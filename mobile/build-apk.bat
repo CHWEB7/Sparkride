@@ -25,8 +25,13 @@ echo [1/5] Creating app icons...
 node create-assets.js
 
 echo.
-echo [2/5] Installing dependencies...
-if not exist node_modules call npm install
+echo [2/6] Installing dependencies (includes expo-asset)...
+if not exist node_modules (
+    call npm install
+) else (
+    call npx expo install expo-asset expo-font expo-splash-screen
+    call npm install
+)
 
 echo.
 echo [3/5] Log in to Expo ^(browser will open if needed^)...

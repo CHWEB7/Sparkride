@@ -94,11 +94,24 @@ This lists builds with links.
 **“No Download button”**  
 → Build is not finished yet, or it failed. Check status on the build page.
 
-**“Build failed”**  
+**Environment variables warning on EAS**  
+→ If you see *“No environment variables with visibility Plain text…”* but also *“EXPO_PUBLIC_API_URL loaded from eas.json”* — **ignore it**. That is normal.
+
+**“The required package expo-asset cannot be found”**  
+→ Run:
+```bat
+cd mobile
+npx expo install expo-asset expo-font expo-splash-screen
+npm install
+npx eas-cli build -p android --profile preview --clear-cache
+```
+
+**“Build failed” (other)**  
 → Open the build logs on expo.dev. Common fixes:
 - Run `npm install` in `mobile/`
 - Run `node create-assets.js`
 - Run `npx eas-cli login` again
+- Rebuild with `--clear-cache`
 
 **“Wrong API URL in the app”**  
 → Edit `eas.json` and set `EXPO_PUBLIC_API_URL` to your real Vercel URL, then rebuild.

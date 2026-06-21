@@ -10,7 +10,7 @@ import { SiteContainer } from "./SiteContainer";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
 
-export function Header() {
+export function Header({ overlay = false }: { overlay?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -30,12 +30,14 @@ export function Header() {
         className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
           menuOpen
             ? "bg-white dark:bg-dark shadow-md"
-            : "bg-app-bg/90 dark:bg-dark/90 backdrop-blur-md shadow-sm dark:shadow-none"
+            : overlay
+              ? "bg-transparent shadow-none"
+              : "bg-app-bg/90 dark:bg-dark/90 backdrop-blur-md shadow-sm dark:shadow-none"
         }`}
       >
         <SiteContainer className="h-16 flex items-center justify-between">
           <div onClick={menuOpen ? closeMenu : undefined}>
-            <Logo href="/" />
+            <Logo href="/" light={overlay && !menuOpen} />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -72,16 +74,20 @@ export function Header() {
               </>
             ) : (
               <>
-                <ThemeToggle />
+                <ThemeToggle light={overlay} />
                 <AnimatedGradientButton href="/book" className="hidden sm:inline-flex text-sm">
                   Reserve a ride
                 </AnimatedGradientButton>
                 <button
                   onClick={() => setMenuOpen(true)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
+                    overlay
+                      ? "hover:bg-white/10 text-white"
+                      : "hover:bg-gray-100 dark:hover:bg-white/10"
+                  }`}
                   aria-label="Open menu"
                 >
-                  <Menu className="w-5 h-5 dark:text-white" />
+                  <Menu className={`w-5 h-5 ${overlay ? "text-white" : "dark:text-white"}`} />
                 </button>
               </>
             )}

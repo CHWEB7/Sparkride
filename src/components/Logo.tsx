@@ -12,9 +12,10 @@ type LogoProps = {
   showText?: boolean;
   href?: string;
   className?: string;
+  light?: boolean;
 };
 
-export function Logo({ size = "md", showText = true, href = "/", className = "" }: LogoProps) {
+export function Logo({ size = "md", showText = true, href = "/", className = "", light = false }: LogoProps) {
   const s = SIZES[size];
 
   const mark = (
@@ -25,7 +26,13 @@ export function Logo({ size = "md", showText = true, href = "/", className = "" 
         <Plane className={`${s.icon} text-white`} />
       </div>
       {showText && (
-        <span className={`${s.text} font-semibold tracking-[-0.02em] dark:text-white`}>Sparkride</span>
+        <span
+          className={`${s.text} font-semibold tracking-[-0.02em] ${
+            light ? "text-white" : "dark:text-white"
+          }`}
+        >
+          Sparkride
+        </span>
       )}
     </>
   );
