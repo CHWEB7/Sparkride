@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "postinstall": "node create-assets.js",
-    "build:apk": "node create-assets.js && eas build -p android --profile preview",
+    "verify": "node verify-routes.js",
+    "build:apk": "node verify-routes.js && node create-assets.js && eas build -p android --profile preview",
     "build:list": "eas build:list"
   },
   "dependencies": {
@@ -18,6 +19,7 @@
     "expo-asset": "~11.0.5",
     "expo-constants": "~17.0.8",
     "expo-font": "~13.0.4",
+    "expo-linear-gradient": "~14.0.2",
     "expo-linking": "~7.0.5",
     "expo-router": "~4.0.21",
     "expo-splash-screen": "~0.29.24",

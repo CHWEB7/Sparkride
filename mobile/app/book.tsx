@@ -8,11 +8,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Chip, Field, PrimaryButton } from "../../components/form";
-import { Card, ErrorText, Label, Screen, SectionTitle } from "../../components/ui";
-import { createBooking, fetchMeta, getApiBaseUrl } from "../../lib/api";
-import type { Airport, BookingInput } from "../../lib/types";
-import { COLORS, estimatePrice } from "../../lib/theme";
+import { AppBackHeader } from "../components/AppBackHeader";
+import { Chip, Field, PrimaryButton } from "../components/form";
+import { Card, ErrorText, Label, Screen, SectionTitle } from "../components/ui";
+import { createBooking, fetchMeta } from "../lib/api";
+import type { Airport, BookingInput } from "../lib/types";
+import { COLORS, estimatePrice } from "../lib/theme";
 
 const defaultForm: BookingInput = {
   serviceType: "AIRPORT_TRANSFER",
@@ -45,7 +46,9 @@ export default function BookScreen() {
   useEffect(() => {
     fetchMeta()
       .then((meta) => setAirports(meta.airports))
-      .catch(() => setAirports([{ code: "LBA", name: "Leeds Bradford", city: "Leeds", region: "Yorkshire" }]))
+      .catch(() =>
+        setAirports([{ code: "LBA", name: "Leeds Bradford", city: "Leeds", region: "Yorkshire" }])
+      )
       .finally(() => setBootLoading(false));
   }, []);
 
@@ -103,12 +106,12 @@ export default function BookScreen() {
   return (
     <Screen>
       <SafeAreaView style={styles.safe} edges={["top"]}>
+        <AppBackHeader title="New booking" />
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <SectionTitle
             title="Book a transfer"
             subtitle="Airport transfers and pre-booked journeys"
           />
-          <Text style={styles.apiHint}>API: {getApiBaseUrl()}</Text>
 
           <Card>
             <Label>Journey type</Label>
@@ -295,7 +298,6 @@ const styles = StyleSheet.create({
   scroll: { padding: 20, paddingBottom: 40 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   row: { flexDirection: "row", flexWrap: "wrap" },
-  apiHint: { fontSize: 12, color: COLORS.muted, marginBottom: 12 },
   priceBox: {
     marginTop: 20,
     padding: 16,

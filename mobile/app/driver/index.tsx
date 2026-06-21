@@ -12,10 +12,11 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { format } from "date-fns";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchBookings, getApiBaseUrl } from "../../../lib/api";
-import type { Booking } from "../../../lib/types";
-import { COLORS, STATUS_COLORS, formatStatus } from "../../../lib/theme";
-import { ErrorText, Screen, SectionTitle } from "../../../components/ui";
+import { AppBackHeader } from "../../components/AppBackHeader";
+import { fetchBookings } from "../../lib/api";
+import type { Booking } from "../../lib/types";
+import { COLORS, STATUS_COLORS, formatStatus } from "../../lib/theme";
+import { ErrorText, Screen, SectionTitle } from "../../components/ui";
 
 export default function DriverListScreen() {
   const router = useRouter();
@@ -83,9 +84,9 @@ export default function DriverListScreen() {
   return (
     <Screen>
       <SafeAreaView style={styles.safe} edges={["top"]}>
+        <AppBackHeader title="Driver" />
         <View style={styles.header}>
           <SectionTitle title="Driver bookings" subtitle="All active and upcoming jobs" />
-          <Text style={styles.apiHint}>API: {getApiBaseUrl()}</Text>
           <ErrorText message={error} />
         </View>
 
@@ -114,8 +115,7 @@ export default function DriverListScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 8 },
-  apiHint: { fontSize: 12, color: COLORS.muted, marginBottom: 8 },
+  header: { paddingHorizontal: 20, paddingTop: 0 },
   list: { padding: 20, paddingTop: 8, paddingBottom: 40 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   card: {
