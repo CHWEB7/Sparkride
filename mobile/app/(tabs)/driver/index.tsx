@@ -12,10 +12,10 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { format } from "date-fns";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchBookings, getApiBaseUrl } from "@/lib/api";
-import type { Booking } from "@/lib/types";
-import { COLORS, STATUS_COLORS, formatStatus } from "@/lib/theme";
-import { ErrorText, Screen, SectionTitle } from "@/components/ui";
+import { fetchBookings, getApiBaseUrl } from "../../../lib/api";
+import type { Booking } from "../../../lib/types";
+import { COLORS, STATUS_COLORS, formatStatus } from "../../../lib/theme";
+import { ErrorText, Screen, SectionTitle } from "../../../components/ui";
 
 export default function DriverListScreen() {
   const router = useRouter();

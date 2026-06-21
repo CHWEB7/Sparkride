@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
-import { COLORS } from "@/lib/theme";
+import { COLORS } from "../lib/theme";
 
 export function Screen({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[styles.screen, style]}>{children}</View>;

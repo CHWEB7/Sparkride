@@ -67,6 +67,23 @@ EXPO_PUBLIC_API_URL=https://your-app.vercel.app
 
 > **Security note:** Mobile routes have no auth yet. Add authentication before public release.
 
+## If the build fails again
+
+Open the failed build on expo.dev → **Logs** → expand **Bundle JavaScript**.
+
+Common fixes (already applied in this repo):
+- `@/` import paths replaced with relative imports
+- `tsconfigPaths` enabled in app.json
+- App icons generated on `npm install` via `postinstall`
+
+Retry:
+
+```bat
+cd mobile
+node create-assets.js
+npx eas-cli build -p android --profile preview --clear-cache
+```
+
 ## Build Android APK for the website
 
 The site serves the app at **`/download`** and **`/downloads/sparkride.apk`**.

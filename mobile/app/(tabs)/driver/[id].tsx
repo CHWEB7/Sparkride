@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,11 +12,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { format } from "date-fns";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchBookings, updateBookingStatus } from "@/lib/api";
-import type { Booking } from "@/lib/types";
-import { COLORS, STATUS_COLORS, formatStatus } from "@/lib/theme";
-import { Card, ErrorText, Label, Screen } from "@/components/ui";
-import { Chip } from "@/components/form";
+import { fetchBookings, updateBookingStatus } from "../../../lib/api";
+import type { Booking } from "../../../lib/types";
+import { COLORS, STATUS_COLORS, formatStatus } from "../../../lib/theme";
+import { Card, ErrorText, Label, Screen } from "../../../components/ui";
+import { Chip } from "../../../components/form";
 
 const STATUSES = ["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"];
 
@@ -95,7 +95,6 @@ export default function DriverDetailScreen() {
 
   return (
     <Screen>
-      <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={COLORS.text} />

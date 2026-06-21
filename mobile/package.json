@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "postinstall": "node create-assets.js",
+    "build:apk": "node create-assets.js && eas build -p android --profile preview",
+    "build:list": "eas build:list"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",

@@ -23,9 +23,20 @@
       },
       "package": "co.uk.sparkride.app"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "4325bf6c-d50f-489b-9fe8-4beadf074c4d"
+      }
     }
   }
 }

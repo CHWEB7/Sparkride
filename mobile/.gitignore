@@ -1,3 +1,4 @@
+# Dependencies
 node_modules/
 .expo/
 dist/
@@ -5,3 +6,7 @@ web-build/
 .env
 .env.local
 *.log
+
+# Generated icons (recreated on npm install via postinstall)
+assets/*.png
+!assets/.gitkeep

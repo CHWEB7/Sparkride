@@ -8,11 +8,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Chip, Field, PrimaryButton } from "@/components/form";
-import { Card, ErrorText, Label, Screen, SectionTitle } from "@/components/ui";
-import { createBooking, fetchMeta, getApiBaseUrl } from "@/lib/api";
-import type { Airport, BookingInput } from "@/lib/types";
-import { COLORS, estimatePrice } from "@/lib/theme";
+import { Chip, Field, PrimaryButton } from "../../components/form";
+import { Card, ErrorText, Label, Screen, SectionTitle } from "../../components/ui";
+import { createBooking, fetchMeta, getApiBaseUrl } from "../../lib/api";
+import type { Airport, BookingInput } from "../../lib/types";
+import { COLORS, estimatePrice } from "../../lib/theme";
 
 const defaultForm: BookingInput = {
   serviceType: "AIRPORT_TRANSFER",

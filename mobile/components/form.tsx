@@ -6,7 +6,7 @@ import {
   TextInputProps,
   ViewStyle,
 } from "react-native";
-import { COLORS } from "@/lib/theme";
+import { COLORS } from "../lib/theme";
 
 export function PrimaryButton({
   label,
