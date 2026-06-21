@@ -5,6 +5,7 @@ import { COLORS } from "../../lib/theme";
 export default function TabLayout() {
   return (
     <Tabs
+      initialRouteName="book"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.brandStart,
