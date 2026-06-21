@@ -4,16 +4,27 @@ import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
 import { getAirport, estimatePrice } from "@/lib/airports";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function json(data: unknown, status = 200) {
+  return NextResponse.json(data, { status, headers: corsHeaders });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = bookingSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.errors[0]?.message || "Invalid input" },
-        { status: 400 }
-      );
+      return json({ error: parsed.error.errors[0]?.message || "Invalid input" }, 400);
     }
 
     const data = parsed.data;
@@ -21,7 +32,7 @@ export async function POST(req: NextRequest) {
     const airport = isAirport && data.airportCode ? getAirport(data.airportCode) : null;
 
     if (isAirport && !airport) {
-      return NextResponse.json({ error: "Invalid airport" }, { status: 400 });
+      return json({ error: "Invalid airport" }, 400);
     }
 
     const pickupDate = new Date(`${data.pickupDate}T${data.pickupTime}:00`);
@@ -60,27 +71,27 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    return json({
       id: booking.id,
       reference: booking.reference,
       estimatedPrice: booking.estimatedPrice,
     });
   } catch (error) {
     console.error("Booking error:", error);
-    return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
+    return json({ error: "Failed to create booking" }, 500);
   }
 }
 
 export async function GET(req: NextRequest) {
   const ref = req.nextUrl.searchParams.get("ref");
   if (!ref) {
-    return NextResponse.json({ error: "Reference required" }, { status: 400 });
+    return json({ error: "Reference required" }, 400);
   }
 
   const booking = await prisma.booking.findUnique({ where: { reference: ref } });
   if (!booking) {
-    return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    return json({ error: "Booking not found" }, 404);
   }
 
-  return NextResponse.json(booking);
+  return json(booking);
 }

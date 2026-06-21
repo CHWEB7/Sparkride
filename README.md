@@ -74,6 +74,20 @@ npm run db:seed
 npm run dev
 ```
 
+## Mobile app
+
+See [`mobile/README.md`](mobile/README.md) for the Expo app (customer booking + driver bookings).
+
+Quick start:
+
+```bat
+cd mobile
+setup.bat
+npm start
+```
+
+Make sure the website API is running (`npm run dev`) in another terminal first.
+
 ## URLs
 
 | Page | URL |
@@ -124,6 +138,7 @@ Billing must be enabled on your Google Cloud account (Google provides free month
 
 ### Tech stack
 - **Next.js 15** — full-stack React framework (front-end + API in one project)
+- **Expo / React Native** — mobile app in `/mobile` (Book + Driver tabs)
 - **Prisma + SQLite** — local database, no external services needed
 - **Tailwind CSS v4** — modern styling
 - **Framer Motion** — Bolt-style menu animations
