@@ -17,6 +17,7 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4">Quick links</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/book" className="hover:text-brand-end transition-colors">Book a transfer</Link></li>
+              <li><Link href="/download" className="hover:text-brand-end transition-colors">Download Android app</Link></li>
               <li><Link href="/#airports" className="hover:text-brand-end transition-colors">Our airports</Link></li>
               <li><Link href="/driver/login" className="hover:text-brand-end transition-colors">Driver portal</Link></li>
             </ul>

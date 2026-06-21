@@ -67,6 +67,26 @@ EXPO_PUBLIC_API_URL=https://your-app.vercel.app
 
 > **Security note:** Mobile routes have no auth yet. Add authentication before public release.
 
+## Build Android APK for the website
+
+The site serves the app at **`/download`** and **`/downloads/sparkride.apk`**.
+
+1. Update `EXPO_PUBLIC_API_URL` in `mobile/eas.json` to your live Vercel URL
+2. Log in to Expo: `npx eas-cli login`
+3. Build the APK:
+   ```bat
+   cd mobile
+   npx eas-cli build -p android --profile preview
+   ```
+4. Download the `.apk` from the Expo build page
+5. Copy it to:
+   ```
+   public/downloads/sparkride.apk
+   ```
+6. Commit and push — Vercel will deploy the download
+
+**Large APK?** Vercel has deployment size limits. Host the file elsewhere (GitHub Releases, Supabase Storage) and set `NEXT_PUBLIC_APK_URL` in Vercel env vars to the direct download link.
+
 ## Push to GitHub
 
 From the project root:
