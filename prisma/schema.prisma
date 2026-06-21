@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Driver {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  createdAt    DateTime @default(now())
+  bookings     Booking[]
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  reference          String        @unique
+  status             BookingStatus @default(PENDING)
+  serviceType        ServiceType   @default(AIRPORT_TRANSFER)
+  journeyType        JourneyType   @default(SINGLE)
+  tripType           TripType
+  airportCode        String?
+  airportName        String?
+  pickupAddress      String
+  dropoffAddress     String
+  pickupDate         DateTime
+  returnPickupDate   DateTime?
+  passengers         Int           @default(1)
+  luggage            Int           @default(1)
+  vehicleType        VehicleType   @default(SALOON)
+  customerName       String
+  customerEmail      String
+  customerPhone      String
+  flightNumber       String?
+  returnFlightNumber String?
+  notes              String?
+  estimatedPrice     Float?
+  driverId           String?
+  driver             Driver?       @relation(fields: [driverId], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+enum ServiceType {
+  AIRPORT_TRANSFER
+  PRE_BOOKED
+}
+
+enum JourneyType {
+  SINGLE
+  RETURN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  EN_ROUTE
+  COMPLETED
+  CANCELLED
+}
+
+enum TripType {
+  TO_AIRPORT
+  FROM_AIRPORT
+}
+
+enum VehicleType {
+  SALOON
+  ESTATE
+  MPV
+  EXECUTIVE
+}

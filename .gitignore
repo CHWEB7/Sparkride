@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment and secrets (never commit)
+.env
+.env.local
+.env.*.local
+
+# Local database
+*.db
+*.db-journal
+prisma/dev.db
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Tooling
+.vercel
+.turbo
+_environment_check_report.txt
