@@ -1,20 +1,19 @@
+import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { SparkrideLogo } from "../components/SparkrideLogo";
 import { PrimaryButton } from "../components/form";
+import { BUILD_LABEL } from "../lib/build-info";
 import { COLORS } from "../lib/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const appVersion = Constants.expoConfig?.version ?? "?";
 
   return (
-    <LinearGradient
-      colors={["#191c23", "#222836", "#1a2840"]}
-      style={styles.fill}
-    >
+    <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.glowTop} />
         <View style={styles.glowBottom} />
@@ -36,10 +35,7 @@ export default function HomeScreen() {
 
             <Pressable
               onPress={() => router.push("/driver")}
-              style={({ pressed }) => [
-                styles.secondaryBtn,
-                pressed && styles.secondaryBtnPressed,
-              ]}
+              style={styles.secondaryBtn}
             >
               <Ionicons name="list-outline" size={20} color={COLORS.white} />
               <Text style={styles.secondaryText}>Driver bookings</Text>
@@ -47,14 +43,16 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Text style={styles.footer}>Sparkride · Castleford, West Yorkshire</Text>
+        <Text style={styles.footer}>
+          Sparkride · v{appVersion} · {BUILD_LABEL}
+        </Text>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  root: { flex: 1, backgroundColor: "#191c23" },
   safe: { flex: 1 },
   glowTop: {
     position: "absolute",
@@ -118,9 +116,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.25)",
     backgroundColor: "rgba(255,255,255,0.08)",
   },
-  secondaryBtnPressed: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-  },
   secondaryText: {
     color: COLORS.white,
     fontSize: 16,
@@ -128,8 +123,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     textAlign: "center",
-    fontSize: 12,
-    color: "rgba(255,255,255,0.4)",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.45)",
     paddingBottom: 24,
   },
 });

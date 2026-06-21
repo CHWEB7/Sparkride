@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sparkride",
     "slug": "sparkride-mobile",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,18 +21,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6a68de"
       },
-      "package": "co.uk.sparkride.app"
+      "package": "co.uk.sparkride.app",
+      "versionCode": 3
     },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "tsconfigPaths": true
-    },
+    "plugins": ["expo-router"],
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
         "projectId": "4325bf6c-d50f-489b-9fe8-4beadf074c4d"
       }
