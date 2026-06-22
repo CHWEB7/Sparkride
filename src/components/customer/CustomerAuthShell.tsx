@@ -115,17 +115,19 @@ export function CustomerAuthShell({
           <Logo href="/" light />
         </header>
 
-        <div className="flex-1 grid lg:grid-cols-[1fr_min(440px,42vw)] xl:grid-cols-[1fr_480px] gap-8 lg:gap-12 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">
-          <div className="hidden lg:block text-white max-w-xl xl:max-w-2xl pl-2 xl:pl-6">
-            <h1 className="text-4xl xl:text-5xl font-semibold leading-[1.08] tracking-[-0.03em]">
-              {hero.headline}
-            </h1>
-            <p className="mt-5 text-lg text-white/75 leading-relaxed max-w-lg">
-              {hero.subline}
-            </p>
+        <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">
+          <div className="hidden lg:flex lg:justify-end text-white pr-2 xl:pr-4">
+            <div className="max-w-md xl:max-w-lg">
+              <h1 className="text-4xl xl:text-5xl font-semibold leading-[1.08] tracking-[-0.03em]">
+                {hero.headline}
+              </h1>
+              <p className="mt-5 text-lg text-white/75 leading-relaxed">
+                {hero.subline}
+              </p>
+            </div>
           </div>
 
-          <div className="w-full max-w-[440px] mx-auto lg:mx-0 lg:mr-8 xl:mr-12">
+          <div className="w-full max-w-[440px] mx-auto lg:mx-0 lg:max-w-none">
             <div className="lg:hidden mb-6 text-white text-center px-2">
               <h1 className="text-2xl font-semibold tracking-[-0.02em]">
                 {hero.headline}
