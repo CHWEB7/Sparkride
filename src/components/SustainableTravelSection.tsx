@@ -77,7 +77,7 @@ export function SustainableTravelSection() {
           </div>
 
           <div className="mt-12 lg:mt-0 border-t lg:border-t-0 lg:border-l border-black/8 dark:border-white/10">
-            <div className="grid grid-cols-2 h-full auto-rows-fr">
+            <div className="grid grid-cols-2 grid-rows-2 h-full">
               {STATS.map((stat, index) => (
                 <RollingStat
                   key={stat.label}

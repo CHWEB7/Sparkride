@@ -43,32 +43,33 @@ function FaqItem({
   answer,
   isOpen,
   onToggle,
+  className = "",
 }: {
   question: string;
   answer: string;
   isOpen: boolean;
   onToggle: () => void;
+  className?: string;
 }) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="border-b border-black/8 dark:border-white/10 last:border-b-0">
+    <div className={className}>
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-4 py-5 sm:py-6 text-left group"
+        className="flex w-full items-center justify-between gap-6 py-5 sm:py-6 px-4 sm:px-6 text-left group"
       >
         <span className="text-base sm:text-lg font-semibold tracking-[-0.02em] text-dark dark:text-white group-hover:text-brand dark:group-hover:text-brand-end transition-colors">
           {question}
         </span>
-        <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/8 dark:border-white/12 bg-white dark:bg-dark-elevated transition-transform duration-300 ${
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-muted transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""
           }`}
-        >
-          <ChevronDown className="h-4 w-4 text-muted" strokeWidth={2} />
-        </span>
+          strokeWidth={2}
+        />
       </button>
 
       <AnimatePresence initial={false}>
@@ -80,7 +81,7 @@ function FaqItem({
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <p className="pb-5 sm:pb-6 pr-12 text-sm sm:text-[15px] leading-relaxed text-muted">
+            <p className="px-4 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-[15px] leading-relaxed text-muted max-w-3xl">
               {answer}
             </p>
           </motion.div>
@@ -109,18 +110,30 @@ export function FaqSection() {
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto rounded-[28px] border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated px-5 sm:px-7 shadow-[0_24px_60px_-32px_rgba(25,28,35,0.18)]">
-          {FAQS.map((item, index) => (
-            <FaqItem
-              key={item.question}
-              question={item.question}
-              answer={item.answer}
-              isOpen={openIndex === index}
-              onToggle={() =>
-                setOpenIndex((current) => (current === index ? null : index))
-              }
-            />
-          ))}
+        <div className="border-y border-black/8 dark:border-white/10">
+          <div className="grid lg:grid-cols-2">
+            {FAQS.map((item, index) => (
+              <FaqItem
+                key={item.question}
+                question={item.question}
+                answer={item.answer}
+                isOpen={openIndex === index}
+                onToggle={() =>
+                  setOpenIndex((current) => (current === index ? null : index))
+                }
+                className={[
+                  "border-b border-black/8 dark:border-white/10",
+                  index % 2 === 0
+                    ? "lg:border-r lg:border-black/8 lg:dark:border-white/10"
+                    : "",
+                  index >= FAQS.length - 2 ? "lg:border-b-0" : "",
+                  index === FAQS.length - 1 ? "border-b-0" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              />
+            ))}
+          </div>
         </div>
       </SiteContainer>
     </section>

@@ -78,24 +78,18 @@ export function RollingStat({
   return (
     <div
       ref={ref}
-      className={`flex flex-col justify-center px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14 transition-opacity duration-700 ease-out ${
+      className={`flex h-full flex-col justify-start overflow-hidden px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14 transition-opacity duration-700 ease-out ${
         revealed ? "opacity-100" : "opacity-0"
       } ${className}`}
     >
-      <div
-        className="min-h-[3.25rem] sm:min-h-[3.75rem] lg:min-h-[4rem] flex items-center"
+      <p
+        className="font-display text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-dark dark:text-white leading-none"
         aria-label={finalText}
       >
-        <div className="inline-flex items-baseline gap-2 whitespace-nowrap font-display text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-dark dark:text-white leading-none">
-          <span
-            className={`tabular-nums ${unit ? "inline-block min-w-[5.5rem] sm:min-w-[6.5rem] lg:min-w-[7rem]" : ""}`}
-          >
-            {formatNumber(display)}
-          </span>
-          {unit ? <span>{unit}</span> : null}
-        </div>
-      </div>
-      <p className="mt-3 text-sm sm:text-[15px] text-muted leading-relaxed max-w-[14rem]">
+        <span className="tabular-nums">{formatNumber(display)}</span>
+        {unit ? <span className="ml-2">{unit}</span> : null}
+      </p>
+      <p className="mt-3 text-sm sm:text-[15px] text-muted leading-relaxed">
         {label}
       </p>
     </div>
