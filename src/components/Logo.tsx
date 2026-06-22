@@ -6,11 +6,11 @@ import Link from "next/link";
 import { Plane } from "lucide-react";
 
 const SIZES = {
-  sm: { height: 40, width: 160, icon: "w-4 h-4", box: "w-9 h-9", text: "text-lg" },
-  md: { height: 48, width: 192, icon: "w-4 h-4", box: "w-10 h-10", text: "text-xl" },
-  lg: { height: 56, width: 224, icon: "w-5 h-5", box: "w-12 h-12", text: "text-2xl" },
-  xl: { height: 68, width: 272, icon: "w-6 h-6", box: "w-14 h-14", text: "text-3xl" },
-  header: { height: 44, width: 220, icon: "w-5 h-5", box: "w-11 h-11", text: "text-2xl" },
+  sm: { height: 32, width: 146, icon: "w-4 h-4", box: "w-9 h-9", text: "text-lg" },
+  md: { height: 40, width: 182, icon: "w-4 h-4", box: "w-10 h-10", text: "text-xl" },
+  lg: { height: 48, width: 219, icon: "w-5 h-5", box: "w-12 h-12", text: "text-2xl" },
+  xl: { height: 56, width: 255, icon: "w-6 h-6", box: "w-14 h-14", text: "text-3xl" },
+  header: { height: 42, width: 191, icon: "w-5 h-5", box: "w-11 h-11", text: "text-2xl" },
 } as const;
 
 type LogoProps = {
@@ -48,7 +48,7 @@ function LogoImage({
       alt="Sparkride"
       width={s.width}
       height={s.height}
-      className="h-auto w-auto max-h-[var(--logo-h)] max-w-[min(220px,42vw)] object-contain object-left shrink-0"
+      className="h-[var(--logo-h)] w-auto max-w-none object-contain object-left shrink-0"
       style={{ "--logo-h": `${s.height}px` } as React.CSSProperties}
       priority
       onError={() => {
@@ -91,7 +91,11 @@ export function Logo({
   }
 
   return (
-    <Link href={href} className={`inline-flex items-center h-11 ${className}`}>
+    <Link
+      href={href}
+      className={`inline-flex items-center ${className}`}
+      style={{ minHeight: `${s.height}px` }}
+    >
       {mark}
     </Link>
   );

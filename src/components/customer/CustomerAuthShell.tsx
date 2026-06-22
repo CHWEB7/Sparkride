@@ -112,7 +112,7 @@ export function CustomerAuthShell({
 
       <div className="relative z-10 min-h-screen flex flex-col">
         <header className="px-4 sm:px-8 pt-6">
-          <Logo href="/" light />
+          <Logo href="/" light size="header" />
         </header>
 
         <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">

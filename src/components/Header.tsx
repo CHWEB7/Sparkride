@@ -61,8 +61,8 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         }`}
       >
         <SiteContainer className="h-16 sm:h-[4.25rem] flex items-center justify-between">
-          <div className="flex items-center h-11" onClick={menuOpen ? closeMenu : undefined}>
-            <Logo href="/" size="header" light={overlayLightText} className="h-11 flex items-center" />
+          <div className="flex items-center min-h-[42px]" onClick={menuOpen ? closeMenu : undefined}>
+            <Logo href="/" size="header" light={overlayLightText} />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
