@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AIRPORTS, estimatePrice } from "@/lib/airports";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
-import { AddressFinder } from "@/components/AddressFinder";
 import {
   ArrowLeft,
   ArrowRight,
@@ -500,32 +499,37 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                     )}
                     {isReturn && isAirportTransfer ? (
                       <div className="lg:col-span-2">
-                        <AddressFinder
-                          label="Home / pickup address"
-                          value={form.pickupAddress}
-                          onChange={handleHomeAddress}
+                        <label className={labelClass}>Home / pickup address</label>
+                        <input
+                          type="text"
+                          required
                           placeholder="e.g. 12 High Street, Castleford"
-                          hint={`Outbound: home → ${selectedAirport?.name}. Return: ${selectedAirport?.name} → home.`}
-                          inputClass={inputClass}
-                          labelClass={labelClass}
+                          value={form.pickupAddress}
+                          onChange={(e) => handleHomeAddress(e.target.value)}
+                          className={inputClass}
                         />
+                        <p className="text-xs text-muted mt-2">
+                          Outbound: home → {selectedAirport?.name}. Return: {selectedAirport?.name} → home.
+                        </p>
                       </div>
                     ) : (
                       <>
                         <div>
-                          <AddressFinder
-                            label="Pickup address"
-                            value={form.pickupAddress}
-                            onChange={(addr) => update("pickupAddress", addr)}
+                          <label className={labelClass}>Pickup address</label>
+                          <input
+                            type="text"
+                            required
                             placeholder="e.g. 12 High Street, Castleford"
-                            inputClass={inputClass}
-                            labelClass={labelClass}
+                            value={form.pickupAddress}
+                            onChange={(e) => update("pickupAddress", e.target.value)}
+                            className={inputClass}
                           />
                         </div>
                         <div>
                           <label className={labelClass}>Drop-off address</label>
                           <input
                             type="text"
+                            required
                             placeholder="e.g. Leeds Bradford Airport"
                             value={form.dropoffAddress}
                             onChange={(e) => update("dropoffAddress", e.target.value)}
