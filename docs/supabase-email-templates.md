@@ -62,7 +62,13 @@ https://*.vercel.app/**
 
 ---
 
-## Vercel environment variable
+## Troubleshooting: no email received
+
+1. **Magic Link template** must include `{{ .Token }}` and must NOT use `{{ .ConfirmationURL }}` alone.
+2. **Supabase built-in email** has strict rate limits (~4 per hour on free tier). Wait 60 seconds between resends.
+3. Check **Authentication → Logs** in the Supabase dashboard for mailer errors.
+4. For production reliability, configure **custom SMTP** under Project Settings → Authentication → SMTP.
+5. OTP is sent via the **anon** auth client (`signInWithOtp`). The service-role key does not dispatch auth emails.
 
 Set in Vercel project settings:
 

@@ -10,6 +10,7 @@ const OTP_SESSION_KEY = "sparkride_otp_requested";
 
 type SendCodeResult = {
   ok?: boolean;
+  sent?: boolean;
   skipped?: boolean;
   resendIn?: number;
   error?: string;
@@ -32,6 +33,7 @@ export function CustomerVerify2faForm() {
   const [resendIn, setResendIn] = useState(0);
 
   const sendCode = useCallback(async () => {
+    if (!email) return;
     setSending(true);
     setError("");
     setInfo("");
@@ -41,20 +43,48 @@ export function CustomerVerify2faForm() {
 
     setSending(false);
 
+    if (data.skipped) {
+      setResendIn(data.resendIn ?? 60);
+      setInfo(data.message || "Please wait before requesting another code.");
+      setCodeSent(true);
+      return;
+    }
+
     if (!res.ok) {
-      setError(data.error || "Failed to send verification code");
-      if (data.resendIn) setResendIn(data.resendIn);
+      // Fallback: browser anon client triggers Supabase mailer directly
+      try {
+        const supabase = createClient();
+        const { error: clientError } = await supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false },
+        });
+        if (clientError) {
+          setError(clientError.message);
+          if (data.resendIn) setResendIn(data.resendIn);
+          return;
+        }
+        setCodeSent(true);
+        setResendIn(60);
+        sessionStorage.setItem(OTP_SESSION_KEY, String(Date.now()));
+        setInfo("Verification code sent — check your inbox and spam folder.");
+        return;
+      } catch {
+        setError(data.error || "Failed to send verification code");
+        if (data.resendIn) setResendIn(data.resendIn);
+        return;
+      }
+    }
+
+    if (!data.sent) {
+      setError("Verification code could not be sent. Try again in a moment.");
       return;
     }
 
     setCodeSent(true);
     setResendIn(data.resendIn ?? 60);
     sessionStorage.setItem(OTP_SESSION_KEY, String(Date.now()));
-
-    if (data.skipped) {
-      setInfo(data.message || "A code was sent recently. Check your inbox or wait to resend.");
-    }
-  }, []);
+    setInfo("Verification code sent — check your inbox and spam folder.");
+  }, [email]);
 
   useEffect(() => {
     const supabase = createClient();

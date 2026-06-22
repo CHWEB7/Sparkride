@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomerUserFromRequest } from "@/lib/customer-auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAnonServerClient } from "@/lib/supabase/anon-server";
 import {
   getOtpResendIn,
   OTP_RESEND_COOLDOWN_SEC,
@@ -18,12 +18,12 @@ export async function OPTIONS() {
 }
 
 function rateLimitMessage(resendIn: number) {
-  return `Please wait ${resendIn} seconds before requesting another code.`;
+  return `Please wait ${resendIn} seconds before requesting another code. Check your inbox for a recent email.`;
 }
 
 /**
- * Sends a 6-digit email OTP for daily MFA.
- * Must NOT pass emailRedirectTo — that forces a magic link instead of a code.
+ * Sends a 6-digit email OTP for daily MFA via the anon auth client so Supabase
+ * actually dispatches the email. Must NOT pass emailRedirectTo.
  */
 export async function POST(req: NextRequest) {
   const user = await getCustomerUserFromRequest(req);
@@ -35,13 +35,18 @@ export async function POST(req: NextRequest) {
   const resendIn = await getOtpResendIn(user.id);
   if (resendIn > 0) {
     return NextResponse.json(
-      { ok: true, skipped: true, resendIn, message: rateLimitMessage(resendIn) },
+      {
+        ok: false,
+        skipped: true,
+        resendIn,
+        message: rateLimitMessage(resendIn),
+      },
       { headers: corsHeaders }
     );
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.auth.signInWithOtp({
+  const supabase = createAnonServerClient();
+  const { data, error } = await supabase.auth.signInWithOtp({
     email: user.email,
     options: {
       shouldCreateUser: false,
@@ -51,7 +56,6 @@ export async function POST(req: NextRequest) {
   if (error) {
     const isRateLimited = error.message.toLowerCase().includes("rate limit");
     if (isRateLimited) {
-      await recordOtpSent(user.id);
       return NextResponse.json(
         {
           error: "Too many verification emails sent. Please wait a minute and try again.",
@@ -66,7 +70,13 @@ export async function POST(req: NextRequest) {
   await recordOtpSent(user.id);
 
   return NextResponse.json(
-    { ok: true, resendIn: OTP_RESEND_COOLDOWN_SEC },
+    {
+      ok: true,
+      sent: true,
+      resendIn: OTP_RESEND_COOLDOWN_SEC,
+      // Supabase returns null user/session when OTP is queued — still a success.
+      queued: !data?.user,
+    },
     { headers: corsHeaders }
   );
 }

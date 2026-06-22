@@ -41,10 +41,12 @@ export default function Verify2faScreen() {
       const result = await sendMfaEmailCode();
       setCodeSent(true);
       setResendIn(result.resendIn);
-      await AsyncStorage.setItem(OTP_STORAGE_KEY, String(Date.now()));
       if (result.skipped) {
-        setInfo("A code was sent recently. Check your inbox or wait to resend.");
+        setInfo("Please wait before requesting another code. Check your inbox.");
+        return;
       }
+      await AsyncStorage.setItem(OTP_STORAGE_KEY, String(Date.now()));
+      setInfo("Verification code sent — check your inbox and spam folder.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send code");
     } finally {

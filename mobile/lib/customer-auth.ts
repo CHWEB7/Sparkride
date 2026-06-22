@@ -32,13 +32,23 @@ export async function completeDailyMfa(): Promise<void> {
   if (!res.ok) throw new Error(data.error || "Failed to complete verification");
 }
 
-export async function sendMfaEmailCode(): Promise<{ resendIn: number; skipped?: boolean }> {
+export async function sendMfaEmailCode(): Promise<{
+  resendIn: number;
+  skipped?: boolean;
+  sent?: boolean;
+}> {
   const res = await authFetch("/api/auth/mfa/send", { method: "POST" });
   const data = await res.json().catch(() => ({}));
+  if (data.skipped) {
+    return { resendIn: data.resendIn ?? 60, skipped: true };
+  }
   if (!res.ok) {
     throw new Error(data.error || "Failed to send verification code");
   }
-  return { resendIn: data.resendIn ?? 60, skipped: data.skipped };
+  if (!data.sent) {
+    throw new Error("Verification code could not be sent");
+  }
+  return { resendIn: data.resendIn ?? 60, sent: true };
 }
 
 export async function verifyMfaEmailCode(email: string, token: string) {
