@@ -36,6 +36,17 @@ Drivers are upserted when:
 
 To add or change drivers in production, deploy code changes and hit `/api/drivers` once, or apply a Supabase SQL migration.
 
-## Security
+## Booking confirmation emails
 
-Change `TestDriver2024!` and `driver123` before going live. Do not use these passwords in production.
+When a driver sets a booking to **CONFIRMED**, the customer receives a confirmation email via **Resend** (same setup as MFA).
+
+Optional env override:
+
+```env
+BOOKINGS_EMAIL_FROM=Sparkride <verify@voltrondigital.co.uk>
+```
+
+Falls back to `MFA_EMAIL_FROM` if not set.
+
+See `docs/daily-email-mfa.md` for Resend domain setup and limits.
+

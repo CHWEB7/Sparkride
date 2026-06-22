@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getDriverSession } from "@/lib/auth";
+import { driverBookingsFilter, isTestDriver } from "@/lib/driver-access";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { Plane } from "lucide-react";
 import { LogoutButton } from "@/components/driver/LogoutButton";
@@ -11,8 +12,13 @@ export default async function DriverDashboardPage() {
   if (!session) redirect("/driver/login");
 
   const bookings = await prisma.booking.findMany({
+    where: driverBookingsFilter(session),
     orderBy: { pickupDate: "asc" },
   });
+
+  const scopeLabel = isTestDriver(session.email)
+    ? "All bookings (test account)"
+    : "Your assigned bookings";
 
   return (
     <div className="min-h-screen bg-dark">
@@ -36,7 +42,7 @@ export default async function DriverDashboardPage() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl font-bold text-white mb-2">Bookings</h1>
-        <p className="text-gray-400 mb-8">Manage and update customer transfer bookings</p>
+        <p className="text-gray-400 mb-8">{scopeLabel}</p>
         <DriverDashboard bookings={JSON.parse(JSON.stringify(bookings))} />
       </main>
     </div>
