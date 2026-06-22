@@ -295,11 +295,11 @@ html.dark .hero-ambient-readability {
   background-clip: text;
 }
 
-/* Services carousel — right-weighted track with left-edge peek */
+/* Services carousel — left-aligned track, cards clip at right viewport edge */
 .services-carousel {
   --services-carousel-inset: max(1rem, calc((100vw - 80rem) / 2 + 1rem));
-  padding-left: 0;
-  padding-right: var(--services-carousel-inset);
+  padding-left: var(--services-carousel-inset);
+  padding-right: 0;
 }
 
 @media (min-width: 640px) {

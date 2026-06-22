@@ -8,6 +8,7 @@ import { SiteContainer } from "@/components/SiteContainer";
 import { SERVICES } from "@/lib/services";
 
 const CARD_GAP = 16;
+const PEEK_SERVICE_ID = "ferry-ports";
 
 export function ServicesSection() {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -22,23 +23,32 @@ export function ServicesSection() {
     setCanScrollRight(maxScroll > 8 && el.scrollLeft < maxScroll - 8);
   }, []);
 
-  useEffect(() => {
-    updateScrollState();
+  const alignCarouselToRight = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    const card = el.querySelector<HTMLElement>("[data-service-card]");
-    if (card) {
-      const peek = Math.round(card.offsetWidth * 0.42);
-      el.scrollLeft = peek;
-    }
+    const peekCard = el.querySelector<HTMLElement>(
+      `[data-service-id="${PEEK_SERVICE_ID}"]`
+    );
+    if (!peekCard) return;
 
-    const observer = new ResizeObserver(() => {
-      updateScrollState();
-    });
+    const targetScroll =
+      peekCard.offsetLeft + peekCard.offsetWidth * 0.5 - el.clientWidth;
+    el.scrollLeft = Math.max(0, targetScroll);
+    updateScrollState();
+  }, [updateScrollState]);
+
+  useEffect(() => {
+    alignCarouselToRight();
+    requestAnimationFrame(alignCarouselToRight);
+
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(updateScrollState);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [updateScrollState]);
+  }, [alignCarouselToRight, updateScrollState]);
 
   const scrollByCards = useCallback(
     (direction: "left" | "right") => {
@@ -71,12 +81,13 @@ export function ServicesSection() {
         <div
           ref={scrollerRef}
           onScroll={updateScrollState}
-          className="services-carousel flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pl-4 sm:pl-6"
+          className="services-carousel flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {SERVICES.map((service) => (
             <article
               key={service.id}
               data-service-card
+              data-service-id={service.id}
               className="group relative flex w-[min(78vw,304px)] sm:w-[320px] lg:w-[336px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[28px] min-h-[500px] sm:min-h-[560px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]"
             >
               <Image
@@ -110,7 +121,7 @@ export function ServicesSection() {
         </div>
 
         <SiteContainer className="mt-6 sm:mt-8">
-          <div className="flex justify-start gap-3">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => scrollByCards("left")}
