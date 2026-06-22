@@ -32,12 +32,10 @@ export async function completeDailyMfa(): Promise<void> {
   if (!res.ok) throw new Error(data.error || "Failed to complete verification");
 }
 
-export async function sendMfaEmailCode(email: string) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false },
-  });
-  if (error) throw error;
+export async function sendMfaEmailCode() {
+  const res = await authFetch("/api/auth/mfa/send", { method: "POST" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to send verification code");
 }
 
 export async function verifyMfaEmailCode(email: string, token: string) {
@@ -85,10 +83,16 @@ export type SignUpInput = {
 };
 
 export async function signUpWithEmail({ email, password, name, phone }: SignUpInput) {
+  const base = (await import("./api")).getApiBaseUrl();
+  const emailRedirectTo = `${base}/auth/callback?redirect=${encodeURIComponent("/")}`;
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { name, phone } },
+    options: {
+      data: { name, phone },
+      emailRedirectTo,
+    },
   });
   if (error) throw error;
 

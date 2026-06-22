@@ -31,11 +31,10 @@ export default function Verify2faScreen() {
   const [resendIn, setResendIn] = useState(0);
 
   const sendCode = useCallback(async () => {
-    if (!email) return;
     setSending(true);
     setError("");
     try {
-      await sendMfaEmailCode(email);
+      await sendMfaEmailCode();
       setCodeSent(true);
       setResendIn(RESEND_COOLDOWN_SEC);
     } catch (err) {
@@ -43,7 +42,7 @@ export default function Verify2faScreen() {
     } finally {
       setSending(false);
     }
-  }, [email]);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

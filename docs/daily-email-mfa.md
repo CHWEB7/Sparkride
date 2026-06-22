@@ -11,15 +11,15 @@ Customer accounts require a **daily email verification code** after password sig
 
 ## Supabase dashboard setup
 
-1. **Authentication → Providers → Email**
+1. **Authentication → URL configuration**
+   - **Site URL:** `https://sparkride-umber.vercel.app`
+   - Redirect URLs: see `docs/supabase-phase1.md`
+
+2. **Authentication → Email Templates**
+   - Update the **Magic Link** template to send `{{ .Token }}` (not a link). See `docs/supabase-email-templates.md` for copy-paste HTML.
+
+3. **Authentication → Providers → Email**
    - Ensure **Email** is enabled.
-   - Enable **Email OTP** (one-time password codes), not only magic links.
-
-2. **Authentication → URL configuration**
-   - Site URL and redirect URLs should already include your production domain (see `docs/supabase-phase1.md`).
-
-3. **Email templates** (optional)
-   - Under **Authentication → Email templates**, customise the **Magic Link / OTP** template if you want Sparkride branding on the verification code email.
 
 ## Technical notes
 

@@ -3,9 +3,15 @@ import Constants from "expo-constants";
 
 const REQUEST_TIMEOUT_MS = 8000;
 
+const PRODUCTION_API_URL = "https://sparkride-umber.vercel.app";
+
 export function getApiBaseUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;
   if (fromEnv) return fromEnv.replace(/\/$/, "");
+
+  if (!__DEV__) {
+    return PRODUCTION_API_URL;
+  }
 
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {

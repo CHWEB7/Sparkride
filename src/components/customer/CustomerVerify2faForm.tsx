@@ -26,15 +26,12 @@ export function CustomerVerify2faForm() {
     setSending(true);
     setError("");
 
-    const supabase = createClient();
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
+    const res = await fetch("/api/auth/mfa/send", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
 
     setSending(false);
-    if (otpError) {
-      setError(otpError.message);
+    if (!res.ok) {
+      setError(data.error || "Failed to send verification code");
       return;
     }
 
