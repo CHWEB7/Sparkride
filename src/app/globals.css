@@ -314,6 +314,7 @@ html.dark .hero-ambient-readability {
   display: inline-block;
   vertical-align: baseline;
   overflow: hidden;
+  min-width: 13.5ch;
   height: 1.12em;
   line-height: 1.12;
 }
