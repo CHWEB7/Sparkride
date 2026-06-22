@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,11 +7,31 @@ import Constants from "expo-constants";
 import { SparkrideLogo } from "../components/SparkrideLogo";
 import { PrimaryButton } from "../components/form";
 import { BUILD_LABEL } from "../lib/build-info";
+import { isDriverModeUnlocked, unlockDriverMode } from "../lib/driver-access";
 import { COLORS } from "../lib/theme";
+
+const TAP_WINDOW_MS = 2500;
+const TAPS_REQUIRED = 5;
 
 export default function HomeScreen() {
   const router = useRouter();
   const appVersion = Constants.expoConfig?.version ?? "?";
+  const [driverUnlocked, setDriverUnlocked] = useState(isDriverModeUnlocked());
+  const [versionTaps, setVersionTaps] = useState(0);
+  const lastTapAt = useRef(0);
+
+  function handleVersionTap() {
+    const now = Date.now();
+    const nextCount = now - lastTapAt.current > TAP_WINDOW_MS ? 1 : versionTaps + 1;
+    lastTapAt.current = now;
+    setVersionTaps(nextCount);
+
+    if (nextCount >= TAPS_REQUIRED) {
+      unlockDriverMode();
+      setDriverUnlocked(true);
+      setVersionTaps(0);
+    }
+  }
 
   return (
     <View style={styles.root}>
@@ -33,19 +54,23 @@ export default function HomeScreen() {
               style={styles.primaryBtn}
             />
 
-            <Pressable
-              onPress={() => router.push("/driver")}
-              style={styles.secondaryBtn}
-            >
-              <Ionicons name="list-outline" size={20} color={COLORS.white} />
-              <Text style={styles.secondaryText}>Driver bookings</Text>
-            </Pressable>
+            {driverUnlocked && (
+              <Pressable
+                onPress={() => router.push("/driver")}
+                style={styles.secondaryBtn}
+              >
+                <Ionicons name="list-outline" size={20} color={COLORS.white} />
+                <Text style={styles.secondaryText}>Driver bookings</Text>
+              </Pressable>
+            )}
           </View>
         </View>
 
-        <Text style={styles.footer}>
-          Sparkride · v{appVersion} · {BUILD_LABEL}
-        </Text>
+        <Pressable onPress={handleVersionTap} style={styles.footerPress}>
+          <Text style={styles.footer}>
+            Sparkride · v{appVersion} · {BUILD_LABEL}
+          </Text>
+        </Pressable>
       </SafeAreaView>
     </View>
   );
@@ -121,10 +146,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  footerPress: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
   footer: {
     textAlign: "center",
     fontSize: 11,
     color: "rgba(255,255,255,0.45)",
-    paddingBottom: 24,
+    paddingBottom: 12,
   },
 });

@@ -1,6 +1,8 @@
 import type { AppMeta, Booking, BookingInput } from "./types";
 import Constants from "expo-constants";
 
+const REQUEST_TIMEOUT_MS = 8000;
+
 export function getApiBaseUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;
   if (fromEnv) return fromEnv.replace(/\/$/, "");
@@ -16,19 +18,32 @@ export function getApiBaseUrl(): string {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getApiBaseUrl();
-  const res = await fetch(`${base}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || `Request failed (${res.status})`);
+  try {
+    const res = await fetch(`${base}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `Request failed (${res.status})`);
+    }
+    return data as T;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Request timed out — check the API is running");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
   }
-  return data as T;
 }
 
 export function fetchMeta() {

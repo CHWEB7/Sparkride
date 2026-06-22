@@ -4,7 +4,7 @@ const STEPS = [
   {
     icon: Calendar,
     title: "Choose your trip",
-    desc: "Book a single journey or return trip. Select your airport, dates, and vehicle type.",
+    desc: "Book a single journey or return trip. Select your airport and travel dates.",
   },
   {
     icon: Car,

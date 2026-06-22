@@ -11,7 +11,6 @@ import {
   ArrowRight,
   ArrowLeftRight,
   Calendar,
-  Car,
   Loader2,
   MapPin,
   Plane,
@@ -20,14 +19,7 @@ import {
   Clock,
 } from "lucide-react";
 
-const VEHICLES = [
-  { value: "SALOON", label: "Saloon", desc: "Up to 3 passengers", price: 45 },
-  { value: "ESTATE", label: "Estate", desc: "Extra luggage space", price: 55 },
-  { value: "MPV", label: "MPV", desc: "Up to 6 passengers", price: 65 },
-  { value: "EXECUTIVE", label: "Executive", desc: "Premium comfort", price: 85 },
-];
-
-type StepId = "journey" | "service" | "direction" | "route" | "schedule" | "vehicle" | "contact";
+type StepId = "journey" | "service" | "direction" | "route" | "schedule" | "contact";
 
 const STEP_META: Record<StepId, { label: string; icon: typeof Plane }> = {
   journey: { label: "Journey", icon: ArrowLeftRight },
@@ -35,7 +27,6 @@ const STEP_META: Record<StepId, { label: string; icon: typeof Plane }> = {
   direction: { label: "Direction", icon: Plane },
   route: { label: "Route", icon: MapPin },
   schedule: { label: "Schedule", icon: Calendar },
-  vehicle: { label: "Vehicle", icon: Car },
   contact: { label: "Details", icon: User },
 };
 
@@ -45,7 +36,7 @@ function getSteps(journeyType: string, serviceType: string): StepId[] {
   steps.push("service");
   if (!serviceType) return steps;
   if (journeyType === "SINGLE" && serviceType === "AIRPORT_TRANSFER") steps.push("direction");
-  steps.push("route", "schedule", "vehicle", "contact");
+  steps.push("route", "schedule", "contact");
   return steps;
 }
 
@@ -106,7 +97,7 @@ export function BookingForm() {
   const price =
     form.journeyType && form.serviceType
       ? estimatePrice(
-          form.vehicleType,
+          "SALOON",
           form.tripType,
           form.journeyType,
           form.serviceType
@@ -577,35 +568,11 @@ export function BookingForm() {
                         )}
                       </>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* Step: Vehicle */}
-              {currentStep === "vehicle" && (
-                <div>
-                  <StepHeading
-                    title="Choose your vehicle"
-                    subtitle="Select the best fit for your party"
-                  />
-                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                    {VEHICLES.map((v) => (
-                      <button
-                        key={v.value}
-                        type="button"
-                        onClick={() => update("vehicleType", v.value)}
-                        className={bigCard(form.vehicleType === v.value)}
-                      >
-                        <Car className="w-8 h-8 text-brand mb-3" />
-                        <div className="font-bold dark:text-white">{v.label}</div>
-                        <div className="text-sm text-muted mt-1">{v.desc}</div>
-                        <div className="text-sm font-semibold text-brand-gradient mt-3">
-                          from £{v.price}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="lg:col-span-2 mt-2">
+                      <h3 className="text-sm font-semibold text-muted mb-4 uppercase tracking-wide">
+                        Party size
+                      </h3>
+                    </div>
                     <div>
                       <label className={labelClass}>Passengers</label>
                       <input
@@ -761,14 +728,6 @@ export function BookingForm() {
               <div className="flex justify-between">
                 <span className="text-muted">Airport</span>
                 <span className="font-medium dark:text-white">{selectedAirport.code}</span>
-              </div>
-            )}
-            {form.vehicleType && ["vehicle", "contact"].includes(currentStep) && (
-              <div className="flex justify-between">
-                <span className="text-muted">Vehicle</span>
-                <span className="font-medium dark:text-white">
-                  {VEHICLES.find((v) => v.value === form.vehicleType)?.label}
-                </span>
               </div>
             )}
           </div>
