@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Fingerprint, KeyRound, Loader2, Plane } from "lucide-react";
+import { Fingerprint, KeyRound, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  DriverAuthShell,
+  authInputClass,
+  authLabelClass,
+} from "@/components/driver/DriverAuthShell";
 
 type Step = "bootstrap" | "passkey";
 
@@ -60,7 +64,12 @@ export function DriverEnrollForm() {
 
       setStep("passkey");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign-in failed");
+      const raw = err instanceof Error ? err.message : "Sign-in failed";
+      const message =
+        raw.toLowerCase().includes("invalid login credentials")
+          ? "No driver account found in Supabase Auth yet, or the one-time password is wrong. Ask your admin to run the driver auth sync, then try again."
+          : raw;
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -91,106 +100,93 @@ export function DriverEnrollForm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark flex items-center justify-center">
+      <div className="relative min-h-screen bg-[#12151c] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-brand-end animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-dark flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center">
-              <Plane className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">Sparkride</span>
-          </Link>
-          <h1 className="mt-6 text-2xl font-bold text-white">
-            {step === "bootstrap" ? "Driver passkey setup" : "Register your passkey"}
-          </h1>
-          <p className="mt-2 text-gray-400 text-sm">
-            {step === "bootstrap"
-              ? "Sign in once with your one-time password, then register a passkey."
-              : "Create a passkey on this device. You will use it for all future sign-ins."}
+    <DriverAuthShell
+      mode="enroll"
+      title={step === "bootstrap" ? "Verify your account" : "Register passkey"}
+      subtitle={
+        step === "bootstrap"
+          ? "Sign in once with your one-time password from Sparkride."
+          : "Create a passkey on this device for all future sign-ins."
+      }
+    >
+      {error && (
+        <div className="p-3 rounded-xl bg-red-500/10 text-red-600 text-sm mb-4">{error}</div>
+      )}
+
+      {step === "bootstrap" ? (
+        <form onSubmit={handleBootstrap} className="space-y-4">
+          <div>
+            <label className={authLabelClass}>Email</label>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="Enter email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={authInputClass}
+            />
+          </div>
+          <div>
+            <label className={authLabelClass}>One-time password</label>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              placeholder="Enter your one-time password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={authInputClass}
+            />
+            <p className="mt-2 text-xs text-muted leading-relaxed">
+              Provided by Sparkride when your driver account was created. Used only for this
+              one-time setup.
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-3.5 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
+          >
+            {submitting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <KeyRound className="w-5 h-5" />
+                Continue
+              </>
+            )}
+          </button>
+        </form>
+      ) : (
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={handleRegisterPasskey}
+            disabled={submitting}
+            className="w-full py-3.5 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <Fingerprint className="w-5 h-5" />
+                Register passkey
+              </>
+            )}
+          </button>
+          <p className="text-xs text-muted text-center leading-relaxed">
+            After this step you will only sign in with your passkey.
           </p>
         </div>
-
-        <div className="bg-dark-elevated rounded-2xl p-8 space-y-5">
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 text-red-400 text-sm">{error}</div>
-          )}
-
-          {step === "bootstrap" ? (
-            <form onSubmit={handleBootstrap} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-brand outline-none text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  One-time password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-brand outline-none text-sm"
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  Provided by Sparkride when your driver account was created. Used only for this
-                  one-time setup.
-                </p>
-              </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3.5 bg-brand-gradient disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <KeyRound className="w-5 h-5" />
-                    Continue
-                  </>
-                )}
-              </button>
-            </form>
-          ) : (
-            <button
-              type="button"
-              onClick={handleRegisterPasskey}
-              disabled={submitting}
-              className="w-full py-3.5 bg-brand-gradient disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2"
-            >
-              {submitting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Fingerprint className="w-5 h-5" />
-                  Register passkey
-                </>
-              )}
-            </button>
-          )}
-
-          <p className="text-center text-sm text-gray-400">
-            Already registered?{" "}
-            <Link href="/driver/login" className="text-brand-end hover:underline">
-              Sign in with passkey
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      )}
+    </DriverAuthShell>
   );
 }

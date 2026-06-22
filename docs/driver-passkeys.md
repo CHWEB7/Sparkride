@@ -15,14 +15,35 @@ Changing RP ID after drivers enroll will invalidate existing passkeys.
 
 ## Sync driver accounts to Supabase Auth
 
-After seeding drivers or adding new ones:
+Driver rows in the database are **not** Supabase Auth users until you sync them.
+
+### Option A — production API (after deploy)
+
+1. Set `ADMIN_SYNC_SECRET` in Vercel (long random string)
+2. Redeploy, then run:
 
 ```bash
-npx prisma db seed
+curl -X POST https://sparkride-umber.vercel.app/api/admin/sync-driver-auth \
+  -H "Authorization: Bearer YOUR_ADMIN_SYNC_SECRET"
+```
+
+### Option B — local script
+
+```bash
+npx vercel env pull .env.production.local --environment=production
 npx tsx scripts/sync-driver-auth-users.ts
 ```
 
-This creates Supabase Auth users with `app_metadata.role = "driver"` and links `Driver.authUserId`.
+Or:
+
+```bash
+npx prisma db seed
+npm run sync:driver-auth
+```
+
+(with `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`)
+
+After sync, drivers appear in **Supabase Dashboard → Authentication → Users** with role `driver` in app metadata.
 
 ## Driver onboarding flow
 
