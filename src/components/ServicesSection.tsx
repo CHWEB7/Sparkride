@@ -8,7 +8,8 @@ import { SiteContainer } from "@/components/SiteContainer";
 import { SERVICES } from "@/lib/services";
 
 const CARD_GAP = 16;
-const FERRY_INDEX = SERVICES.findIndex((service) => service.id === "ferry-ports");
+const PEEK_INDEX = SERVICES.findIndex((service) => service.id === "theme-parks");
+const PEEK_SERVICE_ID = "theme-parks";
 
 export function ServicesSection() {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -31,28 +32,27 @@ export function ServicesSection() {
     if (!scroller || !track) return;
 
     const firstCard = track.querySelector<HTMLElement>("[data-service-card]");
-    if (!firstCard || FERRY_INDEX < 0) return;
+    if (!firstCard || PEEK_INDEX < 0) return;
 
     const cardWidth = firstCard.offsetWidth;
     if (!cardWidth) return;
 
     const paddingLeft = Number.parseFloat(getComputedStyle(scroller).paddingLeft) || 0;
-    const ferryCenter =
-      FERRY_INDEX * (cardWidth + CARD_GAP) + cardWidth * 0.5;
+    const peekCenter = PEEK_INDEX * (cardWidth + CARD_GAP) + cardWidth * 0.5;
 
-    const spacer = Math.round(scroller.clientWidth - paddingLeft - ferryCenter);
+    const spacer = Math.round(scroller.clientWidth - paddingLeft - peekCenter);
     const nextSpacer = Math.max(0, spacer);
     setLeadSpacer((prev) => (prev === nextSpacer ? prev : nextSpacer));
 
     requestAnimationFrame(() => {
       if (nextSpacer === 0) {
-        const ferryCard = track.querySelector<HTMLElement>(
-          '[data-service-id="ferry-ports"]'
+        const peekCard = track.querySelector<HTMLElement>(
+          `[data-service-id="${PEEK_SERVICE_ID}"]`
         );
-        if (ferryCard) {
+        if (peekCard) {
           scroller.scrollLeft = Math.max(
             0,
-            ferryCard.offsetLeft + ferryCard.offsetWidth * 0.5 - scroller.clientWidth
+            peekCard.offsetLeft + peekCard.offsetWidth * 0.5 - scroller.clientWidth
           );
         }
       } else {
