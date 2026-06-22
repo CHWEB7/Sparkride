@@ -51,9 +51,15 @@ export async function sendVerificationCodeEmail(
   const data = (await res.json().catch(() => ({}))) as { message?: string };
 
   if (!res.ok) {
+    const raw = data.message || `Email provider error (${res.status})`;
+    const testingOnly =
+      raw.includes("testing emails to your own email") ||
+      raw.includes("verify a domain");
     return {
       ok: false,
-      error: data.message || `Email provider error (${res.status})`,
+      error: testingOnly
+        ? "Verification emails can only be sent to your Resend account email until a domain is verified. Use that email to test, or verify your domain in Resend and set MFA_EMAIL_FROM in Vercel (see docs/daily-email-mfa.md)."
+        : raw,
     };
   }
 
