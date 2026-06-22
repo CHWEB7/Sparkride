@@ -12,6 +12,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { AccountMegaPanel } from "./customer/AccountMegaPanel";
 
 type NavTab = {
   id: string;
@@ -123,6 +124,11 @@ const NAV_TABS: NavTab[] = [
         ],
       },
     ],
+  },
+  {
+    id: "account",
+    label: "Account",
+    columns: [],
   },
   {
     id: "support",
@@ -250,30 +256,38 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
-                  className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                  className={
+                    activeTab === "account"
+                      ? ""
+                      : "grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                  }
                 >
-                  {active.columns.map((col, i) => (
-                    <div key={i}>
-                      {col.title && (
-                        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-3">
-                          {col.title}
-                        </p>
-                      )}
-                      <ul className="space-y-2.5">
-                        {col.links.map((link) => (
-                          <li key={link.label}>
-                            <Link
-                              href={link.href}
-                              onClick={onClose}
-                              className="text-sm font-medium text-dark/80 dark:text-gray-200 hover:text-brand dark:hover:text-brand-end tracking-[-0.01em] transition-colors"
-                            >
-                              {link.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                  {activeTab === "account" ? (
+                    <AccountMegaPanel onClose={onClose} />
+                  ) : (
+                    active.columns.map((col, i) => (
+                      <div key={i}>
+                        {col.title && (
+                          <p className="text-xs font-medium text-muted uppercase tracking-wide mb-3">
+                            {col.title}
+                          </p>
+                        )}
+                        <ul className="space-y-2.5">
+                          {col.links.map((link) => (
+                            <li key={link.label}>
+                              <Link
+                                href={link.href}
+                                onClick={onClose}
+                                className="text-sm font-medium text-dark/80 dark:text-gray-200 hover:text-brand dark:hover:text-brand-end tracking-[-0.01em] transition-colors"
+                              >
+                                {link.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>
