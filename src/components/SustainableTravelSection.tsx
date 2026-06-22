@@ -4,32 +4,35 @@ import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 import { RollingStat } from "@/components/RollingStat";
 
-const STATS = [
+const STATS: {
+  value: number;
+  unit?: string;
+  label: string;
+  delay: number;
+}[] = [
   {
     value: 30000,
-    suffix: "",
     label: "Miles covered each year",
     delay: 0,
   },
   {
     value: 4000,
-    suffix: "",
     label: "Litres of fuel saved per year",
-    delay: 120,
+    delay: 100,
   },
   {
     value: 8,
-    suffix: " tonnes",
+    unit: "tonnes",
     label: "CO₂ not emitted each year",
-    delay: 240,
+    delay: 200,
   },
   {
     value: 8000,
-    suffix: " kWh",
+    unit: "kWh",
     label: "Clean energy used to charge our vehicles",
-    delay: 360,
+    delay: 300,
   },
-] as const;
+];
 
 export function SustainableTravelSection() {
   return (
@@ -79,7 +82,7 @@ export function SustainableTravelSection() {
                 <RollingStat
                   key={stat.label}
                   value={stat.value}
-                  suffix={stat.suffix}
+                  unit={stat.unit}
                   label={stat.label}
                   delay={stat.delay}
                   className={[

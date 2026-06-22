@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteContainer } from "./SiteContainer";
+import { Logo } from "./Logo";
 
 export function Footer() {
   return (
@@ -7,7 +8,7 @@ export function Footer() {
       <SiteContainer>
         <div className="grid md:grid-cols-3 gap-12">
           <div>
-            <h3 className="text-white text-xl font-bold mb-4">Sparkride</h3>
+            <Logo size="md" light href="/" className="mb-5" />
             <p className="text-sm leading-relaxed">
               Professional private hire airport transfers based in Castleford,
               West Yorkshire. Serving customers across the UK.
@@ -21,6 +22,7 @@ export function Footer() {
               <li><Link href="/my-bookings" className="hover:text-brand-end transition-colors">My bookings</Link></li>
               <li><Link href="/download" className="hover:text-brand-end transition-colors">Download Android app</Link></li>
               <li><Link href="/#sustainability" className="hover:text-brand-end transition-colors">Sustainable travel</Link></li>
+              <li><Link href="/#how-it-works" className="hover:text-brand-end transition-colors">FAQ</Link></li>
               <li><Link href="/driver/login" className="hover:text-brand-end transition-colors">Driver portal</Link></li>
             </ul>
           </div>
