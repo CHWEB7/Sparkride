@@ -40,7 +40,7 @@ const NAV_TABS: NavTab[] = [
           { label: "Leeds Bradford", href: "/airports/leeds-bradford" },
           { label: "Manchester", href: "/airports/manchester" },
           { label: "Heathrow", href: "/airports/heathrow" },
-          { label: "View all airports", href: "/#airports" },
+          { label: "Airport transfers", href: "/#airports" },
         ],
       },
       {

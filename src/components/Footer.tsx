@@ -20,7 +20,7 @@ export function Footer() {
               <li><Link href="/login" className="hover:text-brand-end transition-colors">Sign in</Link></li>
               <li><Link href="/my-bookings" className="hover:text-brand-end transition-colors">My bookings</Link></li>
               <li><Link href="/download" className="hover:text-brand-end transition-colors">Download Android app</Link></li>
-              <li><Link href="/#airports" className="hover:text-brand-end transition-colors">Our airports</Link></li>
+              <li><Link href="/#airports" className="hover:text-brand-end transition-colors">Airport transfers</Link></li>
               <li><Link href="/driver/login" className="hover:text-brand-end transition-colors">Driver portal</Link></li>
             </ul>
           </div>
