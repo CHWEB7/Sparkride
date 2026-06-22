@@ -294,3 +294,16 @@ html.dark .hero-ambient-readability {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Services carousel — Bolt-style left-aligned track, right bleed */
+.services-carousel {
+  --services-carousel-inset: max(1rem, calc((100vw - 80rem) / 2 + 1rem));
+  padding-left: var(--services-carousel-inset);
+  padding-right: var(--services-carousel-inset);
+}
+
+@media (min-width: 640px) {
+  .services-carousel {
+    --services-carousel-inset: max(1.5rem, calc((100vw - 80rem) / 2 + 1.5rem));
+  }
+}

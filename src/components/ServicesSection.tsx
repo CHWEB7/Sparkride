@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SiteContainer } from "@/components/SiteContainer";
 import { SERVICES } from "@/lib/services";
 
-const CARD_GAP = 20;
+const CARD_GAP = 16;
 
 export function ServicesSection() {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -58,68 +58,70 @@ export function ServicesSection() {
         </div>
       </SiteContainer>
 
-      <div
-        ref={scrollerRef}
-        onScroll={updateScrollState}
-        className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-4"
-      >
-        {SERVICES.map((service) => (
-          <article
-            key={service.id}
-            data-service-card
-            className="group relative flex w-[min(82vw,360px)] sm:w-[380px] lg:w-[400px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[32px] min-h-[500px] sm:min-h-[540px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]"
-          >
-            <Image
-              src={service.image}
-              alt=""
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              sizes="(max-width: 640px) 82vw, 400px"
-              priority={service.id === "airport-transfers"}
-            />
+      <div className="relative">
+        <div
+          ref={scrollerRef}
+          onScroll={updateScrollState}
+          className="services-carousel flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {SERVICES.map((service) => (
+            <article
+              key={service.id}
+              data-service-card
+              className="group relative flex w-[min(78vw,304px)] sm:w-[320px] lg:w-[336px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[28px] min-h-[500px] sm:min-h-[560px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]"
+            >
+              <Image
+                src={service.image}
+                alt=""
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                sizes="(max-width: 640px) 78vw, 336px"
+                priority={service.id === "airport-transfers"}
+              />
 
-            <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/55" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/55" />
 
-            <div className="relative z-10 flex flex-col p-7 sm:p-8">
-              <h3 className="text-[1.75rem] sm:text-[1.9rem] font-semibold leading-tight tracking-[-0.02em] text-white">
-                {service.title}
-              </h3>
-              <p className="mt-3 max-w-[30ch] text-[0.95rem] sm:text-base leading-relaxed text-white/85">
-                {service.teaser}
-              </p>
-              <Link
-                href={service.href}
-                className={`mt-6 inline-flex w-fit items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-opacity ${service.buttonClass}`}
-              >
-                {service.cta}
-              </Link>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <SiteContainer className="mt-8 sm:mt-10">
-        <div className="flex justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => scrollByCards("left")}
-            disabled={!canScrollLeft}
-            aria-label="Previous service"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollByCards("right")}
-            disabled={!canScrollRight}
-            aria-label="Next service"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+              <div className="relative z-10 flex flex-col p-7 sm:p-8">
+                <h3 className="text-[1.75rem] sm:text-[1.9rem] font-semibold leading-tight tracking-[-0.02em] text-white">
+                  {service.title}
+                </h3>
+                <p className="mt-3 max-w-[30ch] text-[0.95rem] sm:text-base leading-relaxed text-white/85">
+                  {service.teaser}
+                </p>
+                <Link
+                  href={service.href}
+                  className={`mt-6 inline-flex w-fit items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-opacity ${service.buttonClass}`}
+                >
+                  {service.cta}
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
-      </SiteContainer>
+
+        <SiteContainer className="mt-6 sm:mt-8">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => scrollByCards("left")}
+              disabled={!canScrollLeft}
+              aria-label="Previous service"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByCards("right")}
+              disabled={!canScrollRight}
+              aria-label="Next service"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </SiteContainer>
+      </div>
     </section>
   );
 }
