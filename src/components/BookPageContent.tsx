@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BookingPageLoader } from "@/components/BookingPageLoader";
-import { BookingForm } from "@/components/BookingForm";
-import { PageHeader } from "@/components/PageHeader";
+import { CustomerPortal } from "@/components/customer/CustomerPortal";
 import { SiteContainer } from "@/components/SiteContainer";
 import type { CustomerProfile } from "@/lib/customer";
 
@@ -22,11 +21,7 @@ export function BookPageContent({ profile }: { profile: CustomerProfile }) {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <SiteContainer>
-            <PageHeader
-              title="Book your transfer"
-              description="Step through each section — we'll build your quote as you go."
-            />
-            <BookingForm profile={profile} />
+            <CustomerPortal profile={profile} />
           </SiteContainer>
         </motion.div>
       )}

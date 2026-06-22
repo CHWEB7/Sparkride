@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AIRPORTS, estimatePrice } from "@/lib/airports";
@@ -17,9 +17,10 @@ import {
   User,
   Check,
   Clock,
+  Car,
 } from "lucide-react";
 
-type StepId = "journey" | "service" | "direction" | "route" | "schedule" | "contact";
+type StepId = "journey" | "service" | "direction" | "route" | "schedule" | "driver" | "contact";
 
 const STEP_META: Record<StepId, { label: string; icon: typeof Plane }> = {
   journey: { label: "Journey", icon: ArrowLeftRight },
@@ -27,6 +28,7 @@ const STEP_META: Record<StepId, { label: string; icon: typeof Plane }> = {
   direction: { label: "Direction", icon: Plane },
   route: { label: "Route", icon: MapPin },
   schedule: { label: "Schedule", icon: Calendar },
+  driver: { label: "Driver", icon: Car },
   contact: { label: "Details", icon: User },
 };
 
@@ -36,7 +38,7 @@ function getSteps(journeyType: string, serviceType: string): StepId[] {
   steps.push("service");
   if (!serviceType) return steps;
   if (journeyType === "SINGLE" && serviceType === "AIRPORT_TRANSFER") steps.push("direction");
-  steps.push("route", "schedule", "contact");
+  steps.push("route", "schedule", "driver", "contact");
   return steps;
 }
 
@@ -60,37 +62,73 @@ function StepHeading({ title, subtitle }: { title: string; subtitle: string }) {
 
 import type { CustomerProfile } from "@/lib/customer";
 
-type BookingFormProps = {
-  profile?: CustomerProfile | null;
+type SavedTemplate = {
+  serviceType: string;
+  journeyType: string;
+  tripType: string;
+  airportCode: string | null;
+  pickupAddress: string;
+  dropoffAddress: string;
+  passengers: number;
+  luggage: number;
+  vehicleType: string;
+  driverId: string | null;
+  notes: string | null;
 };
 
-export function BookingForm({ profile }: BookingFormProps) {
+type BookableDriver = {
+  id: string;
+  name: string;
+  vehicleLabel: string;
+  vehicleType: string;
+  maxSeats: number;
+};
+
+type BookingFormProps = {
+  profile?: CustomerProfile | null;
+  savedTemplate?: SavedTemplate | null;
+};
+
+export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [drivers, setDrivers] = useState<BookableDriver[]>([]);
   const [form, setForm] = useState({
-    journeyType: "",
-    serviceType: "",
-    tripType: "TO_AIRPORT",
-    airportCode: "LBA",
-    pickupAddress: "",
-    dropoffAddress: "",
+    journeyType: savedTemplate?.journeyType ?? "",
+    serviceType: savedTemplate?.serviceType ?? "",
+    tripType: savedTemplate?.tripType ?? "TO_AIRPORT",
+    airportCode: savedTemplate?.airportCode ?? "LBA",
+    pickupAddress: savedTemplate?.pickupAddress ?? "",
+    dropoffAddress: savedTemplate?.dropoffAddress ?? "",
     pickupDate: "",
     pickupTime: "",
     returnDate: "",
     returnTime: "",
-    passengers: 1,
-    luggage: 1,
-    vehicleType: "SALOON",
+    passengers: savedTemplate?.passengers ?? 1,
+    luggage: savedTemplate?.luggage ?? 1,
+    vehicleType: savedTemplate?.vehicleType ?? "SALOON",
+    driverId: savedTemplate?.driverId ?? "",
     customerName: profile?.name ?? "",
     customerEmail: profile?.email ?? "",
     customerPhone: profile?.phone ?? "",
     flightNumber: "",
     returnFlightNumber: "",
-    notes: "",
+    notes: savedTemplate?.notes ?? "",
+    saveDetails: false,
+    savedDetailsLabel: "",
   });
+
+  useEffect(() => {
+    fetch("/api/drivers")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setDrivers(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const steps = useMemo(
     () => getSteps(form.journeyType, form.serviceType),
@@ -100,10 +138,12 @@ export function BookingForm({ profile }: BookingFormProps) {
   const isReturn = form.journeyType === "RETURN";
   const isAirportTransfer = form.serviceType === "AIRPORT_TRANSFER";
   const selectedAirport = AIRPORTS.find((a) => a.code === form.airportCode);
+  const selectedDriver = drivers.find((d) => d.id === form.driverId);
+  const priceVehicleType = selectedDriver?.vehicleType ?? form.vehicleType;
   const price =
     form.journeyType && form.serviceType
       ? estimatePrice(
-          "SALOON",
+          priceVehicleType,
           form.tripType,
           form.journeyType,
           form.serviceType
@@ -191,6 +231,9 @@ export function BookingForm({ profile }: BookingFormProps) {
         if (isReturn && form.returnDate < form.pickupDate)
           return "Return date must be on or after outbound date";
         return null;
+      case "driver":
+        if (!form.driverId) return "Please select a driver";
+        return null;
       case "contact":
         if (!form.customerName.trim()) return "Name is required";
         if (!form.customerPhone.trim()) return "Phone number is required";
@@ -208,6 +251,19 @@ export function BookingForm({ profile }: BookingFormProps) {
       return;
     }
     next();
+  }
+
+  function selectDriver(driver: BookableDriver) {
+    setForm((prev) => ({
+      ...prev,
+      driverId: driver.id,
+      vehicleType: driver.vehicleType,
+    }));
+    setTimeout(() => {
+      setDirection(1);
+      setStepIndex((i) => i + 1);
+      setError("");
+    }, 350);
   }
 
   async function handleSubmit() {
@@ -327,7 +383,7 @@ export function BookingForm({ profile }: BookingFormProps) {
                         value: "SINGLE",
                         label: "Single journey",
                         desc: "One-way airport transfer",
-                        icon: Plane,
+                        icon: ArrowRight,
                       },
                       {
                         value: "RETURN",
@@ -605,6 +661,36 @@ export function BookingForm({ profile }: BookingFormProps) {
                 </div>
               )}
 
+              {/* Step: Driver */}
+              {currentStep === "driver" && (
+                <div>
+                  <StepHeading
+                    title="Choose your driver"
+                    subtitle="Select who you'd like for this journey"
+                  />
+                  <div className="grid sm:grid-cols-2 gap-4 lg:gap-6">
+                    {drivers.map((driver) => (
+                      <button
+                        key={driver.id}
+                        type="button"
+                        onClick={() => selectDriver(driver)}
+                        className={bigCard(form.driverId === driver.id)}
+                      >
+                        <Car className="w-10 h-10 text-brand mb-4" />
+                        <div className="text-xl font-bold dark:text-white">{driver.name}</div>
+                        <div className="text-sm text-muted mt-2">{driver.vehicleLabel}</div>
+                        <div className="text-xs text-brand mt-2 font-medium">
+                          Up to {driver.maxSeats} passengers
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  {drivers.length === 0 && (
+                    <p className="text-sm text-muted">Loading drivers…</p>
+                  )}
+                </div>
+              )}
+
               {/* Step: Contact */}
               {currentStep === "contact" && (
                 <div>
@@ -652,6 +738,33 @@ export function BookingForm({ profile }: BookingFormProps) {
                         onChange={(e) => update("notes", e.target.value)}
                         className={inputClass}
                       />
+                    </div>
+                    <div className="lg:col-span-2 pt-2 border-t border-gray-200/60 dark:border-white/10">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.saveDetails}
+                          onChange={(e) =>
+                            setForm((prev) => ({ ...prev, saveDetails: e.target.checked }))
+                          }
+                          className="mt-1 h-4 w-4 rounded border-black/20 text-brand"
+                        />
+                        <span className="text-sm text-muted leading-relaxed">
+                          Save these trip details for next time
+                        </span>
+                      </label>
+                      {form.saveDetails && (
+                        <div className="mt-4">
+                          <label className={labelClass}>Saved label (optional)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Home to Leeds Bradford"
+                            value={form.savedDetailsLabel}
+                            onChange={(e) => update("savedDetailsLabel", e.target.value)}
+                            className={inputClass}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -736,6 +849,17 @@ export function BookingForm({ profile }: BookingFormProps) {
               <div className="flex justify-between">
                 <span className="text-muted">Airport</span>
                 <span className="font-medium dark:text-white">{selectedAirport.code}</span>
+              </div>
+            )}
+            {selectedDriver && !["journey", "service", "direction", "route", "schedule"].includes(currentStep) && (
+              <div className="flex justify-between">
+                <span className="text-muted">Driver</span>
+                <span className="font-medium dark:text-white text-right">
+                  {selectedDriver.name}
+                  <span className="block text-xs text-muted font-normal">
+                    {selectedDriver.vehicleLabel}
+                  </span>
+                </span>
               </div>
             )}
           </div>

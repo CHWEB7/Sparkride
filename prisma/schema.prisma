@@ -9,13 +9,14 @@ datasource db {
 }
 
 model Customer {
-  id        String    @id
-  email     String    @unique
-  name      String?
-  phone     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
+  id                 String               @id
+  email              String               @unique
+  name               String?
+  phone              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  bookings           Booking[]
+  savedBookingDetails SavedBookingDetails[]
 }
 
 model CustomerMfaSession {
@@ -30,13 +31,37 @@ model CustomerMfaSession {
 }
 
 model Driver {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  phone        String?
-  createdAt    DateTime @default(now())
-  bookings     Booking[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  vehicleLabel  String?
+  vehicleType   VehicleType @default(SALOON)
+  maxSeats      Int       @default(4)
+  bookable      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  bookings      Booking[]
+}
+
+model SavedBookingDetails {
+  id             String      @id @default(cuid())
+  customerId     String
+  customer       Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label          String
+  serviceType    ServiceType @default(AIRPORT_TRANSFER)
+  journeyType    JourneyType @default(SINGLE)
+  tripType       TripType    @default(TO_AIRPORT)
+  airportCode    String?
+  pickupAddress  String
+  dropoffAddress String
+  passengers     Int         @default(1)
+  luggage        Int         @default(1)
+  vehicleType    VehicleType @default(SALOON)
+  driverId       String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model Booking {

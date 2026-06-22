@@ -63,10 +63,18 @@ export async function POST(req: NextRequest) {
       return json({ error: "Please add your phone number in Account settings" }, 400);
     }
 
+    const driver = await prisma.driver.findFirst({
+      where: { id: data.driverId, bookable: true },
+    });
+    if (!driver) {
+      return json({ error: "Please select a valid driver" }, 400);
+    }
+
     const booking = await prisma.booking.create({
       data: {
         reference: generateReference(),
         customerId: customer.id,
+        driverId: driver.id,
         serviceType: data.serviceType,
         journeyType: data.journeyType,
         tripType: data.tripType,
@@ -78,7 +86,7 @@ export async function POST(req: NextRequest) {
         returnPickupDate,
         passengers: data.passengers,
         luggage: data.luggage,
-        vehicleType: data.vehicleType,
+        vehicleType: driver.vehicleType,
         customerName,
         customerEmail: customer.email,
         customerPhone,
@@ -86,13 +94,36 @@ export async function POST(req: NextRequest) {
         returnFlightNumber: data.returnFlightNumber || null,
         notes: data.notes || null,
         estimatedPrice: estimatePrice(
-          data.vehicleType,
+          driver.vehicleType,
           data.tripType,
           data.journeyType,
           data.serviceType
         ),
       },
     });
+
+    if (data.saveDetails) {
+      const label =
+        data.savedDetailsLabel?.trim() ||
+        `${data.pickupAddress.slice(0, 24)}…`;
+      await prisma.savedBookingDetails.create({
+        data: {
+          customerId: customer.id,
+          label,
+          serviceType: data.serviceType,
+          journeyType: data.journeyType,
+          tripType: data.tripType,
+          airportCode: airport?.code ?? null,
+          pickupAddress: data.pickupAddress,
+          dropoffAddress: data.dropoffAddress,
+          passengers: data.passengers,
+          luggage: data.luggage,
+          vehicleType: driver.vehicleType,
+          driverId: driver.id,
+          notes: data.notes || null,
+        },
+      });
+    }
 
     return json({
       id: booking.id,

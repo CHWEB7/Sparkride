@@ -182,10 +182,10 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   },
   {
     id: "customer-portal",
-    href: "/my-bookings",
+    href: "/book",
     icon: UserCircle,
     title: "Customer portal",
-    desc: "View and manage bookings",
+    desc: "Bookings, profile & saved trips",
     iconBg: "bg-violet-500/15",
     iconColor: "text-violet-600",
   },

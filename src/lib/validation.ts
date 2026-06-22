@@ -21,6 +21,9 @@ export const bookingSchema = z
     flightNumber: z.string().optional(),
     returnFlightNumber: z.string().optional(),
     notes: z.string().optional(),
+    driverId: z.string().min(1, "Please select a driver"),
+    saveDetails: z.boolean().optional(),
+    savedDetailsLabel: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.serviceType === "AIRPORT_TRANSFER") {

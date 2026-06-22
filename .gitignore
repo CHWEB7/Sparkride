@@ -27,3 +27,4 @@ npm-debug.log*
 _environment_check_report.txt
 
 .env*
+.vercel
