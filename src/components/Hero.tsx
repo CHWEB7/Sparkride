@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Plane, Shield, Clock, Star, Zap } from "lucide-react";
 import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { HeroAmbientBackground } from "./HeroAmbientBackground";
-import { RotatingWord } from "./RotatingWord";
+import { HeroTitle } from "./HeroTitle";
 
 export function Hero() {
   return (
@@ -17,10 +17,7 @@ export function Hero() {
               Premium electric transfers
             </div>
 
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-[4.5rem] text-dark dark:text-white leading-[1.05]">
-              Travel <RotatingWord /> with{" "}
-              <span className="text-brand-gradient">Sparkride</span>
-            </h1>
+            <HeroTitle />
 
             <p className="mt-6 text-lg sm:text-xl text-muted dark:text-gray-200 font-normal tracking-[-0.01em] leading-relaxed max-w-lg">
               Reliable private hire airport transfers from Castleford. Fixed prices,

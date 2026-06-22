@@ -291,6 +291,10 @@ html.dark .hero-ambient-readability {
   .hero-ambient-orb {
     animation: none !important;
   }
+
+  .rotating-word-item {
+    transform: none !important;
+  }
 }
 
 .hover\:bg-brand-gradient-hover:hover {
@@ -298,10 +302,26 @@ html.dark .hero-ambient-readability {
 }
 
 .text-brand-gradient {
+  display: inline-block;
   background: linear-gradient(135deg, #6a68de 0%, #82dbdf 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+}
+
+.rotating-word-slot {
+  display: inline-block;
+  vertical-align: bottom;
+  overflow: hidden;
+  min-width: 11.5ch;
+  height: 1.12em;
+  line-height: 1.12;
+}
+
+.rotating-word-item {
+  display: block;
+  white-space: nowrap;
 }
 
 /* Services carousel — cards clip at the right viewport edge */

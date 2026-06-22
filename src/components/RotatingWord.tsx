@@ -8,48 +8,55 @@ const INTERVAL_MS = 2800;
 
 export function RotatingWord({
   words = WORDS,
-  className = "",
 }: {
   words?: readonly string[];
-  className?: string;
 }) {
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (reduceMotion || words.length <= 1) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || reduceMotion || words.length <= 1) return;
 
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % words.length);
     }, INTERVAL_MS);
 
     return () => window.clearInterval(timer);
-  }, [reduceMotion, words]);
+  }, [mounted, reduceMotion, words]);
 
   const word = words[index] ?? words[0];
 
+  if (!mounted) {
+    return (
+      <span className="rotating-word-slot text-brand-gradient" aria-hidden>
+        {words[0]}
+      </span>
+    );
+  }
+
+  if (reduceMotion) {
+    return <span className="rotating-word-slot text-brand-gradient">{word}</span>;
+  }
+
   return (
-    <span
-      className={`relative inline-block overflow-hidden align-bottom text-brand-gradient ${className}`}
-      style={{ minWidth: "11.5ch", height: "1.08em" }}
-      aria-live="polite"
-    >
-      {reduceMotion ? (
-        <span className="inline-block">{word}</span>
-      ) : (
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={word}
-            initial={{ opacity: 0, y: "100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "-100%" }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-x-0 bottom-0 inline-block whitespace-nowrap"
-          >
-            {word}
-          </motion.span>
-        </AnimatePresence>
-      )}
+    <span className="rotating-word-slot" aria-live="polite">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={word}
+          initial={{ y: "100%", opacity: 0 }}
+          animate={{ y: "0%", opacity: 1 }}
+          exit={{ y: "-100%", opacity: 0 }}
+          transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
+          className="rotating-word-item text-brand-gradient"
+        >
+          {word}
+        </motion.span>
+      </AnimatePresence>
     </span>
   );
 }
