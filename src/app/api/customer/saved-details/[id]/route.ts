@@ -6,7 +6,12 @@ import { ensureCustomer } from "@/lib/customer";
 
 const savedDetailsSchema = z.object({
   label: z.string().min(1, "Label is required"),
-  serviceType: z.enum(["AIRPORT_TRANSFER", "PRE_BOOKED"]),
+  serviceType: z.enum([
+    "AIRPORT_TRANSFER",
+    "FERRY_PORT_TRANSFER",
+    "CRUISE_TERMINAL_TRANSFER",
+    "PRE_BOOKED",
+  ]),
   journeyType: z.enum(["SINGLE", "RETURN"]),
   tripType: z.enum(["TO_AIRPORT", "FROM_AIRPORT"]),
   airportCode: z.string().optional().nullable(),

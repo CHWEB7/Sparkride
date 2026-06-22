@@ -8,6 +8,7 @@ import { CheckCircle, Calendar, MapPin, Car, User, ArrowLeftRight } from "lucide
 import { format } from "date-fns";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
+import { getServiceLabel, isHubTransfer } from "@/lib/hubs";
 
 export default async function BookingConfirmationPage({
   params,
@@ -23,7 +24,7 @@ export default async function BookingConfirmationPage({
   if (!booking || booking.customerId !== customer.id) notFound();
 
   const isReturn = booking.journeyType === "RETURN";
-  const isAirport = booking.serviceType === "AIRPORT_TRANSFER";
+  const isHub = isHubTransfer(booking.serviceType);
 
   const statusColors: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400",
@@ -54,7 +55,7 @@ export default async function BookingConfirmationPage({
               <span className="text-sm text-muted">Status</span>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-brand-light dark:bg-brand/10 text-brand">
-                  {isAirport ? "AIRPORT" : "PRE-BOOKED"}
+                  {getServiceLabel(booking.serviceType).toUpperCase()}
                 </span>
                 {isReturn && (
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-brand-light dark:bg-brand/10 text-brand">
@@ -96,7 +97,7 @@ export default async function BookingConfirmationPage({
                 <MapPin className="w-5 h-5 text-brand mt-0.5" />
                 <div>
                   <div className="text-sm text-muted">
-                    {isAirport
+                    {isHub
                       ? isReturn
                         ? `Return trip to ${booking.airportName}`
                         : `${booking.tripType === "TO_AIRPORT" ? "To" : "From"} ${booking.airportName}`
@@ -106,7 +107,7 @@ export default async function BookingConfirmationPage({
                   </div>
                   <div className="font-semibold dark:text-white">{booking.pickupAddress}</div>
                   <div className="text-sm text-muted mt-1">→ {booking.dropoffAddress}</div>
-                  {isReturn && isAirport && (
+                  {isReturn && isHub && (
                     <div className="text-sm text-muted mt-1">→ {booking.pickupAddress} (return)</div>
                   )}
                 </div>

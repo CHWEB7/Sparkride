@@ -1,8 +1,16 @@
 import { z } from "zod";
+import { isHubTransfer } from "./hubs";
+
+const serviceTypeEnum = z.enum([
+  "AIRPORT_TRANSFER",
+  "FERRY_PORT_TRANSFER",
+  "CRUISE_TERMINAL_TRANSFER",
+  "PRE_BOOKED",
+]);
 
 export const bookingSchema = z
   .object({
-    serviceType: z.enum(["AIRPORT_TRANSFER", "PRE_BOOKED"]),
+    serviceType: serviceTypeEnum,
     journeyType: z.enum(["SINGLE", "RETURN"]),
     tripType: z.enum(["TO_AIRPORT", "FROM_AIRPORT"]),
     airportCode: z.string().optional(),
@@ -26,9 +34,13 @@ export const bookingSchema = z
     savedDetailsLabel: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.serviceType === "AIRPORT_TRANSFER") {
-      if (!data.airportCode || data.airportCode.length !== 3) {
-        ctx.addIssue({ code: "custom", message: "Airport is required", path: ["airportCode"] });
+    if (isHubTransfer(data.serviceType)) {
+      if (!data.airportCode || data.airportCode.length < 2 || data.airportCode.length > 4) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Please select a destination",
+          path: ["airportCode"],
+        });
       }
     }
 

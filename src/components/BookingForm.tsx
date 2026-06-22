@@ -3,7 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { AIRPORTS, estimatePrice } from "@/lib/airports";
+import { estimatePrice } from "@/lib/airports";
+import {
+  formatHubLabel,
+  getDefaultHubCode,
+  getDirectionOptions,
+  getHub,
+  getHubList,
+  getHubPickerLabel,
+  getServiceLabel,
+  isHubTransfer,
+} from "@/lib/hubs";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 import {
   ArrowLeft,
@@ -13,6 +23,8 @@ import {
   Loader2,
   MapPin,
   Plane,
+  Ship,
+  Anchor,
   User,
   Check,
   Clock,
@@ -36,7 +48,7 @@ function getSteps(journeyType: string, serviceType: string): StepId[] {
   if (!journeyType) return steps;
   steps.push("service");
   if (!serviceType) return steps;
-  if (journeyType === "SINGLE" && serviceType === "AIRPORT_TRANSFER") steps.push("direction");
+  if (journeyType === "SINGLE" && isHubTransfer(serviceType)) steps.push("direction");
   steps.push("route", "schedule", "driver", "contact");
   return steps;
 }
@@ -135,8 +147,10 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
   );
   const currentStep = steps[stepIndex] ?? "journey";
   const isReturn = form.journeyType === "RETURN";
+  const isHubTransferType = isHubTransfer(form.serviceType);
   const isAirportTransfer = form.serviceType === "AIRPORT_TRANSFER";
-  const selectedAirport = AIRPORTS.find((a) => a.code === form.airportCode);
+  const hubList = isHubTransferType ? getHubList(form.serviceType) : [];
+  const selectedHub = isHubTransferType ? getHub(form.airportCode, form.serviceType) : undefined;
   const selectedDriver = drivers.find((d) => d.id === form.driverId);
   const priceVehicleType = selectedDriver?.vehicleType ?? form.vehicleType;
   const price =
@@ -168,13 +182,16 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
       const next = { ...prev, [field]: value };
       if (field === "journeyType" && value === "RETURN") next.tripType = "TO_AIRPORT";
       if (field === "airportCode" || field === "journeyType" || field === "tripType") {
-        const airport = AIRPORTS.find(
-          (a) => a.code === (field === "airportCode" ? value : next.airportCode)
-        );
-        if (airport && next.serviceType === "AIRPORT_TRANSFER") {
-          const airportLabel = `${airport.name} Airport (${airport.code})`;
-          if (next.journeyType === "RETURN" || next.tripType === "TO_AIRPORT") {
-            if (!next.dropoffAddress.includes("Airport")) next.dropoffAddress = airportLabel;
+        if (isHubTransfer(next.serviceType)) {
+          const hub = getHub(
+            field === "airportCode" ? String(value) : next.airportCode,
+            next.serviceType
+          );
+          if (hub) {
+            const hubLabel = formatHubLabel(hub, next.serviceType);
+            if (next.journeyType === "RETURN" || next.tripType === "TO_AIRPORT") {
+              next.dropoffAddress = hubLabel;
+            }
           }
         }
       }
@@ -192,7 +209,16 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
   }
 
   function selectService(value: string) {
-    update("serviceType", value);
+    const hubCode = getDefaultHubCode(value);
+    const hub = getHub(hubCode, value);
+    setForm((prev) => ({
+      ...prev,
+      serviceType: value,
+      airportCode: hubCode,
+      tripType: "TO_AIRPORT",
+      pickupAddress: "",
+      dropoffAddress: hub && isHubTransfer(value) ? formatHubLabel(hub, value) : "",
+    }));
     setTimeout(() => {
       setDirection(1);
       setStepIndex((i) => i + 1);
@@ -211,9 +237,12 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
 
   function handleHomeAddress(value: string) {
     setForm((prev) => {
-      const airport = AIRPORTS.find((a) => a.code === prev.airportCode);
-      const airportLabel = airport ? `${airport.name} Airport (${airport.code})` : "";
-      return { ...prev, pickupAddress: value, dropoffAddress: airportLabel };
+      if (!isHubTransfer(prev.serviceType)) {
+        return { ...prev, pickupAddress: value };
+      }
+      const hub = getHub(prev.airportCode, prev.serviceType);
+      const hubLabel = hub ? formatHubLabel(hub, prev.serviceType) : "";
+      return { ...prev, pickupAddress: value, dropoffAddress: hubLabel };
     });
   }
 
@@ -276,12 +305,14 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
     setError("");
 
     try {
-      const airport = AIRPORTS.find((a) => a.code === form.airportCode);
-      const airportLabel = airport ? `${airport.name} Airport (${airport.code})` : "";
+      const hub = isHubTransfer(form.serviceType)
+        ? getHub(form.airportCode, form.serviceType)
+        : null;
+      const hubLabel = hub ? formatHubLabel(hub, form.serviceType) : "";
       const payload = {
         ...form,
-        ...(form.journeyType === "RETURN" && isAirportTransfer
-          ? { tripType: "TO_AIRPORT", dropoffAddress: airportLabel || form.dropoffAddress }
+        ...(form.journeyType === "RETURN" && isHubTransfer(form.serviceType)
+          ? { tripType: "TO_AIRPORT", dropoffAddress: hubLabel || form.dropoffAddress }
           : {}),
       };
 
@@ -422,6 +453,18 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                         icon: Plane,
                       },
                       {
+                        value: "FERRY_PORT_TRANSFER",
+                        label: "Ferry port transfer",
+                        desc: "To or from UK ferry terminals",
+                        icon: Ship,
+                      },
+                      {
+                        value: "CRUISE_TERMINAL_TRANSFER",
+                        label: "Cruise terminal transfer",
+                        desc: "To or from UK cruise ports",
+                        icon: Anchor,
+                      },
+                      {
                         value: "PRE_BOOKED",
                         label: "Pre-booked journey",
                         desc: "Private hire for any destination",
@@ -444,23 +487,30 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
               )}
 
               {/* Step: Direction */}
-              {currentStep === "direction" && (
+              {currentStep === "direction" && isHubTransferType && (
                 <div>
                   <StepHeading title="Which direction?" subtitle="Where are you heading?" />
                   <div className="grid sm:grid-cols-2 gap-4 lg:gap-6">
-                    {[
-                      { value: "TO_AIRPORT", label: "To airport", desc: "Home or hotel → airport" },
-                      { value: "FROM_AIRPORT", label: "From airport", desc: "Airport → your destination" },
-                    ].map((opt) => (
+                    {getDirectionOptions(form.serviceType).map((opt) => (
                       <button
                         key={opt.value}
                         type="button"
                         onClick={() => selectDirection(opt.value)}
                         className={bigCard(form.tripType === opt.value)}
                       >
-                        <Plane
-                          className={`w-10 h-10 text-brand mb-4 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
-                        />
+                        {form.serviceType === "FERRY_PORT_TRANSFER" ? (
+                          <Ship
+                            className={`w-10 h-10 text-brand mb-4 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
+                          />
+                        ) : form.serviceType === "CRUISE_TERMINAL_TRANSFER" ? (
+                          <Anchor
+                            className={`w-10 h-10 text-brand mb-4 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
+                          />
+                        ) : (
+                          <Plane
+                            className={`w-10 h-10 text-brand mb-4 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
+                          />
+                        )}
                         <div className="text-xl font-bold dark:text-white">{opt.label}</div>
                         <div className="text-sm text-muted mt-2">{opt.desc}</div>
                       </button>
@@ -475,29 +525,29 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                   <StepHeading
                     title="Where are you travelling?"
                     subtitle={
-                      isAirportTransfer
-                        ? "Select your airport and addresses"
+                      isHubTransferType
+                        ? `Select your ${getHubPickerLabel(form.serviceType).toLowerCase()} and addresses`
                         : "Enter your pickup and drop-off locations"
                     }
                   />
                   <div className="grid lg:grid-cols-2 gap-6">
-                    {isAirportTransfer && (
+                    {isHubTransferType && (
                       <div className="lg:col-span-2">
-                        <label className={labelClass}>Airport</label>
+                        <label className={labelClass}>{getHubPickerLabel(form.serviceType)}</label>
                         <select
                           value={form.airportCode}
                           onChange={(e) => update("airportCode", e.target.value)}
                           className={inputClass}
                         >
-                          {AIRPORTS.map((a) => (
-                            <option key={a.code} value={a.code}>
-                              {a.name} ({a.code}) — {a.city}
+                          {hubList.map((hub) => (
+                            <option key={hub.code} value={hub.code}>
+                              {hub.name} ({hub.code}) — {hub.city}
                             </option>
                           ))}
                         </select>
                       </div>
                     )}
-                    {isReturn && isAirportTransfer ? (
+                    {isReturn && isHubTransferType ? (
                       <div className="lg:col-span-2">
                         <label className={labelClass}>Home / pickup address</label>
                         <input
@@ -509,7 +559,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                           className={inputClass}
                         />
                         <p className="text-xs text-muted mt-2">
-                          Outbound: home → {selectedAirport?.name}. Return: {selectedAirport?.name} → home.
+                          Outbound: home → {selectedHub?.name}. Return: {selectedHub?.name} → home.
                         </p>
                       </div>
                     ) : (
@@ -838,21 +888,22 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
             <div className="flex justify-between">
               <span className="text-muted">Service</span>
               <span className="font-medium dark:text-white">
-                {isAirportTransfer ? "Airport transfer" : "Pre-booked"}
+                {getServiceLabel(form.serviceType)}
               </span>
             </div>
-            {form.journeyType === "SINGLE" && isAirportTransfer && form.tripType && (
+            {form.journeyType === "SINGLE" && isHubTransferType && form.tripType && (
               <div className="flex justify-between">
                 <span className="text-muted">Direction</span>
                 <span className="font-medium dark:text-white">
-                  {form.tripType === "TO_AIRPORT" ? "To airport" : "From airport"}
+                  {getDirectionOptions(form.serviceType).find((o) => o.value === form.tripType)?.label ??
+                    form.tripType}
                 </span>
               </div>
             )}
-            {isAirportTransfer && selectedAirport && !["journey", "service"].includes(currentStep) && (
+            {isHubTransferType && selectedHub && !["journey", "service"].includes(currentStep) && (
               <div className="flex justify-between">
-                <span className="text-muted">Airport</span>
-                <span className="font-medium dark:text-white">{selectedAirport.code}</span>
+                <span className="text-muted">{getHubPickerLabel(form.serviceType)}</span>
+                <span className="font-medium dark:text-white">{selectedHub.code}</span>
               </div>
             )}
             {selectedDriver && !["journey", "service", "direction", "route", "schedule"].includes(currentStep) && (

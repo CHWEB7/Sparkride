@@ -31,6 +31,8 @@ export const VEHICLE_PRICES: Record<string, number> = {
   EXECUTIVE: 85,
 };
 
+import { usesHubPricing } from "./hubs";
+
 export function estimatePrice(
   vehicleType: string,
   tripType: string,
@@ -38,11 +40,11 @@ export function estimatePrice(
   serviceType: string = "AIRPORT_TRANSFER"
 ): number {
   const base = VEHICLE_PRICES[vehicleType] ?? 45;
-  const isAirport = serviceType === "AIRPORT_TRANSFER";
-  const outbound = isAirport && tripType === "FROM_AIRPORT" ? base + 5 : base;
+  const isHub = usesHubPricing(serviceType);
+  const outbound = isHub && tripType === "FROM_AIRPORT" ? base + 5 : base;
 
   if (journeyType === "RETURN") {
-    const inbound = isAirport ? base + 5 : base;
+    const inbound = isHub ? base + 5 : base;
     return Math.round((outbound + inbound) * 0.9);
   }
 

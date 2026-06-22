@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
-import { getAirport, estimatePrice } from "@/lib/airports";
+import { getHub, formatHubLabel, isHubTransfer } from "@/lib/hubs";
+import { estimatePrice } from "@/lib/airports";
 import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
 
@@ -40,11 +41,13 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
-    const isAirport = data.serviceType === "AIRPORT_TRANSFER";
-    const airport = isAirport && data.airportCode ? getAirport(data.airportCode) : null;
+    const hub =
+      isHubTransfer(data.serviceType) && data.airportCode
+        ? getHub(data.airportCode, data.serviceType)
+        : null;
 
-    if (isAirport && !airport) {
-      return json({ error: "Invalid airport" }, 400);
+    if (isHubTransfer(data.serviceType) && !hub) {
+      return json({ error: "Invalid destination" }, 400);
     }
 
     const pickupDate = new Date(`${data.pickupDate}T${data.pickupTime}:00`);
@@ -78,8 +81,8 @@ export async function POST(req: NextRequest) {
         serviceType: data.serviceType,
         journeyType: data.journeyType,
         tripType: data.tripType,
-        airportCode: airport?.code ?? null,
-        airportName: airport?.name ?? null,
+        airportCode: hub?.code ?? null,
+        airportName: hub?.name ?? null,
         pickupAddress: data.pickupAddress,
         dropoffAddress: data.dropoffAddress,
         pickupDate,
@@ -113,7 +116,7 @@ export async function POST(req: NextRequest) {
           serviceType: data.serviceType,
           journeyType: data.journeyType,
           tripType: data.tripType,
-          airportCode: airport?.code ?? null,
+          airportCode: hub?.code ?? null,
           pickupAddress: data.pickupAddress,
           dropoffAddress: data.dropoffAddress,
           passengers: data.passengers,

@@ -97,6 +97,8 @@ model Booking {
 
 enum ServiceType {
   AIRPORT_TRANSFER
+  FERRY_PORT_TRANSFER
+  CRUISE_TERMINAL_TRANSFER
   PRE_BOOKED
 }
 

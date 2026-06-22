@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { AIRPORTS, VEHICLE_PRICES } from "@/lib/airports";
+import { CRUISE_TERMINALS } from "@/lib/cruise-terminals";
+import { FERRY_PORTS } from "@/lib/ferry-ports";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +17,8 @@ export async function GET() {
   return NextResponse.json(
     {
       airports: AIRPORTS,
+      ferryPorts: FERRY_PORTS,
+      cruiseTerminals: CRUISE_TERMINALS,
       vehiclePrices: VEHICLE_PRICES,
       vehicleTypes: [
         { value: "SALOON", label: "Saloon", desc: "Up to 3 passengers" },
