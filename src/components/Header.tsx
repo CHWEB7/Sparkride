@@ -9,12 +9,17 @@ import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { SiteContainer } from "./SiteContainer";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
+import { BackToTop } from "./BackToTop";
 import { useTheme } from "./ThemeProvider";
+
+const FADE_START = 48;
+const FADE_END = 180;
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const { theme } = useTheme();
-  const overlayLightText = overlay && theme === "dark" && !menuOpen;
+  const overlayLightText = overlay && theme === "dark" && !menuOpen && scrollY < FADE_START;
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -23,24 +28,41 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   function closeMenu() {
     setMenuOpen(false);
   }
 
+  const headerOpacity = menuOpen
+    ? 1
+    : Math.max(0, Math.min(1, 1 - (scrollY - FADE_START) / (FADE_END - FADE_START)));
+
+  const headerHidden = !menuOpen && headerOpacity <= 0.02;
+  const showBackToTop = !menuOpen && scrollY > FADE_END;
+
   return (
     <>
-      <header
+      <motion.header
+        style={{ opacity: headerOpacity }}
         className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+          headerHidden ? "pointer-events-none" : ""
+        } ${
           menuOpen
             ? "bg-white dark:bg-dark shadow-md"
-            : overlay
+            : overlay && scrollY < FADE_START
               ? "bg-transparent shadow-none"
               : "bg-app-bg/90 dark:bg-dark/90 backdrop-blur-md shadow-sm dark:shadow-none"
         }`}
       >
-        <SiteContainer className="h-16 flex items-center justify-between">
+        <SiteContainer className="h-[4.5rem] sm:h-20 flex items-center justify-between">
           <div onClick={menuOpen ? closeMenu : undefined}>
-            <Logo href="/" light={overlayLightText} />
+            <Logo href="/" size="lg" light={overlayLightText} />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -102,7 +124,9 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         </SiteContainer>
 
         <AnimatePresence>{menuOpen && <MegaMenu onClose={closeMenu} />}</AnimatePresence>
-      </header>
+      </motion.header>
+
+      <BackToTop visible={showBackToTop} />
 
       <AnimatePresence>
         {menuOpen && (
@@ -114,7 +138,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             transition={{ duration: 0.25 }}
             aria-label="Close menu"
             onClick={closeMenu}
-            className="fixed top-16 left-0 right-0 bottom-0 z-40 bg-dark/15 dark:bg-black/35 backdrop-blur-[2px]"
+            className="fixed top-20 left-0 right-0 bottom-0 z-40 bg-dark/15 dark:bg-black/35 backdrop-blur-[2px]"
           />
         )}
       </AnimatePresence>

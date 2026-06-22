@@ -7,9 +7,10 @@ import {
   ChevronRight,
   Plane,
   Car,
-  Building2,
+  UserCircle,
   HelpCircle,
   Briefcase,
+  User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AccountMegaPanel } from "./customer/AccountMegaPanel";
@@ -126,11 +127,6 @@ const NAV_TABS: NavTab[] = [
     ],
   },
   {
-    id: "account",
-    label: "Account",
-    columns: [],
-  },
-  {
     id: "support",
     label: "Support",
     columns: [
@@ -154,15 +150,20 @@ const NAV_TABS: NavTab[] = [
   },
 ];
 
-const SIDEBAR_ITEMS: {
-  href: string;
+type SidebarItem = {
+  id: string;
+  href?: string;
   icon: LucideIcon;
   title: string;
   desc: string;
   iconBg: string;
   iconColor: string;
-}[] = [
+  panel?: "account";
+};
+
+const SIDEBAR_ITEMS: SidebarItem[] = [
   {
+    id: "book",
     href: "/book",
     icon: Plane,
     title: "Book a transfer",
@@ -171,6 +172,7 @@ const SIDEBAR_ITEMS: {
     iconColor: "text-brand",
   },
   {
+    id: "drive",
     href: "/drive",
     icon: Car,
     title: "Become a driver",
@@ -179,14 +181,16 @@ const SIDEBAR_ITEMS: {
     iconColor: "text-emerald-600",
   },
   {
-    href: "/corporate",
-    icon: Building2,
-    title: "Business travel",
-    desc: "Accounts for your team",
+    id: "customer-portal",
+    href: "/my-bookings",
+    icon: UserCircle,
+    title: "Customer portal",
+    desc: "View and manage bookings",
     iconBg: "bg-violet-500/15",
     iconColor: "text-violet-600",
   },
   {
+    id: "driver-portal",
     href: "/driver/login",
     icon: Briefcase,
     title: "Driver portal",
@@ -195,12 +199,13 @@ const SIDEBAR_ITEMS: {
     iconColor: "text-amber-600",
   },
   {
-    href: "/help",
-    icon: HelpCircle,
-    title: "Get support",
-    desc: "We're here to help 24/7",
+    id: "account",
+    icon: User,
+    title: "Account",
+    desc: "Sign in, profile & settings",
     iconBg: "bg-sky-500/15",
     iconColor: "text-sky-600",
+    panel: "account",
   },
 ];
 
@@ -210,7 +215,16 @@ type MegaMenuProps = {
 
 export function MegaMenu({ onClose }: MegaMenuProps) {
   const [activeTab, setActiveTab] = useState(NAV_TABS[0].id);
+  const [showAccountPanel, setShowAccountPanel] = useState(false);
   const active = NAV_TABS.find((t) => t.id === activeTab) ?? NAV_TABS[0];
+
+  function openTabs() {
+    setShowAccountPanel(false);
+  }
+
+  function openAccountPanel() {
+    setShowAccountPanel(true);
+  }
 
   return (
     <motion.div
@@ -228,107 +242,108 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
           className="max-w-7xl mx-auto px-4 sm:px-6 pt-5"
         >
           <div className="grid lg:grid-cols-[1fr_300px] gap-4">
-            {/* Main panel */}
             <div className="bg-booking-bg dark:bg-dark-elevated rounded-2xl p-5 sm:p-6 shadow-sm">
-              {/* Tab row */}
-              <div className="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-gray-200/60 dark:border-white/10">
-                {NAV_TABS.map((tab) => (
+              {showAccountPanel ? (
+                <>
                   <button
-                    key={tab.id}
                     type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium tracking-[-0.01em] transition-all ${
-                      activeTab === tab.id
-                        ? "bg-white dark:bg-dark text-dark dark:text-white shadow-sm"
-                        : "text-muted hover:text-dark dark:hover:text-white"
-                    }`}
+                    onClick={openTabs}
+                    className="mb-5 text-sm font-medium text-brand hover:underline"
                   >
-                    {tab.label}
+                    ← Back to menu
                   </button>
-                ))}
-              </div>
+                  <AccountMegaPanel onClose={onClose} />
+                </>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-gray-200/60 dark:border-white/10">
+                    {NAV_TABS.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium tracking-[-0.01em] transition-all ${
+                          activeTab === tab.id
+                            ? "bg-white dark:bg-dark text-dark dark:text-white shadow-sm"
+                            : "text-muted hover:text-dark dark:hover:text-white"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
 
-              {/* Link columns */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className={
-                    activeTab === "account"
-                      ? ""
-                      : "grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
-                  }
-                >
-                  {activeTab === "account" ? (
-                    <AccountMegaPanel onClose={onClose} />
-                  ) : (
-                    active.columns.map((col, i) => (
-                      <div key={i}>
-                        {col.title && (
-                          <p className="text-xs font-medium text-muted uppercase tracking-wide mb-3">
-                            {col.title}
-                          </p>
-                        )}
-                        <ul className="space-y-2.5">
-                          {col.links.map((link) => (
-                            <li key={link.label}>
-                              <Link
-                                href={link.href}
-                                onClick={onClose}
-                                className="text-sm font-medium text-dark/80 dark:text-gray-200 hover:text-brand dark:hover:text-brand-end tracking-[-0.01em] transition-colors"
-                              >
-                                {link.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))
-                  )}
-                </motion.div>
-              </AnimatePresence>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeTab}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2 }}
+                      className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                    >
+                      {active.columns.map((col, i) => (
+                        <div key={i}>
+                          {col.title && (
+                            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-3">
+                              {col.title}
+                            </p>
+                          )}
+                          <ul className="space-y-2.5">
+                            {col.links.map((link) => (
+                              <li key={link.label}>
+                                <Link
+                                  href={link.href}
+                                  onClick={onClose}
+                                  className="text-sm font-medium text-dark/80 dark:text-gray-200 hover:text-brand dark:hover:text-brand-end tracking-[-0.01em] transition-colors"
+                                >
+                                  {link.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
+                </>
+              )}
             </div>
 
-            {/* Sidebar */}
             <div className="bg-[#e8eaee] dark:bg-dark-elevated/80 rounded-2xl p-4 shadow-sm">
               <ul className="space-y-1">
                 {SIDEBAR_ITEMS.map((item, i) => (
                   <motion.li
-                    key={item.href + item.title}
+                    key={item.id}
                     initial={{ opacity: 0, x: 12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.12 + i * 0.04 }}
                   >
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group"
-                    >
-                      <div
-                        className={`w-10 h-10 rounded-full ${item.iconBg} flex items-center justify-center shrink-0`}
+                    {item.panel === "account" ? (
+                      <button
+                        type="button"
+                        onClick={openAccountPanel}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group text-left ${
+                          showAccountPanel ? "bg-white/60 dark:bg-white/5" : ""
+                        }`}
                       >
-                        <item.icon className={`w-5 h-5 ${item.iconColor}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-dark dark:text-white tracking-[-0.01em]">
-                          {item.title}
-                        </div>
-                        <div className="text-xs text-muted tracking-[-0.01em] truncate">
-                          {item.desc}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted group-hover:text-brand transition-colors shrink-0" />
-                    </Link>
+                        <SidebarItemContent item={item} />
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href!}
+                        onClick={onClose}
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group"
+                      >
+                        <SidebarItemContent item={item} />
+                      </Link>
+                    )}
                   </motion.li>
                 ))}
               </ul>
             </div>
           </div>
 
-          {/* Footer row */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -362,5 +377,26 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
         </motion.div>
       </div>
     </motion.div>
+  );
+}
+
+function SidebarItemContent({ item }: { item: SidebarItem }) {
+  return (
+    <>
+      <div
+        className={`w-10 h-10 rounded-full ${item.iconBg} flex items-center justify-center shrink-0`}
+      >
+        <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-dark dark:text-white tracking-[-0.01em]">
+          {item.title}
+        </div>
+        <div className="text-xs text-muted tracking-[-0.01em] truncate">
+          {item.desc}
+        </div>
+      </div>
+      <ChevronRight className="w-4 h-4 text-muted group-hover:text-brand transition-colors shrink-0" />
+    </>
   );
 }
