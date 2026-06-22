@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -9,8 +10,8 @@ import {
   CalendarClock,
   History,
   Loader2,
-  Plus,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { CustomerProfile } from "@/lib/customer";
 import { BookingForm } from "@/components/BookingForm";
 import { SavedDetailsManager } from "@/components/customer/SavedDetailsManager";
@@ -127,32 +128,26 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4 lg:gap-5">
-        <PortalCard
-          icon={Plus}
-          title="Book a new ride"
-          desc="Start a fresh booking with live pricing"
-          onClick={() => startBooking()}
-          accent="brand"
-        />
-        <PortalCard
+      <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-3 gap-4 lg:gap-4 lg:min-h-[420px]">
+        <BookHeroTile onClick={() => startBooking()} />
+        <PortalCompactCard
           icon={CalendarClock}
           title="Manage existing trips"
-          desc="View and track upcoming bookings"
+          desc="Track upcoming bookings"
           onClick={() => setView("active")}
           accent="sky"
         />
-        <PortalCard
+        <PortalCompactCard
           icon={History}
           title="Previous trips"
-          desc="Browse completed and cancelled journeys"
+          desc="Completed & cancelled"
           onClick={() => setView("history")}
           accent="violet"
         />
-        <PortalCard
+        <PortalCompactCard
           icon={Bookmark}
           title="Saved trip details"
-          desc="Edit, delete, or reuse saved routes"
+          desc="Reuse saved routes"
           onClick={() => setView("saved")}
           accent="emerald"
         />
@@ -178,41 +173,76 @@ function PortalNav({ title, onBack }: { title: string; onBack: () => void }) {
   );
 }
 
-function PortalCard({
+function BookHeroTile({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative min-h-[300px] sm:min-h-[340px] lg:min-h-0 lg:row-span-3 rounded-3xl overflow-hidden text-left group shadow-md hover:shadow-xl transition-shadow"
+    >
+      <Image
+        src="/images/portal-book-ride.jpg"
+        alt=""
+        fill
+        className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+        sizes="(max-width: 1024px) 100vw, 55vw"
+        priority
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/15" />
+      <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-2">
+          New booking
+        </p>
+        <h3 className="text-2xl sm:text-3xl font-semibold text-white tracking-[-0.02em]">
+          Book a new ride
+        </h3>
+        <p className="mt-2 text-sm text-white/80 max-w-sm leading-relaxed">
+          Start a fresh airport transfer with live pricing and driver choice.
+        </p>
+        <span className="mt-5 inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-full bg-white text-dark text-sm font-semibold group-hover:gap-3 transition-all">
+          Get started
+          <ArrowRight className="w-4 h-4" />
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function PortalCompactCard({
   icon: Icon,
   title,
   desc,
   onClick,
   accent,
 }: {
-  icon: typeof Plus;
+  icon: LucideIcon;
   title: string;
   desc: string;
   onClick: () => void;
-  accent: "brand" | "sky" | "violet" | "emerald";
+  accent: "sky" | "violet" | "emerald";
 }) {
   const accents = {
-    brand: "bg-brand/15 text-brand",
-    sky: "bg-sky-500/15 text-sky-600",
-    violet: "bg-violet-500/15 text-violet-600",
-    emerald: "bg-emerald-500/15 text-emerald-600",
+    sky: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+    violet: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+    emerald: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   };
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="text-left p-6 sm:p-7 rounded-2xl bg-booking-bg dark:bg-dark-elevated hover:shadow-md transition-all group"
+      className="flex items-center gap-4 p-5 sm:p-6 rounded-2xl bg-booking-bg dark:bg-dark-elevated hover:shadow-md transition-all group text-left lg:min-h-0"
     >
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accents[accent]}`}>
-        <Icon className="w-6 h-6" />
+      <div
+        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accents[accent]}`}
+      >
+        <Icon className="w-5 h-5" />
       </div>
-      <h3 className="mt-4 text-lg font-semibold dark:text-white">{title}</h3>
-      <p className="mt-1.5 text-sm text-muted leading-relaxed">{desc}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand group-hover:gap-2 transition-all">
-        Open
-        <ArrowRight className="w-4 h-4" />
-      </span>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-base font-semibold dark:text-white">{title}</h3>
+        <p className="text-sm text-muted mt-0.5 truncate">{desc}</p>
+      </div>
+      <ArrowRight className="w-4 h-4 text-muted group-hover:text-brand shrink-0 transition-colors" />
     </button>
   );
 }

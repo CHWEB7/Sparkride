@@ -60,9 +60,9 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               : "bg-app-bg/90 dark:bg-dark/90 backdrop-blur-md shadow-sm dark:shadow-none"
         }`}
       >
-        <SiteContainer className="h-[4.75rem] sm:h-[5.25rem] flex items-center justify-between">
-          <div onClick={menuOpen ? closeMenu : undefined}>
-            <Logo href="/" size="xl" light={overlayLightText} />
+        <SiteContainer className="h-16 sm:h-[4.25rem] flex items-center justify-between">
+          <div className="flex items-center h-11" onClick={menuOpen ? closeMenu : undefined}>
+            <Logo href="/" size="header" light={overlayLightText} className="h-11 flex items-center" />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -138,7 +138,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             transition={{ duration: 0.25 }}
             aria-label="Close menu"
             onClick={closeMenu}
-            className="fixed top-[5.25rem] left-0 right-0 bottom-0 z-40 bg-dark/15 dark:bg-black/35 backdrop-blur-[2px]"
+            className="fixed top-16 sm:top-[4.25rem] left-0 right-0 bottom-0 z-40 bg-dark/15 dark:bg-black/35 backdrop-blur-[2px]"
           />
         )}
       </AnimatePresence>
