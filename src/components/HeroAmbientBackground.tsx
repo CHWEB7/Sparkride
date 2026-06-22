@@ -19,10 +19,10 @@ function createParticles(count: number, width: number, height: number): Particle
     y: Math.random() * height,
     size: Math.random() * 2.2 + 0.4,
     opacity: Math.random() * 0.55 + 0.15,
-    speedX: (Math.random() - 0.5) * 0.18,
-    speedY: (Math.random() - 0.5) * 0.12,
+    speedX: (Math.random() - 0.5) * 0.38,
+    speedY: (Math.random() - 0.5) * 0.28,
     twinkle: Math.random() * Math.PI * 2,
-    twinkleSpeed: Math.random() * 0.02 + 0.008,
+    twinkleSpeed: Math.random() * 0.04 + 0.018,
   }));
 }
 
@@ -47,7 +47,7 @@ export function HeroAmbientBackground() {
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       particlesRef.current = createParticles(
-        Math.floor((width * height) / 9000),
+        Math.floor((width * height) / 7500),
         width,
         height
       );
