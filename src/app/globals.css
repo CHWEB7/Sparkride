@@ -12,8 +12,8 @@
   --color-dark: #191c23;
   --color-dark-elevated: #22262f;
   --color-muted: #6b7280;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 }
 
 * {
@@ -27,12 +27,11 @@ html {
 body {
   font-family: var(--font-sans);
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--color-dark);
   background: #f9fafc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "cv11", "ss01";
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -40,7 +39,9 @@ h1,
 h2,
 h3,
 h4 {
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 .tracking-bolt-display {
