@@ -96,33 +96,31 @@ export function FaqSection() {
   return (
     <section id="how-it-works" className="py-20 sm:py-24 bg-app-bg dark:bg-dark">
       <SiteContainer>
-        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-12 lg:gap-16 xl:gap-20 items-start">
-          <div className="lg:sticky lg:top-28">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
-              FAQ
-            </p>
-            <h2 className="font-display mt-3 text-4xl sm:text-5xl dark:text-white leading-[1.05]">
-              Questions answered
-            </h2>
-            <p className="mt-5 text-lg text-muted leading-relaxed max-w-md">
-              Everything you need to know about booking, pricing, and travelling
-              with Sparkride&apos;s electric fleet.
-            </p>
-          </div>
+        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
+            FAQ
+          </p>
+          <h2 className="font-display mt-3 text-4xl sm:text-5xl dark:text-white leading-[1.05]">
+            Questions answered
+          </h2>
+          <p className="mt-5 text-lg text-muted leading-relaxed">
+            Everything you need to know about booking, pricing, and travelling
+            with Sparkride&apos;s electric fleet.
+          </p>
+        </div>
 
-          <div className="rounded-[28px] border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated px-5 sm:px-7 shadow-[0_24px_60px_-32px_rgba(25,28,35,0.18)]">
-            {FAQS.map((item, index) => (
-              <FaqItem
-                key={item.question}
-                question={item.question}
-                answer={item.answer}
-                isOpen={openIndex === index}
-                onToggle={() =>
-                  setOpenIndex((current) => (current === index ? null : index))
-                }
-              />
-            ))}
-          </div>
+        <div className="max-w-3xl mx-auto rounded-[28px] border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated px-5 sm:px-7 shadow-[0_24px_60px_-32px_rgba(25,28,35,0.18)]">
+          {FAQS.map((item, index) => (
+            <FaqItem
+              key={item.question}
+              question={item.question}
+              answer={item.answer}
+              isOpen={openIndex === index}
+              onToggle={() =>
+                setOpenIndex((current) => (current === index ? null : index))
+              }
+            />
+          ))}
         </div>
       </SiteContainer>
     </section>

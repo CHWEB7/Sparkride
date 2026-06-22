@@ -82,13 +82,19 @@ export function RollingStat({
         revealed ? "opacity-100" : "opacity-0"
       } ${className}`}
     >
-      <p
-        className="font-display text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-dark dark:text-white leading-none whitespace-nowrap tabular-nums"
+      <div
+        className="min-h-[3.25rem] sm:min-h-[3.75rem] lg:min-h-[4rem] flex items-center"
         aria-label={finalText}
       >
-        {formatNumber(display)}
-        {unit ? <span>{unit}</span> : null}
-      </p>
+        <div className="inline-flex items-baseline gap-2 whitespace-nowrap font-display text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-dark dark:text-white leading-none">
+          <span
+            className={`tabular-nums ${unit ? "inline-block min-w-[5.5rem] sm:min-w-[6.5rem] lg:min-w-[7rem]" : ""}`}
+          >
+            {formatNumber(display)}
+          </span>
+          {unit ? <span>{unit}</span> : null}
+        </div>
+      </div>
       <p className="mt-3 text-sm sm:text-[15px] text-muted leading-relaxed max-w-[14rem]">
         {label}
       </p>
