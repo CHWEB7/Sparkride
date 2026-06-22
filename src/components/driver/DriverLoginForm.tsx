@@ -87,9 +87,19 @@ export function DriverLoginForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-gray-500 text-xs">
-          Demo: driver@sparkride.co.uk / driver123
-        </p>
+        <div className="mt-6 space-y-2 text-center text-gray-500 text-xs">
+          <p>
+            <span className="text-gray-400">Test driver:</span> test@sparkride.co.uk /{" "}
+            TestDriver2024!
+          </p>
+          <p>
+            <span className="text-gray-400">Lee & Darren:</span> lee@ or darren@sparkride.co.uk /{" "}
+            driver123
+          </p>
+          <p>
+            <span className="text-gray-400">Legacy demo:</span> driver@sparkride.co.uk / driver123
+          </p>
+        </div>
       </div>
     </div>
   );
