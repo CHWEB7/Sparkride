@@ -28,10 +28,11 @@ const NAV_TABS: NavTab[] = [
     columns: [
       {
         links: [
-          { label: "Airport transfers", href: "/book" },
-          { label: "Return journeys", href: "/book" },
-          { label: "Pre-booked hire", href: "/book" },
-          { label: "Corporate travel", href: "/corporate" },
+          { label: "Airport transfers", href: "/services/airport-transfers" },
+          { label: "Ferry ports", href: "/services/ferry-ports" },
+          { label: "Theme parks", href: "/services/theme-parks" },
+          { label: "Pre-booked hire", href: "/services/private-hire" },
+          { label: "Corporate travel", href: "/services/corporate" },
         ],
       },
       {

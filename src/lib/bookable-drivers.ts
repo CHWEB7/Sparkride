@@ -1,4 +1,5 @@
 import { VehicleType } from "@prisma/client";
+import { TEST_DRIVER_EMAIL } from "@/lib/driver-access";
 
 export type BookableDriver = {
   id: string;
@@ -39,7 +40,7 @@ export const BOOKABLE_DRIVER_SEEDS: DriverSeed[] = [
     maxSeats: 4,
   },
   {
-    email: "test@sparkride.co.uk",
+    email: TEST_DRIVER_EMAIL,
     name: "Test Driver",
     phone: "07700 900199",
     vehicleLabel: "Saloon (4 seater)",

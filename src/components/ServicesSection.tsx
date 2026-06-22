@@ -1,63 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Building2, Car, ChevronLeft, ChevronRight, Plane } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { SiteContainer } from "@/components/SiteContainer";
+import { SERVICES } from "@/lib/services";
 
-type Service = {
-  id: string;
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-  icon: LucideIcon;
-  cardClass: string;
-  buttonClass: string;
-  iconWrapClass: string;
-};
-
-const SERVICES: Service[] = [
-  {
-    id: "airport-transfers",
-    title: "Airport transfers",
-    description: "Fixed-price rides to and from all major UK airports. Professional drivers, flight tracking, and 24/7 availability.",
-    href: "/book",
-    cta: "Book a transfer",
-    icon: Plane,
-    cardClass:
-      "bg-dark text-white border border-white/10 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]",
-    buttonClass: "bg-brand-gradient text-white hover:opacity-90",
-    iconWrapClass: "bg-white/10 text-brand-end",
-  },
-  {
-    id: "private-hire",
-    title: "Private hire",
-    description: "Pre-booked journeys for nights out, events, and local travel. Saloon, estate, MPV and executive vehicles.",
-    href: "/book",
-    cta: "Reserve a ride",
-    icon: Car,
-    cardClass:
-      "bg-brand-gradient text-white shadow-[0_24px_60px_-20px_rgba(106,104,222,0.55)]",
-    buttonClass: "bg-white text-dark hover:bg-white/90",
-    iconWrapClass: "bg-white/20 text-white",
-  },
-  {
-    id: "corporate",
-    title: "Corporate",
-    description: "Account travel for teams and clients. Centralised billing, priority booking, and dedicated support for your business.",
-    href: "/book",
-    cta: "Corporate travel",
-    icon: Building2,
-    cardClass:
-      "bg-white dark:bg-dark-elevated text-dark dark:text-white border border-black/5 dark:border-white/10 shadow-[0_24px_60px_-24px_rgba(106,104,222,0.25)]",
-    buttonClass:
-      "bg-dark dark:bg-white text-white dark:text-dark hover:opacity-90",
-    iconWrapClass: "bg-brand-light dark:bg-brand/10 text-brand",
-  },
-];
-
-const CARD_WIDTH = 320;
 const CARD_GAP = 20;
 
 export function ServicesSection() {
@@ -86,7 +35,10 @@ export function ServicesSection() {
     (direction: "left" | "right") => {
       const el = scrollerRef.current;
       if (!el) return;
-      const distance = (CARD_WIDTH + CARD_GAP) * (direction === "left" ? -1 : 1);
+      const card = el.querySelector<HTMLElement>("[data-service-card]");
+      if (!card) return;
+      const distance =
+        (card.offsetWidth + CARD_GAP) * (direction === "left" ? -1 : 1);
       el.scrollBy({ left: distance, behavior: "smooth" });
       window.setTimeout(updateScrollState, 320);
     },
@@ -94,62 +46,60 @@ export function ServicesSection() {
   );
 
   return (
-    <section id="services" className="py-24 bg-app-bg dark:bg-dark overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12">
+    <section id="services" className="py-20 sm:py-24 bg-app-bg dark:bg-dark overflow-hidden">
+      <SiteContainer className="mb-10 sm:mb-12">
+        <div className="text-center max-w-2xl mx-auto">
           <h2 className="text-4xl sm:text-5xl font-semibold tracking-[-0.029em] dark:text-white">
             Our services
           </h2>
-          <p className="mt-4 text-lg text-muted">
-            Premium private hire from Castleford — airport runs, local journeys, and business travel.
+          <p className="mt-4 text-base sm:text-lg text-muted leading-relaxed">
+            Premium private hire from Castleford — airports, ferry ports, theme parks, and business travel.
           </p>
         </div>
+      </SiteContainer>
 
-        <div
-          ref={scrollerRef}
-          onScroll={updateScrollState}
-          className="flex gap-5 overflow-x-auto px-1 sm:px-0 pb-4 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-center"
-        >
-          {SERVICES.map((service) => (
-            <article
-              key={service.id}
-              className={`group relative flex w-[min(82vw,320px)] shrink-0 snap-center flex-col rounded-[28px] p-7 min-h-[480px] transition-transform duration-300 hover:-translate-y-1 ${service.cardClass}`}
-            >
-              <div className="relative z-10">
-                <h3 className="text-[1.65rem] font-semibold leading-tight tracking-[-0.02em]">
-                  {service.title}
-                </h3>
-                <p className="mt-3 text-[0.95rem] leading-relaxed opacity-85">
-                  {service.description}
-                </p>
-                <Link
-                  href={service.href}
-                  className={`mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-opacity ${service.buttonClass}`}
-                >
-                  {service.cta}
-                </Link>
-              </div>
+      <div
+        ref={scrollerRef}
+        onScroll={updateScrollState}
+        className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-4"
+      >
+        {SERVICES.map((service) => (
+          <article
+            key={service.id}
+            data-service-card
+            className="group relative flex w-[min(82vw,360px)] sm:w-[380px] lg:w-[400px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[32px] min-h-[500px] sm:min-h-[540px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]"
+          >
+            <Image
+              src={service.image}
+              alt=""
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes="(max-width: 640px) 82vw, 400px"
+              priority={service.id === "airport-transfers"}
+            />
 
-              <div className="mt-auto pt-10 relative z-10 flex justify-center">
-                <div
-                  className={`flex h-36 w-36 items-center justify-center rounded-[24px] ${service.iconWrapClass}`}
-                >
-                  <service.icon className="h-16 w-16" strokeWidth={1.25} />
-                </div>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/55" />
 
-              <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-40 rounded-b-[28px] opacity-30"
-                style={{
-                  background:
-                    "radial-gradient(ellipse 80% 100% at 50% 100%, rgba(255,255,255,0.35) 0%, transparent 70%)",
-                }}
-              />
-            </article>
-          ))}
-        </div>
+            <div className="relative z-10 flex flex-col p-7 sm:p-8">
+              <h3 className="text-[1.75rem] sm:text-[1.9rem] font-semibold leading-tight tracking-[-0.02em] text-white">
+                {service.title}
+              </h3>
+              <p className="mt-3 max-w-[30ch] text-[0.95rem] sm:text-base leading-relaxed text-white/85">
+                {service.teaser}
+              </p>
+              <Link
+                href={service.href}
+                className={`mt-6 inline-flex w-fit items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-opacity ${service.buttonClass}`}
+              >
+                {service.cta}
+              </Link>
+            </div>
+          </article>
+        ))}
+      </div>
 
-        <div className="mt-8 flex justify-center gap-3 sm:mt-10">
+      <SiteContainer className="mt-8 sm:mt-10">
+        <div className="flex justify-center gap-3">
           <button
             type="button"
             onClick={() => scrollByCards("left")}
@@ -169,7 +119,7 @@ export function ServicesSection() {
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
-      </div>
+      </SiteContainer>
     </section>
   );
 }
