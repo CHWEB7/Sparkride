@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { DEFAULT_AIRPORTS } from "../lib/airports";
 import { createBooking, fetchMeta } from "../lib/api";
+import { fetchCustomerProfile } from "../lib/customer-auth";
 import {
   getSteps,
   INITIAL_FORM,
@@ -48,6 +49,17 @@ export function BookingWizard() {
     fetchMeta()
       .then((meta) => {
         if (meta.airports?.length) setAirports(meta.airports);
+      })
+      .catch(() => {});
+
+    fetchCustomerProfile()
+      .then((profile) => {
+        setForm((prev) => ({
+          ...prev,
+          customerName: profile.name ?? prev.customerName,
+          customerEmail: profile.email,
+          customerPhone: profile.phone ?? prev.customerPhone,
+        }));
       })
       .catch(() => {});
   }, []);

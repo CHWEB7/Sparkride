@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
@@ -6,6 +6,8 @@ import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { CheckCircle, Calendar, MapPin, Car, User, ArrowLeftRight } from "lucide-react";
 import { format } from "date-fns";
+import { getCustomerUserFromCookies } from "@/lib/customer-auth";
+import { ensureCustomer } from "@/lib/customer";
 
 export default async function BookingConfirmationPage({
   params,
@@ -13,8 +15,12 @@ export default async function BookingConfirmationPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
+  const user = await getCustomerUserFromCookies();
+  if (!user) redirect(`/login?redirect=/booking/${reference}`);
+
+  const customer = await ensureCustomer(user);
   const booking = await prisma.booking.findUnique({ where: { reference } });
-  if (!booking) notFound();
+  if (!booking || booking.customerId !== customer.id) notFound();
 
   const isReturn = booking.journeyType === "RETURN";
   const isAirport = booking.serviceType === "AIRPORT_TRANSFER";

@@ -9,6 +9,7 @@ import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { SiteContainer } from "./SiteContainer";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
+import { CustomerNav } from "./customer/CustomerNav";
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -74,6 +75,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               </>
             ) : (
               <>
+                <CustomerNav />
                 <ThemeToggle light={overlay} />
                 <AnimatedGradientButton href="/book" className="hidden sm:inline-flex text-sm">
                   Reserve a ride

@@ -10,7 +10,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sparkride-booking.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://sparkride-booking.vercel.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://[PROJECT_REF].supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-anon-key"
       }
     },
     "production": {
@@ -18,7 +20,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sparkride-booking.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://sparkride-booking.vercel.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://[PROJECT_REF].supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-anon-key"
       }
     }
   }

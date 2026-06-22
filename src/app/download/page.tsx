@@ -65,8 +65,9 @@ export default async function DownloadPage() {
                   Android app
                 </h2>
                 <p className="text-muted mt-2 leading-relaxed">
-                  Install the Sparkride app to book airport transfers or view driver
-                  bookings on your phone. iPhone users can book via this website.
+                  Install the Sparkride app to book airport transfers on Android. The
+                  booking flow matches this website. Drivers can view and update jobs
+                  from the app (unlock via the version footer).
                 </p>
               </div>
             </div>
@@ -87,7 +88,7 @@ export default async function DownloadPage() {
             )}
 
             <p className="text-sm text-muted mt-4">
-              Version 1.0.0 · Requires Android 8.0 or later
+              Version 1.0.6 · Requires Android 8.0 or later
               {"sizeMb" in status && status.sizeMb ? ` · ${status.sizeMb} MB` : ""}
             </p>
           </div>
@@ -107,7 +108,7 @@ export default async function DownloadPage() {
               {
                 icon: RefreshCw,
                 title: "3. Open app",
-                text: "Launch Sparkride, then use Book or Driver tabs.",
+                text: "Launch Sparkride, tap Book a new ride, and follow the step-by-step wizard.",
               },
             ].map(({ icon: Icon, title, text }) => (
               <div

@@ -6,8 +6,9 @@ import { BookingPageLoader } from "@/components/BookingPageLoader";
 import { BookingForm } from "@/components/BookingForm";
 import { PageHeader } from "@/components/PageHeader";
 import { SiteContainer } from "@/components/SiteContainer";
+import type { CustomerProfile } from "@/lib/customer";
 
-export function BookPageContent() {
+export function BookPageContent({ profile }: { profile: CustomerProfile }) {
   const [ready, setReady] = useState(false);
 
   return (
@@ -25,7 +26,7 @@ export function BookPageContent() {
               title="Book your transfer"
               description="Step through each section — we'll build your quote as you go."
             />
-            <BookingForm />
+            <BookingForm profile={profile} />
           </SiteContainer>
         </motion.div>
       )}

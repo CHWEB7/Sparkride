@@ -58,7 +58,13 @@ function StepHeading({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-export function BookingForm() {
+import type { CustomerProfile } from "@/lib/customer";
+
+type BookingFormProps = {
+  profile?: CustomerProfile | null;
+};
+
+export function BookingForm({ profile }: BookingFormProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -78,9 +84,9 @@ export function BookingForm() {
     passengers: 1,
     luggage: 1,
     vehicleType: "SALOON",
-    customerName: "",
-    customerEmail: "",
-    customerPhone: "",
+    customerName: profile?.name ?? "",
+    customerEmail: profile?.email ?? "",
+    customerPhone: profile?.phone ?? "",
     flightNumber: "",
     returnFlightNumber: "",
     notes: "",
@@ -604,13 +610,14 @@ export function BookingForm() {
                 <div>
                   <StepHeading
                     title="Your details"
-                    subtitle="Almost done — just need your contact info"
+                    subtitle="Confirm your contact info — from your account"
                   />
                   <div className="grid lg:grid-cols-2 gap-6">
                     <div>
                       <label className={labelClass}>Full name</label>
                       <input
                         type="text"
+                        required
                         value={form.customerName}
                         onChange={(e) => update("customerName", e.target.value)}
                         className={inputClass}
@@ -620,6 +627,7 @@ export function BookingForm() {
                       <label className={labelClass}>Phone number</label>
                       <input
                         type="tel"
+                        required
                         placeholder="07xxx xxxxxx"
                         value={form.customerPhone}
                         onChange={(e) => update("customerPhone", e.target.value)}
@@ -630,9 +638,9 @@ export function BookingForm() {
                       <label className={labelClass}>Email address</label>
                       <input
                         type="email"
+                        readOnly
                         value={form.customerEmail}
-                        onChange={(e) => update("customerEmail", e.target.value)}
-                        className={inputClass}
+                        className={`${inputClass} opacity-70`}
                       />
                     </div>
                     <div className="lg:col-span-2">

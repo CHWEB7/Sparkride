@@ -7,6 +7,7 @@ import Constants from "expo-constants";
 import { SparkrideLogo } from "../components/SparkrideLogo";
 import { PrimaryButton } from "../components/form";
 import { BUILD_LABEL } from "../lib/build-info";
+import { useAuth } from "../lib/auth-context";
 import { isDriverModeUnlocked, unlockDriverMode } from "../lib/driver-access";
 import { COLORS } from "../lib/theme";
 
@@ -15,6 +16,7 @@ const TAPS_REQUIRED = 5;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user, loading, signOut } = useAuth();
   const appVersion = Constants.expoConfig?.version ?? "?";
   const [driverUnlocked, setDriverUnlocked] = useState(isDriverModeUnlocked());
   const [versionTaps, setVersionTaps] = useState(0);
@@ -48,13 +50,41 @@ export default function HomeScreen() {
           </Text>
 
           <View style={styles.actions}>
-            <PrimaryButton
-              label="Book a new ride"
-              onPress={() => router.push("/book")}
-              style={styles.primaryBtn}
-            />
+            {!loading && user ? (
+              <>
+                <PrimaryButton
+                  label="Book a new ride"
+                  onPress={() => router.push("/book")}
+                  style={styles.primaryBtn}
+                />
+                <Pressable
+                  onPress={() => router.push("/my-bookings")}
+                  style={styles.secondaryBtn}
+                >
+                  <Ionicons name="calendar-outline" size={20} color={COLORS.white} />
+                  <Text style={styles.secondaryText}>My bookings</Text>
+                </Pressable>
+                <Pressable onPress={() => signOut()} style={styles.textBtn}>
+                  <Text style={styles.textBtnLabel}>Sign out</Text>
+                </Pressable>
+              </>
+            ) : !loading ? (
+              <>
+                <PrimaryButton
+                  label="Sign in"
+                  onPress={() => router.push("/login")}
+                  style={styles.primaryBtn}
+                />
+                <Pressable
+                  onPress={() => router.push("/signup")}
+                  style={styles.secondaryBtn}
+                >
+                  <Text style={styles.secondaryText}>Create account</Text>
+                </Pressable>
+              </>
+            ) : null}
 
-            {driverUnlocked && (
+            {driverUnlocked && user && (
               <Pressable
                 onPress={() => router.push("/driver")}
                 style={styles.secondaryBtn}
@@ -126,9 +156,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     gap: 14,
   },
-  primaryBtn: {
-    width: "100%",
-  },
+  primaryBtn: { width: "100%" },
   secondaryBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -141,15 +169,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.25)",
     backgroundColor: "rgba(255,255,255,0.08)",
   },
-  secondaryText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  footerPress: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
+  secondaryText: { color: COLORS.white, fontSize: 16, fontWeight: "600" },
+  textBtn: { alignItems: "center", paddingVertical: 8 },
+  textBtnLabel: { color: "rgba(255,255,255,0.55)", fontSize: 14, fontWeight: "600" },
+  footerPress: { paddingVertical: 12, paddingHorizontal: 24 },
   footer: {
     textAlign: "center",
     fontSize: 11,

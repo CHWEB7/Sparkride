@@ -3,11 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
 import { getAirport, estimatePrice } from "@/lib/airports";
+import { getCustomerUserFromRequest } from "@/lib/customer-auth";
+import { ensureCustomer } from "@/lib/customer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 function json(data: unknown, status = 200) {
@@ -20,6 +22,12 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCustomerUserFromRequest(req);
+    if (!user) {
+      return json({ error: "Sign in required to create a booking" }, 401);
+    }
+
+    const customer = await ensureCustomer(user);
     const body = await req.json();
     const parsed = bookingSchema.safeParse(body);
 
@@ -41,9 +49,20 @@ export async function POST(req: NextRequest) {
         ? new Date(`${data.returnDate}T${data.returnTime}:00`)
         : null;
 
+    const customerName = customer.name || data.customerName;
+    const customerPhone = customer.phone || data.customerPhone;
+
+    if (!customerName?.trim()) {
+      return json({ error: "Please add your name in Account settings" }, 400);
+    }
+    if (!customerPhone?.trim()) {
+      return json({ error: "Please add your phone number in Account settings" }, 400);
+    }
+
     const booking = await prisma.booking.create({
       data: {
         reference: generateReference(),
+        customerId: customer.id,
         serviceType: data.serviceType,
         journeyType: data.journeyType,
         tripType: data.tripType,
@@ -56,9 +75,9 @@ export async function POST(req: NextRequest) {
         passengers: data.passengers,
         luggage: data.luggage,
         vehicleType: data.vehicleType,
-        customerName: data.customerName,
-        customerEmail: data.customerEmail,
-        customerPhone: data.customerPhone,
+        customerName,
+        customerEmail: customer.email,
+        customerPhone,
         flightNumber: data.flightNumber || null,
         returnFlightNumber: data.returnFlightNumber || null,
         notes: data.notes || null,
@@ -83,13 +102,20 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const user = await getCustomerUserFromRequest(req);
+  if (!user) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
   const ref = req.nextUrl.searchParams.get("ref");
   if (!ref) {
     return json({ error: "Reference required" }, 400);
   }
 
+  const customer = await ensureCustomer(user);
   const booking = await prisma.booking.findUnique({ where: { reference: ref } });
-  if (!booking) {
+
+  if (!booking || booking.customerId !== customer.id) {
     return json({ error: "Booking not found" }, 404);
   }
 

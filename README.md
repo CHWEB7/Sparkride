@@ -1,6 +1,6 @@
 # Sparkride Airport Transfer Booking
 
-Private hire airport transfer web app with a customer booking front-end and driver management portal.
+Private hire airport transfer platform with a **customer website**, **Expo mobile app**, and **driver management portal**.
 
 ## Open in Cursor
 
@@ -46,14 +46,25 @@ If GitHub asks for credentials, use a [Personal Access Token](https://github.com
 
 ### 4. Connect to Vercel
 
-1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import your GitHub repo
-3. Add environment variables from `.env.example` in the Vercel project settings
-4. Deploy
+1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo
+2. Install the **[Supabase integration](https://vercel.com/integrations/supabase)** and link your Supabase project — this auto-syncs Postgres and Auth env vars
+3. Add app-only secrets in Vercel: `JWT_SECRET`, `GOOGLE_MAPS_API_KEY`, etc. (see [`docs/supabase-phase0.md`](docs/supabase-phase0.md))
+4. Deploy, then run `npm run db:push` and `npm run db:seed` once against your Supabase database
 
-> **Important:** `.env` is not pushed to GitHub. Copy values into Vercel (and later Supabase) manually.
+> **Important:** `.env` is not pushed to GitHub. For local dev, run `npx vercel env pull .env` after linking the project — or copy vars from the Vercel / Supabase dashboards.
 
-## Quick Start (Windows)
+## Quick Start — Website (Windows)
+
+**Prerequisite:** Supabase linked to Vercel (integration) or `.env` configured — see [`docs/supabase-phase0.md`](docs/supabase-phase0.md).
+
+Pull env vars from Vercel (if integration is connected):
+
+```bat
+npx vercel link
+npx vercel env pull .env
+```
+
+Then add `JWT_SECRET` and `GOOGLE_MAPS_API_KEY` to `.env`.
 
 Double-click **`setup.bat`** in the project folder, or run in a terminal:
 
@@ -64,10 +75,12 @@ setup.bat
 
 This will install dependencies, create the database, seed a demo driver, and start the app.
 
-## Manual Setup
+### Manual setup
 
 ```bash
 cd "C:\Users\Charly Admin\sparkride-booking"
+copy .env.example .env
+# Edit .env with Supabase credentials (see docs/supabase-phase0.md)
 npm install
 npm run db:push
 npm run db:seed
@@ -76,17 +89,61 @@ npm run dev
 
 ## Mobile app
 
-See [`mobile/README.md`](mobile/README.md) for the Expo app (customer booking + driver bookings).
+Expo (React Native) app in [`mobile/`](mobile/README.md). Uses the same Next.js API as the website.
 
-Quick start:
+| Feature | Website | Mobile app |
+|---------|---------|------------|
+| Customer booking | `/book` | Home → **Book a new ride** (multi-step wizard) |
+| Driver bookings | `/driver/login` (auth) | Hidden — tap version footer **5 times** to unlock |
+| Download | `/download` | Android APK (when built and uploaded) |
+
+**Current app version:** `1.0.6` (Expo SDK 54)
+
+### Quick start — mobile (Expo Go)
+
+**Terminal 1 — website API:**
 
 ```bat
-cd mobile
-setup.bat
-npm start
+cd "C:\Users\Charly Admin\sparkride-booking"
+npm run dev
 ```
 
-Make sure the website API is running (`npm run dev`) in another terminal first.
+**Terminal 2 — mobile app:**
+
+```bat
+cd "C:\Users\Charly Admin\sparkride-booking\mobile"
+npm install
+npx expo start --clear
+```
+
+Scan the QR code with **Expo Go** on your phone.
+
+### API URL (`mobile/.env`)
+
+```env
+# Local dev (simulator on same PC)
+EXPO_PUBLIC_API_URL=http://localhost:3000
+
+# Physical phone on same Wi‑Fi — use your PC's IP
+EXPO_PUBLIC_API_URL=http://192.168.1.10:3000
+
+# Production (Vercel)
+EXPO_PUBLIC_API_URL=https://sparkride-booking.vercel.app
+```
+
+### Build Android APK for `/download`
+
+1. Log in: `npx eas-cli login`
+2. Build:
+   ```bat
+   cd mobile
+   npx eas-cli build -p android --profile preview --clear-cache
+   ```
+3. Download the `.apk` from [expo.dev](https://expo.dev)
+4. Copy to `public/downloads/sparkride.apk`
+5. Commit and push — Vercel deploys the download page
+
+See [`mobile/README.md`](mobile/README.md) and [`mobile/BUILD_APK.md`](mobile/BUILD_APK.md) for full details.
 
 ## URLs
 
@@ -94,11 +151,12 @@ Make sure the website API is running (`npm run dev`) in another terminal first.
 |------|-----|
 | Homepage | http://localhost:3000 |
 | Book a transfer | http://localhost:3000/book |
+| Download Android app | http://localhost:3000/download |
 | Booking confirmation | http://localhost:3000/booking/SR-XXXXXX |
 | Driver login | http://localhost:3000/driver/login |
 | Driver dashboard | http://localhost:3000/driver/dashboard |
 
-## Demo Driver Login
+## Demo Driver Login (website)
 
 - **Email:** `driver@sparkride.co.uk`
 - **Password:** `driver123`
@@ -121,39 +179,80 @@ GOOGLE_MAPS_API_KEY="your-api-key-here"
 
 Billing must be enabled on your Google Cloud account (Google provides free monthly credit). Restrict the API key to Places API (New) and your domain in production.
 
-## What Was Built
+## What was built
 
-### Customer app
-- Landing page inspired by Sparkride (hero, airports, how-it-works)
-- Bolt-style full-screen hamburger menu with animated overlay
-- Booking form for 12 UK airports (LBA, MAN, LHR, etc.)
-- Instant fixed-price estimates by vehicle type
+### Customer website
+- Landing page with hero video, airports, how-it-works
+- Multi-step booking wizard (journey → service → direction → route → schedule → contact)
+- Instant fixed-price estimates
 - Booking confirmation page with reference number
+- Android app download page at `/download`
 
-### Driver portal
+### Mobile app (`mobile/`)
+- Home screen with **Book a new ride**
+- Same multi-step booking wizard as the website
+- Driver bookings list (hidden until version footer tapped 5 times)
+- Connects to production or local API via `EXPO_PUBLIC_API_URL`
+
+### Driver portal (website)
 - Secure login (JWT cookie session)
 - Dashboard listing all bookings
 - Filter by status (Pending, Confirmed, En Route, Completed, Cancelled)
 - Update booking status in one click
 
 ### Tech stack
-- **Next.js 15** — full-stack React framework (front-end + API in one project)
-- **Expo / React Native** — mobile app in `/mobile` (Book + Driver tabs)
-- **Prisma + SQLite** — local database, no external services needed
-- **Tailwind CSS v4** — modern styling
-- **Framer Motion** — Bolt-style menu animations
-- **Zod** — form validation
+- **Next.js 15** — website + API routes
+- **Supabase** — Postgres database + customer auth (Phase 1+)
+- **Expo SDK 54 / React Native** — mobile app in `/mobile`
+- **Prisma** — ORM against Supabase Postgres
+- **Tailwind CSS v4** — website styling
+- **Framer Motion** — menu animations
+- **Zod** — validation
 
-## Project Structure
+## Supabase & authentication
+
+| Phase | Status | Scope |
+|-------|--------|--------|
+| **0** | Ready to configure | Postgres migration, Supabase client libs, health check |
+| **1** | Implemented | Customer email auth, mandatory sign-up, no guest bookings |
+| **2** | Planned | My bookings, cancel/amend |
+| **3** | Planned | Notifications, profiles |
+| **4** | Planned | Driver auth on Supabase |
+
+Setup guide: [`docs/supabase-phase0.md`](docs/supabase-phase0.md)
+
+## Project structure
 
 ```
-src/app/           Pages and API routes
-src/components/    UI components (Header, BookingForm, etc.)
-src/lib/           Database, auth, airports, validation
-prisma/            Database schema and seed script
+src/app/              Website pages and API routes
+src/components/       UI components (Header, BookingForm, etc.)
+src/lib/              Database, auth, airports, validation
+prisma/               Database schema and seed script
+docs/                 Supabase setup and phase guides
+mobile/               Expo mobile app
+public/downloads/     Android APK served at /download
 ```
 
-## Production Build
+## Refresh & deploy checklist
+
+After code changes:
+
+```bat
+cd "C:\Users\Charly Admin\sparkride-booking"
+git add .
+git commit -m "Your message"
+git push origin main
+```
+
+Vercel auto-deploys the website. For the mobile app:
+
+| Goal | Command |
+|------|---------|
+| Test in Expo Go | `cd mobile && npx expo start --clear` |
+| New Android APK | `cd mobile && npx eas-cli build -p android --profile preview` |
+| Update website download | Copy APK to `public/downloads/sparkride.apk`, commit, push |
+
+## Production build (website)
 
 ```bash
 npm run build

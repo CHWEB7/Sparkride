@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.8",
     "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.16.0",

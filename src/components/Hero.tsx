@@ -31,8 +31,14 @@ export function Hero() {
                 Reserve a ride
               </AnimatedGradientButton>
               <Link
-                href="/#how-it-works"
+                href="/download"
                 className="inline-flex items-center justify-center px-8 py-4 border border-white/25 bg-white/5 backdrop-blur-sm text-white hover:bg-white/15 font-medium tracking-[-0.01em] rounded-full transition-colors text-base"
+              >
+                Get the Android app
+              </Link>
+              <Link
+                href="/#how-it-works"
+                className="inline-flex items-center justify-center px-8 py-4 border border-white/25 bg-white/5 backdrop-blur-sm text-white hover:bg-white/15 font-medium tracking-[-0.01em] rounded-full transition-colors text-base sm:hidden"
               >
                 How it works
               </Link>

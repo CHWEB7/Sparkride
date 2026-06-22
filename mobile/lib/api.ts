@@ -21,12 +21,20 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
+  const token = await import("./customer-auth")
+    .then((m) => m.getAccessToken())
+    .catch(() => null);
+  const authHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
   try {
     const res = await fetch(`${base}${path}`, {
       ...options,
       signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...options?.headers,
       },
     });
@@ -62,10 +70,7 @@ export function updateBookingStatus(id: string, status: string) {
 }
 
 export function createBooking(payload: BookingInput) {
-  return request<{ reference: string; estimatedPrice: number }>("/api/bookings", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return import("./customer-auth").then((m) => m.createAuthenticatedBooking(payload));
 }
 
 export function fetchBookingByRef(ref: string) {
