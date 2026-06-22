@@ -28,3 +28,5 @@ _environment_check_report.txt
 
 .env*
 .vercel
+
+.env*

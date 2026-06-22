@@ -32,8 +32,9 @@ model CustomerMfaSession {
 
 model Driver {
   id            String    @id @default(cuid())
+  authUserId    String?   @unique
   email         String    @unique
-  passwordHash  String
+  passwordHash  String?
   name          String
   phone         String?
   vehicleLabel  String?

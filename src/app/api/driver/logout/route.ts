@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { clearDriverCookie } from "@/lib/auth";
+import { signOutDriver } from "@/lib/driver-auth";
 
 export async function POST() {
-  await clearDriverCookie();
+  await signOutDriver();
   return NextResponse.json({ ok: true });
 }

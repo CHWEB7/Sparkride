@@ -1,4 +1,4 @@
-import type { DriverSession } from "@/lib/auth";
+import type { DriverSession } from "@/lib/driver-auth";
 
 export const TEST_DRIVER_EMAIL = "test@sparkride.co.uk";
 

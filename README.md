@@ -195,8 +195,9 @@ Billing must be enabled on your Google Cloud account (Google provides free month
 - Connects to production or local API via `EXPO_PUBLIC_API_URL`
 
 ### Driver portal (website)
-- Secure login (JWT cookie session)
-- Dashboard listing all bookings
+- Passkey-only login via Supabase Auth (WebAuthn)
+- One-time password enrollment at `/driver/enroll`
+- Dashboard listing assigned bookings
 - Filter by status (Pending, Confirmed, En Route, Completed, Cancelled)
 - Update booking status in one click
 
@@ -217,7 +218,7 @@ Billing must be enabled on your Google Cloud account (Google provides free month
 | **1** | Implemented | Customer email auth, mandatory sign-up, no guest bookings |
 | **2** | Planned | My bookings, cancel/amend |
 | **3** | Planned | Notifications, profiles |
-| **4** | Planned | Driver auth on Supabase |
+| **4** | Implemented | Driver auth on Supabase with mandatory passkeys |
 
 Setup guide: [`docs/supabase-phase0.md`](docs/supabase-phase0.md)
 

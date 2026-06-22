@@ -1,52 +1,44 @@
-# Driver accounts (Supabase Postgres)
+# Driver accounts (Supabase Auth + passkeys)
 
-Driver logins are stored in the **`Driver`** table in Supabase Postgres — not Supabase Auth. Customers use Supabase Auth; drivers use email + password via `/driver/login`.
+Driver logins use **Supabase Auth** with **mandatory passkeys**. See [`docs/driver-passkeys.md`](./driver-passkeys.md) for setup.
 
 ## Test driver (recommended for QA)
 
 | Field | Value |
 |-------|--------|
 | **Portal** | https://sparkride-umber.vercel.app/driver/login |
+| **First-time setup** | `/driver/enroll` |
 | **Email** | `test@sparkride.co.uk` |
-| **Password** | `TestDriver2024!` |
-| **Bookable in customer wizard** | Yes — appears as **Test Driver** (Saloon, 4 seats) |
+| **One-time password** | `TestDriver2024!` (enrollment only) |
+| **Bookable in customer wizard** | Yes — **Test Driver** (Saloon, 4 seats) |
 
-## Bookable drivers (customer booking step)
+## Bookable drivers
 
-| Driver | Email | Password (driver portal) | Vehicle |
-|--------|-------|--------------------------|---------|
+| Driver | Email | One-time password (enroll only) | Vehicle |
+|--------|-------|----------------------------------|---------|
 | Lee | `lee@sparkride.co.uk` | `driver123` | KIA Carnival (6 seater) |
 | Darren | `darren@sparkride.co.uk` | `driver123` | Tesla Model 3 (4 seater) |
 | Test Driver | `test@sparkride.co.uk` | `TestDriver2024!` | Saloon (4 seater) |
 
+## Sync drivers
+
+```bash
+npx prisma db seed
+npx tsx scripts/sync-driver-auth-users.ts
+```
+
 ## Legacy demo account
 
-| Email | Password |
-|-------|----------|
-| `driver@sparkride.co.uk` | `driver123` |
-
-Not shown in the customer driver picker (`bookable: false`).
-
-## Sync drivers to the database
-
-Drivers are upserted when:
-
-1. **`GET /api/drivers`** runs (e.g. customer opens the booking wizard), or  
-2. You run **`npx prisma db seed`** locally with database env vars set.
-
-To add or change drivers in production, deploy code changes and hit `/api/drivers` once, or apply a Supabase SQL migration.
+| Email | Notes |
+|-------|--------|
+| `driver@sparkride.co.uk` | Not bookable; sync script creates Supabase Auth user |
 
 ## Booking confirmation emails
 
-When a driver sets a booking to **CONFIRMED**, the customer receives a confirmation email via **Resend** (same setup as MFA).
+When a driver sets a booking to **CONFIRMED**, the customer receives a confirmation email via **Resend**.
 
 Optional env override:
 
 ```env
 BOOKINGS_EMAIL_FROM=Sparkride <verify@voltrondigital.co.uk>
 ```
-
-Falls back to `MFA_EMAIL_FROM` if not set.
-
-See `docs/daily-email-mfa.md` for Resend domain setup and limits.
-
