@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -23,7 +23,6 @@ const OTP_STORAGE_KEY = "sparkride_otp_requested";
 
 export default function Verify2faScreen() {
   const router = useRouter();
-  const initialSendStarted = useRef(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,32 +54,24 @@ export default function Verify2faScreen() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) {
         router.replace("/login");
         return;
       }
       setEmail(user.email);
-    });
-  }, [router]);
 
-  useEffect(() => {
-    if (!email || initialSendStarted.current) return;
-    initialSendStarted.current = true;
-
-    void (async () => {
       const lastRequested = await AsyncStorage.getItem(OTP_STORAGE_KEY);
       if (lastRequested) {
         const elapsed = (Date.now() - Number(lastRequested)) / 1000;
-        if (elapsed < 60) {
+        if (elapsed < 120) {
           setCodeSent(true);
-          setResendIn(Math.ceil(60 - elapsed));
-          return;
+          setResendIn(Math.ceil(120 - elapsed));
         }
       }
-      await sendCode();
     })();
-  }, [email, sendCode]);
+  }, [router]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -93,7 +84,7 @@ export default function Verify2faScreen() {
     setLoading(true);
     setError("");
     try {
-      await verifyMfaEmailCode(email, code.trim());
+      await verifyMfaEmailCode(code.trim());
       await AsyncStorage.removeItem(OTP_STORAGE_KEY);
       router.replace("/");
     } catch (err) {

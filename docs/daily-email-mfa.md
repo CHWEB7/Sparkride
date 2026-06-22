@@ -1,39 +1,90 @@
 # Daily email verification (2FA)
 
-Customer accounts require a **daily email verification code** after password sign-in. This uses Supabase **email OTP** (Supabase does not offer email as a native MFA factor — only TOTP and SMS — so we send a one-time code to the registered email after each day's first sign-in).
+Daily sign-in verification uses **Sparkride's own email codes** sent via [Resend](https://resend.com). This avoids Supabase Auth's built-in email rate limits (~4 emails/hour on the free tier), which caused `email rate limit exceeded` errors.
 
 ## Behaviour
 
-- After password sign-in, the user is sent a **6-digit code** by email.
-- Entering the code unlocks booking until **midnight UK time** (`Europe/London`).
-- **Once per day**: further sign-ins the same day skip the code if the daily session is still valid.
-- **Midnight logout**: at the start of a new UK calendar day, the session is cleared and the user must sign in again (password + email code).
+- After password sign-in, the user requests a **6-digit code** by email.
+- Codes expire after **10 minutes**.
+- Resend is limited to **once every 2 minutes** per user.
+- Once verified, access lasts until **midnight UK time** (`Europe/London`).
 
-## Supabase dashboard setup
+---
 
-1. **Authentication → URL configuration**
-   - **Site URL:** `https://sparkride-umber.vercel.app`
-   - Redirect URLs: see `docs/supabase-phase1.md`
+## Required setup (about 5 minutes)
 
-2. **Authentication → Email Templates**
-   - Update the **Magic Link** template to send `{{ .Token }}` (not a link). See `docs/supabase-email-templates.md` for copy-paste HTML.
+### 1. Create a free Resend account
 
-3. **Authentication → Providers → Email**
-   - Ensure **Email** is enabled.
+1. Sign up at [resend.com](https://resend.com) (free tier: **100 emails/day**, **3,000/month**).
+2. Go to **API Keys** → Create API key.
+3. Copy the key (`re_...`).
 
-## Technical notes
+### 2. Add environment variables in Vercel
 
-- Web: signed httpOnly cookie `sparkride_daily_mfa` (expires at midnight London).
-- Mobile: `CustomerMfaSession` row in Postgres, checked on API requests.
-- Protected routes: `/book`, `/my-bookings`, `/account`, `/booking/*`, and customer booking APIs.
-- Verification page: `/verify-2fa` (web and mobile).
+Project → Settings → Environment Variables:
+
+```env
+RESEND_API_KEY=re_your_key_here
+JWT_SECRET=your-long-random-string
+```
+
+Optional (recommended for production):
+
+```env
+MFA_EMAIL_FROM=Sparkride <verify@yourdomain.com>
+```
+
+If `MFA_EMAIL_FROM` is omitted, Resend's test sender is used (`onboarding@resend.dev`), which only delivers to **your own Resend account email** until you verify a domain.
+
+### 3. Verify your domain (production)
+
+In Resend → **Domains**, add `sparkride.co.uk` (or your domain) and add the DNS records shown. Then set:
+
+```env
+MFA_EMAIL_FROM=Sparkride <verify@sparkride.co.uk>
+```
+
+### 4. Redeploy
+
+Push to GitHub or redeploy on Vercel so the new env vars are live.
+
+---
+
+## Do I need a paid Supabase subscription?
+
+**No** — for daily MFA codes. Supabase Pro does **not** fix this by itself.
+
+| Email type | Provider | Free tier limit |
+|------------|----------|-----------------|
+| Daily MFA codes | **Resend** (our app) | 100/day |
+| Signup confirm / password reset | **Supabase** built-in | ~4/hour |
+
+For signup and password-reset emails at scale, either:
+
+- Configure **custom SMTP** in Supabase ([Authentication → SMTP](https://supabase.com/dashboard/project/ukpkntvjqedtbycrpanv/auth/smtp)), or
+- Upgrade Supabase and use custom SMTP (recommended for production).
+
+---
 
 ## Database
 
-Apply the Prisma schema change (adds `CustomerMfaSession`):
+Columns on `CustomerMfaSession`: `otpHash`, `otpExpiresAt`, `lastOtpSentAt`.
+
+If not applied yet:
 
 ```bash
 npx prisma db push
 ```
 
-Or deploy via your usual migration workflow.
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `Email is not configured` | Add `RESEND_API_KEY` to Vercel and redeploy |
+| Email only arrives at your address | Using test sender — verify a domain in Resend |
+| `Invalid or expired code` | Code lasts 10 min; click Resend after cooldown |
+| Still see Supabase rate limit | Deploy latest code — MFA no longer uses `signInWithOtp` |
+
+Signup/password-reset templates: see `docs/supabase-email-templates.md`.

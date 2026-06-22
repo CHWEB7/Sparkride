@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SparkrideLogo } from "../components/SparkrideLogo";
+import { AuthModeTabs } from "../components/AuthModeTabs";
 import { PrimaryButton } from "../components/form";
 import { signInWithEmail, fetchMfaStatus } from "../lib/customer-auth";
 import { COLORS } from "../lib/theme";
@@ -47,6 +48,7 @@ export default function LoginScreen() {
         >
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
             <SparkrideLogo size="md" />
+            <AuthModeTabs mode="login" />
             <Text style={styles.title}>Sign in</Text>
             <Text style={styles.subtitle}>Sign in to book and manage your transfers</Text>
 
@@ -79,7 +81,8 @@ export default function LoginScreen() {
             />
 
             <Pressable onPress={() => router.push("/signup")} style={styles.linkWrap}>
-              <Text style={styles.link}>No account? Create one</Text>
+              <Text style={styles.linkMuted}>New to Sparkride? </Text>
+              <Text style={styles.link}>Create account →</Text>
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -113,6 +116,7 @@ const styles = StyleSheet.create({
   },
   btn: { marginTop: 24 },
   error: { marginTop: 16, color: COLORS.danger, fontSize: 14 },
-  linkWrap: { marginTop: 20, alignItems: "center" },
-  link: { color: COLORS.brandEnd, fontSize: 15, fontWeight: "600" },
+  linkWrap: { marginTop: 20, flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  linkMuted: { color: "rgba(255,255,255,0.55)", fontSize: 15 },
+  link: { color: COLORS.brandEnd, fontSize: 15, fontWeight: "700" },
 });

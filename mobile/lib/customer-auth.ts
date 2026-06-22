@@ -51,14 +51,14 @@ export async function sendMfaEmailCode(): Promise<{
   return { resendIn: data.resendIn ?? 60, sent: true };
 }
 
-export async function verifyMfaEmailCode(email: string, token: string) {
-  const { error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "email",
+export async function verifyMfaEmailCode(code: string) {
+  const res = await authFetch("/api/auth/mfa/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: code.trim() }),
   });
-  if (error) throw error;
-  await completeDailyMfa();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Invalid verification code");
 }
 
 export async function signOutWithMfaClear() {

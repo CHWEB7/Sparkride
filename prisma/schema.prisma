@@ -23,6 +23,8 @@ model CustomerMfaSession {
   validDate     String
   expiresAt     DateTime
   lastOtpSentAt DateTime?
+  otpHash       String?
+  otpExpiresAt  DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

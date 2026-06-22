@@ -9,8 +9,14 @@ import {
   signMfaCookie,
 } from "@/lib/daily-mfa";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  generateOtpCode,
+  getOtpExpiry,
+  hashOtpCode,
+  verifyOtpCode,
+} from "@/lib/mfa-otp";
 
-export const OTP_RESEND_COOLDOWN_SEC = 60;
+export const OTP_RESEND_COOLDOWN_SEC = 120;
 
 export async function getOtpResendIn(userId: string): Promise<number> {
   const session = await prisma.customerMfaSession.findUnique({
@@ -22,13 +28,41 @@ export async function getOtpResendIn(userId: string): Promise<number> {
   return Math.max(0, Math.ceil(OTP_RESEND_COOLDOWN_SEC - elapsedSec));
 }
 
-export async function recordOtpSent(userId: string) {
+export async function storePendingOtp(userId: string, code: string) {
   const today = getLondonDateString();
   const expiresAt = getMidnightLondonExpiry();
+  const otpExpiresAt = getOtpExpiry();
+  const otpHash = hashOtpCode(userId, code);
+
   await prisma.customerMfaSession.upsert({
     where: { userId },
-    create: { userId, validDate: today, expiresAt, lastOtpSentAt: new Date() },
-    update: { lastOtpSentAt: new Date() },
+    create: {
+      userId,
+      validDate: today,
+      expiresAt,
+      lastOtpSentAt: new Date(),
+      otpHash,
+      otpExpiresAt,
+    },
+    update: {
+      lastOtpSentAt: new Date(),
+      otpHash,
+      otpExpiresAt,
+    },
+  });
+}
+
+export async function verifyPendingOtp(userId: string, code: string): Promise<boolean> {
+  const session = await prisma.customerMfaSession.findUnique({ where: { userId } });
+  if (!session?.otpHash || !session.otpExpiresAt) return false;
+  if (session.otpExpiresAt < new Date()) return false;
+  return verifyOtpCode(userId, code, session.otpHash);
+}
+
+export async function clearPendingOtp(userId: string) {
+  await prisma.customerMfaSession.updateMany({
+    where: { userId },
+    data: { otpHash: null, otpExpiresAt: null },
   });
 }
 
@@ -57,7 +91,12 @@ export async function recordDailyMfaVerification(userId: string): Promise<{
   await prisma.customerMfaSession.upsert({
     where: { userId },
     create: { userId, validDate: today, expiresAt },
-    update: { validDate: today, expiresAt },
+    update: {
+      validDate: today,
+      expiresAt,
+      otpHash: null,
+      otpExpiresAt: null,
+    },
   });
 
   return {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Mail, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -21,7 +21,6 @@ export function CustomerVerify2faForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/book";
-  const initialSendStarted = useRef(false);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -44,35 +43,16 @@ export function CustomerVerify2faForm() {
     setSending(false);
 
     if (data.skipped) {
-      setResendIn(data.resendIn ?? 60);
+      setResendIn(data.resendIn ?? 120);
       setInfo(data.message || "Please wait before requesting another code.");
       setCodeSent(true);
       return;
     }
 
     if (!res.ok) {
-      // Fallback: browser anon client triggers Supabase mailer directly
-      try {
-        const supabase = createClient();
-        const { error: clientError } = await supabase.auth.signInWithOtp({
-          email,
-          options: { shouldCreateUser: false },
-        });
-        if (clientError) {
-          setError(clientError.message);
-          if (data.resendIn) setResendIn(data.resendIn);
-          return;
-        }
-        setCodeSent(true);
-        setResendIn(60);
-        sessionStorage.setItem(OTP_SESSION_KEY, String(Date.now()));
-        setInfo("Verification code sent — check your inbox and spam folder.");
-        return;
-      } catch {
-        setError(data.error || "Failed to send verification code");
-        if (data.resendIn) setResendIn(data.resendIn);
-        return;
-      }
+      setError(data.error || "Failed to send verification code");
+      if (data.resendIn) setResendIn(data.resendIn);
+      return;
     }
 
     if (!data.sent) {
@@ -81,7 +61,7 @@ export function CustomerVerify2faForm() {
     }
 
     setCodeSent(true);
-    setResendIn(data.resendIn ?? 60);
+    setResendIn(data.resendIn ?? 120);
     sessionStorage.setItem(OTP_SESSION_KEY, String(Date.now()));
     setInfo("Verification code sent — check your inbox and spam folder.");
   }, [email]);
@@ -94,25 +74,17 @@ export function CustomerVerify2faForm() {
         return;
       }
       setEmail(user.email);
+
+      const lastRequested = sessionStorage.getItem(OTP_SESSION_KEY);
+      if (lastRequested) {
+        const elapsed = (Date.now() - Number(lastRequested)) / 1000;
+        if (elapsed < 120) {
+          setCodeSent(true);
+          setResendIn(Math.ceil(120 - elapsed));
+        }
+      }
     });
   }, [redirect, router]);
-
-  useEffect(() => {
-    if (!email || initialSendStarted.current) return;
-    initialSendStarted.current = true;
-
-    const lastRequested = sessionStorage.getItem(OTP_SESSION_KEY);
-    if (lastRequested) {
-      const elapsed = (Date.now() - Number(lastRequested)) / 1000;
-      if (elapsed < 60) {
-        setCodeSent(true);
-        setResendIn(Math.ceil(60 - elapsed));
-        return;
-      }
-    }
-
-    void sendCode();
-  }, [email, sendCode]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -127,28 +99,20 @@ export function CustomerVerify2faForm() {
     setLoading(true);
     setError("");
 
-    const supabase = createClient();
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email,
-      token: code.trim(),
-      type: "email",
+    const res = await fetch("/api/auth/mfa/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code.trim() }),
     });
+    const data = await res.json().catch(() => ({}));
 
-    if (verifyError) {
-      setError(verifyError.message);
+    if (!res.ok) {
+      setError(data.error || "Invalid verification code");
       setLoading(false);
       return;
     }
 
     sessionStorage.removeItem(OTP_SESSION_KEY);
-
-    const completeRes = await fetch("/api/auth/mfa/complete", { method: "POST" });
-    if (!completeRes.ok) {
-      setError("Verification succeeded but session could not be saved. Try again.");
-      setLoading(false);
-      return;
-    }
-
     router.push(redirect);
     router.refresh();
   }
@@ -164,7 +128,7 @@ export function CustomerVerify2faForm() {
           <p className="mt-2 text-muted text-sm">
             {codeSent
               ? "Enter the 6-digit code we sent to complete sign-in"
-              : "We will email you a one-time code to continue"}
+              : "Tap below to receive a one-time code by email"}
           </p>
         </div>
 

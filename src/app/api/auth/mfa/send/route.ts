@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomerUserFromRequest } from "@/lib/customer-auth";
-import { createAnonServerClient } from "@/lib/supabase/anon-server";
+import { generateOtpCode } from "@/lib/mfa-otp";
 import {
   getOtpResendIn,
   OTP_RESEND_COOLDOWN_SEC,
-  recordOtpSent,
+  storePendingOtp,
 } from "@/lib/mfa-session";
+import { sendVerificationCodeEmail } from "@/lib/send-verification-email";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,14 +18,6 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
 
-function rateLimitMessage(resendIn: number) {
-  return `Please wait ${resendIn} seconds before requesting another code. Check your inbox for a recent email.`;
-}
-
-/**
- * Sends a 6-digit email OTP for daily MFA via the anon auth client so Supabase
- * actually dispatches the email. Must NOT pass emailRedirectTo.
- */
 export async function POST(req: NextRequest) {
   const user = await getCustomerUserFromRequest(req);
 
@@ -39,44 +32,23 @@ export async function POST(req: NextRequest) {
         ok: false,
         skipped: true,
         resendIn,
-        message: rateLimitMessage(resendIn),
+        message: `Please wait ${resendIn} seconds before requesting another code.`,
       },
       { headers: corsHeaders }
     );
   }
 
-  const supabase = createAnonServerClient();
-  const { data, error } = await supabase.auth.signInWithOtp({
-    email: user.email,
-    options: {
-      shouldCreateUser: false,
-    },
-  });
+  const code = generateOtpCode();
+  const emailResult = await sendVerificationCodeEmail(user.email, code);
 
-  if (error) {
-    const isRateLimited = error.message.toLowerCase().includes("rate limit");
-    if (isRateLimited) {
-      return NextResponse.json(
-        {
-          error: "Too many verification emails sent. Please wait a minute and try again.",
-          resendIn: OTP_RESEND_COOLDOWN_SEC,
-        },
-        { status: 429, headers: corsHeaders }
-      );
-    }
-    return NextResponse.json({ error: error.message }, { status: 400, headers: corsHeaders });
+  if (!emailResult.ok) {
+    return NextResponse.json({ error: emailResult.error }, { status: 503, headers: corsHeaders });
   }
 
-  await recordOtpSent(user.id);
+  await storePendingOtp(user.id, code);
 
   return NextResponse.json(
-    {
-      ok: true,
-      sent: true,
-      resendIn: OTP_RESEND_COOLDOWN_SEC,
-      // Supabase returns null user/session when OTP is queued — still a success.
-      queued: !data?.user,
-    },
+    { ok: true, sent: true, resendIn: OTP_RESEND_COOLDOWN_SEC },
     { headers: corsHeaders }
   );
 }
