@@ -7,6 +7,7 @@ const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
   display: "swap",
+  weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -21,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${outfit.variable} font-sans antialiased`}>
+    <html lang="en" className={outfit.variable} suppressHydrationWarning>
+      <body className={`${outfit.className} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

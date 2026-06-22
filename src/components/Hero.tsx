@@ -17,7 +17,7 @@ export function Hero() {
               Premium electric transfers
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-dark dark:text-white leading-[1.05] tracking-[-0.029em]">
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-[4.5rem] text-dark dark:text-white leading-[1.05]">
               Travel <RotatingWord /> with{" "}
               <span className="text-brand-gradient">Sparkride</span>
             </h1>

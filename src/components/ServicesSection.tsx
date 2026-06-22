@@ -99,7 +99,7 @@ export function ServicesSection() {
     <section id="services" className="py-20 sm:py-24 bg-app-bg dark:bg-dark overflow-hidden">
       <SiteContainer className="mb-10 sm:mb-12">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-4xl sm:text-5xl font-semibold tracking-[-0.029em] dark:text-white">
+          <h2 className="font-display text-4xl sm:text-5xl dark:text-white">
             Our services
           </h2>
           <p className="mt-4 text-base sm:text-lg text-muted leading-relaxed">

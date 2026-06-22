@@ -23,7 +23,7 @@ export function HowItWorks() {
     <section id="how-it-works" className="py-24 bg-app-bg dark:bg-dark">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold tracking-tight dark:text-white">How it works</h2>
+          <h2 className="font-display text-4xl sm:text-5xl dark:text-white">How it works</h2>
           <p className="mt-4 text-lg text-muted">
             Book your airport transfer in under 2 minutes
           </p>

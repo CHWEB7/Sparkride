@@ -50,7 +50,7 @@ export function AirportsSection() {
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
               Airport transfers
             </p>
-            <h2 className="mt-3 text-4xl sm:text-5xl font-semibold tracking-[-0.029em] dark:text-white leading-[1.05]">
+            <h2 className="font-display mt-3 text-4xl sm:text-5xl dark:text-white leading-[1.05]">
               Stress-free rides to the runway
             </h2>
             <p className="mt-5 text-lg text-muted leading-relaxed">
