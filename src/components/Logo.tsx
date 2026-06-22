@@ -28,7 +28,7 @@ export function Logo({ size = "md", showText = true, href = "/", className = "",
       {showText && (
         <span
           className={`${s.text} font-semibold tracking-[-0.02em] ${
-            light ? "text-white" : "dark:text-white"
+            light ? "text-white" : "text-dark dark:text-white"
           }`}
         >
           Sparkride

@@ -10,9 +10,12 @@ import { SiteContainer } from "./SiteContainer";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
 import { CustomerNav } from "./customer/CustomerNav";
+import { useTheme } from "./ThemeProvider";
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme } = useTheme();
+  const overlayLightText = overlay && theme === "dark" && !menuOpen;
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -38,7 +41,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
       >
         <SiteContainer className="h-16 flex items-center justify-between">
           <div onClick={menuOpen ? closeMenu : undefined}>
-            <Logo href="/" light={overlay && !menuOpen} />
+            <Logo href="/" light={overlayLightText} />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -76,20 +79,24 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             ) : (
               <>
                 <CustomerNav />
-                <ThemeToggle light={overlay} />
+                <ThemeToggle light={overlayLightText} />
                 <AnimatedGradientButton href="/book" className="hidden sm:inline-flex text-sm">
                   Reserve a ride
                 </AnimatedGradientButton>
                 <button
                   onClick={() => setMenuOpen(true)}
                   className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
-                    overlay
+                    overlayLightText
                       ? "hover:bg-white/10 text-white"
                       : "hover:bg-gray-100 dark:hover:bg-white/10"
                   }`}
                   aria-label="Open menu"
                 >
-                  <Menu className={`w-5 h-5 ${overlay ? "text-white" : "dark:text-white"}`} />
+                  <Menu
+                    className={`w-5 h-5 ${
+                      overlayLightText ? "text-white" : "text-dark dark:text-white"
+                    }`}
+                  />
                 </button>
               </>
             )}
