@@ -1,0 +1,58 @@
+import { prisma } from "@/lib/prisma";
+import {
+  getLondonDateString,
+  getMidnightLondonExpiry,
+  MFA_COOKIE_NAME,
+  mfaCookieOptions,
+  parseMfaCookie,
+  secondsUntilMidnightLondon,
+  signMfaCookie,
+} from "@/lib/daily-mfa";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function isDailyMfaVerified(userId: string, req: NextRequest): Promise<boolean> {
+  const cookieValue = req.cookies.get(MFA_COOKIE_NAME)?.value;
+  const fromCookie = parseMfaCookie(cookieValue);
+  if (fromCookie?.userId === userId) return true;
+
+  const today = getLondonDateString();
+  const session = await prisma.customerMfaSession.findUnique({ where: { userId } });
+  if (!session) return false;
+  if (session.validDate !== today) return false;
+  if (session.expiresAt < new Date()) return false;
+  return true;
+}
+
+export async function recordDailyMfaVerification(userId: string): Promise<{
+  cookieValue: string;
+  maxAge: number;
+  expiresAt: Date;
+}> {
+  const today = getLondonDateString();
+  const maxAge = secondsUntilMidnightLondon();
+  const expiresAt = getMidnightLondonExpiry();
+
+  await prisma.customerMfaSession.upsert({
+    where: { userId },
+    create: { userId, validDate: today, expiresAt },
+    update: { validDate: today, expiresAt },
+  });
+
+  return {
+    cookieValue: signMfaCookie(userId, today),
+    maxAge,
+    expiresAt,
+  };
+}
+
+export function attachMfaCookie(res: NextResponse, cookieValue: string, maxAge: number) {
+  res.cookies.set(MFA_COOKIE_NAME, cookieValue, mfaCookieOptions(maxAge));
+}
+
+export function clearMfaCookie(res: NextResponse) {
+  res.cookies.set(MFA_COOKIE_NAME, "", { ...mfaCookieOptions(0), maxAge: 0 });
+}
+
+export async function clearDailyMfaVerification(userId: string) {
+  await prisma.customerMfaSession.deleteMany({ where: { userId } });
+}

@@ -7,6 +7,7 @@ import { AppBackHeader } from "../components/AppBackHeader";
 import { Screen } from "../components/ui";
 import { useAuth } from "../lib/auth-context";
 import { fetchMyBookings } from "../lib/customer-auth";
+import { ensureDailyMfaAccess } from "../lib/mfa-guard";
 import type { Booking } from "../lib/types";
 import { COLORS, formatStatus } from "../lib/theme";
 
@@ -24,11 +25,16 @@ export default function MyBookingsScreen() {
         return;
       }
 
-      setLoading(true);
-      fetchMyBookings()
-        .then(setBookings)
-        .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
-        .finally(() => setLoading(false));
+      void (async () => {
+        const ok = await ensureDailyMfaAccess(router);
+        if (!ok) return;
+
+        setLoading(true);
+        fetchMyBookings()
+          .then(setBookings)
+          .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
+          .finally(() => setLoading(false));
+      })();
     }, [user, router])
   );
 

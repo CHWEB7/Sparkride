@@ -27,6 +27,7 @@ export function CustomerNav() {
   }, []);
 
   async function signOut() {
+    await fetch("/api/auth/sign-out", { method: "POST" });
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");

@@ -6,6 +6,7 @@ import { AppBackHeader } from "../components/AppBackHeader";
 import { BookingWizard } from "../components/BookingWizard";
 import { Screen } from "../components/ui";
 import { useAuth } from "../lib/auth-context";
+import { ensureDailyMfaAccess } from "../lib/mfa-guard";
 import { COLORS } from "../lib/theme";
 
 export default function BookScreen() {
@@ -13,9 +14,12 @@ export default function BookScreen() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       router.replace("/login");
+      return;
     }
+    void ensureDailyMfaAccess(router);
   }, [loading, user, router]);
 
   if (loading || !user) {

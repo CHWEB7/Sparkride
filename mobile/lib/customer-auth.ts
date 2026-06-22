@@ -1,9 +1,67 @@
 import type { BookingInput } from "./types";
 import { supabase } from "./supabase";
 
+export type MfaStatus = {
+  verified: boolean;
+  expiresAt: string | null;
+};
+
 export async function getAccessToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? null;
+}
+
+async function authFetch(path: string, init?: RequestInit) {
+  const token = await getAccessToken();
+  const base = (await import("./api")).getApiBaseUrl();
+  const headers = new Headers(init?.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return fetch(`${base}${path}`, { ...init, headers });
+}
+
+export async function fetchMfaStatus(): Promise<MfaStatus> {
+  const res = await authFetch("/api/auth/mfa/status");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to check verification status");
+  return data;
+}
+
+export async function completeDailyMfa(): Promise<void> {
+  const res = await authFetch("/api/auth/mfa/complete", { method: "POST" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to complete verification");
+}
+
+export async function sendMfaEmailCode(email: string) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
+  });
+  if (error) throw error;
+}
+
+export async function verifyMfaEmailCode(email: string, token: string) {
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "email",
+  });
+  if (error) throw error;
+  await completeDailyMfa();
+}
+
+export async function signOutWithMfaClear() {
+  await authFetch("/api/auth/sign-out", { method: "POST" });
+  await supabase.auth.signOut();
+}
+
+/** Returns true when the user may access booking features */
+export async function hasDailyMfaAccess(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session?.user) return false;
+
+  const status = await fetchMfaStatus();
+  return status.verified;
 }
 
 export async function syncCustomerProfile() {
@@ -49,8 +107,7 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  await signOutWithMfaClear();
 }
 
 export type CustomerProfile = {

@@ -30,8 +30,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const user = await getCustomerUserFromRequest(req);
+  const user = await getCustomerUserWithDailyMfa(req);
   if (!user) {
+    const authed = await getCustomerUserFromRequest(req);
+    if (authed) {
+      return NextResponse.json({ error: "Email verification required", code: "mfa_required" }, { status: 403 });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

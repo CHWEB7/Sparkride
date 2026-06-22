@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SparkrideLogo } from "../components/SparkrideLogo";
 import { PrimaryButton } from "../components/form";
-import { signInWithEmail } from "../lib/customer-auth";
+import { signInWithEmail, fetchMfaStatus } from "../lib/customer-auth";
 import { COLORS } from "../lib/theme";
 
 export default function LoginScreen() {
@@ -29,7 +29,8 @@ export default function LoginScreen() {
     setError("");
     try {
       await signInWithEmail(email.trim(), password);
-      router.replace("/");
+      const mfa = await fetchMfaStatus();
+      router.replace(mfa.verified ? "/" : "/verify-2fa");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {

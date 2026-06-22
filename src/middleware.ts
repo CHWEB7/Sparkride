@@ -13,5 +13,6 @@ export const config = {
     "/booking/:path*",
     "/login",
     "/signup",
+    "/verify-2fa",
   ],
 };

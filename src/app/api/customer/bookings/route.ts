@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCustomerUserFromRequest } from "@/lib/customer-auth";
+import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
 
 const corsHeaders = {
@@ -14,8 +14,15 @@ export async function OPTIONS() {
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getCustomerUserFromRequest(req);
+  const user = await getCustomerUserWithDailyMfa(req);
   if (!user) {
+    const authed = await getCustomerUserFromRequest(req);
+    if (authed) {
+      return NextResponse.json(
+        { error: "Email verification required", code: "mfa_required" },
+        { status: 403, headers: corsHeaders }
+      );
+    }
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401, headers: corsHeaders }

@@ -35,6 +35,7 @@ Open: [Authentication → Providers → Email](https://supabase.com/dashboard/pr
 | Setting | Recommended |
 |---------|-------------|
 | **Enable Email provider** | On |
+| **Email OTP** | On (required for daily verification codes — see `docs/daily-email-mfa.md`) |
 | **Confirm email** | Off for testing · On for production |
 | **Secure email change** | On |
 
@@ -62,6 +63,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=<from Vercel integration>
 3. If email confirm is **on**: click link in email → `/auth/callback` → `/book`  
 4. Complete a booking → row in `Booking` with `customerId`  
 5. `/my-bookings` lists your trips  
+6. Daily email verification: see `docs/daily-email-mfa.md`
 
 ## Security note (RLS)
 

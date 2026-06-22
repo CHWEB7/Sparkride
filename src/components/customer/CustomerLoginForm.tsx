@@ -12,6 +12,7 @@ export function CustomerLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/book";
+  const sessionExpired = searchParams.get("error") === "session_expired";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -77,6 +78,11 @@ export function CustomerLoginForm() {
           onSubmit={handleSubmit}
           className="bg-booking-bg dark:bg-dark-elevated rounded-2xl p-8 space-y-5 shadow-md"
         >
+          {sessionExpired && (
+            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-sm">
+              Your session ended at midnight. Please sign in again.
+            </div>
+          )}
           {error && (
             <div className="p-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 text-sm">
               {error}

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
 import { getAirport, estimatePrice } from "@/lib/airports";
-import { getCustomerUserFromRequest } from "@/lib/customer-auth";
+import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
 
 const corsHeaders = {
@@ -22,8 +22,12 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCustomerUserFromRequest(req);
+    const user = await getCustomerUserWithDailyMfa(req);
     if (!user) {
+      const authed = await getCustomerUserFromRequest(req);
+      if (authed) {
+        return json({ error: "Email verification required", code: "mfa_required" }, 403);
+      }
       return json({ error: "Sign in required to create a booking" }, 401);
     }
 
