@@ -1,6 +1,10 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { MFA_COOKIE_NAME, parseMfaCookie, signedInTodayLondon } from "@/lib/daily-mfa";
+import {
+  MFA_COOKIE_NAME,
+  signedInTodayLondon,
+  verifyMfaCookie,
+} from "@/lib/daily-mfa-edge";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -65,7 +69,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    const mfaCookie = parseMfaCookie(request.cookies.get(MFA_COOKIE_NAME)?.value);
+    const mfaCookie = await verifyMfaCookie(
+      request.cookies.get(MFA_COOKIE_NAME)?.value,
+      process.env.JWT_SECRET
+    );
     const mfaVerified = mfaCookie?.userId === user.id;
 
     if (!mfaVerified) {

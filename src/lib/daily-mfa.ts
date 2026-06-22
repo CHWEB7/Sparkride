@@ -10,6 +10,10 @@ export function getMfaSecret(): string {
   return secret;
 }
 
+export function getMfaSecretOrNull(): string | null {
+  return process.env.JWT_SECRET ?? null;
+}
+
 /** Calendar date in Europe/London as YYYY-MM-DD */
 export function getLondonDateString(date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: MFA_TIMEZONE }).format(date);
@@ -44,8 +48,10 @@ export function signMfaCookie(userId: string, date: string, secret = getMfaSecre
 
 export function parseMfaCookie(
   value: string | undefined,
-  secret = getMfaSecret()
+  secret?: string | null
 ): { userId: string; date: string } | null {
+  const resolvedSecret = secret !== undefined ? secret : getMfaSecretOrNull();
+  if (!resolvedSecret) return null;
   if (!value) return null;
   const parts = value.split(".");
   if (parts.length !== 3) return null;
@@ -53,7 +59,7 @@ export function parseMfaCookie(
   const [userId, date, sig] = parts;
   if (!userId || !date || !sig) return null;
 
-  const expected = createHmac("sha256", secret).update(`${userId}.${date}`).digest("base64url");
+  const expected = createHmac("sha256", resolvedSecret).update(`${userId}.${date}`).digest("base64url");
   try {
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
