@@ -26,7 +26,16 @@ export function ServicesSection() {
     updateScrollState();
     const el = scrollerRef.current;
     if (!el) return;
-    const observer = new ResizeObserver(updateScrollState);
+
+    const card = el.querySelector<HTMLElement>("[data-service-card]");
+    if (card) {
+      const peek = Math.round(card.offsetWidth * 0.42);
+      el.scrollLeft = peek;
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateScrollState();
+    });
     observer.observe(el);
     return () => observer.disconnect();
   }, [updateScrollState]);
@@ -62,7 +71,7 @@ export function ServicesSection() {
         <div
           ref={scrollerRef}
           onScroll={updateScrollState}
-          className="services-carousel flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="services-carousel flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pl-4 sm:pl-6"
         >
           {SERVICES.map((service) => (
             <article
@@ -97,10 +106,11 @@ export function ServicesSection() {
               </div>
             </article>
           ))}
+          <div className="services-carousel-spacer shrink-0" aria-hidden />
         </div>
 
         <SiteContainer className="mt-6 sm:mt-8">
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-start gap-3">
             <button
               type="button"
               onClick={() => scrollByCards("left")}

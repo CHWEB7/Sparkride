@@ -295,10 +295,10 @@ html.dark .hero-ambient-readability {
   background-clip: text;
 }
 
-/* Services carousel — Bolt-style left-aligned track, right bleed */
+/* Services carousel — right-weighted track with left-edge peek */
 .services-carousel {
   --services-carousel-inset: max(1rem, calc((100vw - 80rem) / 2 + 1rem));
-  padding-left: var(--services-carousel-inset);
+  padding-left: 0;
   padding-right: var(--services-carousel-inset);
 }
 
@@ -306,4 +306,8 @@ html.dark .hero-ambient-readability {
   .services-carousel {
     --services-carousel-inset: max(1.5rem, calc((100vw - 80rem) / 2 + 1.5rem));
   }
+}
+
+.services-carousel-spacer {
+  width: var(--services-carousel-inset);
 }
