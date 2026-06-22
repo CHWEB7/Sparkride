@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plane, Shield, Clock, Star, Zap } from "lucide-react";
 import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { HeroAmbientBackground } from "./HeroAmbientBackground";
+import { RotatingWord } from "./RotatingWord";
 
 export function Hero() {
   return (
@@ -17,7 +18,7 @@ export function Hero() {
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-dark dark:text-white leading-[1.05] tracking-[-0.029em]">
-              Travel freely with{" "}
+              Travel <RotatingWord /> with{" "}
               <span className="text-brand-gradient">Sparkride</span>
             </h1>
 
