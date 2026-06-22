@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getCustomerUserFromRequest } from "@/lib/customer-auth";
+import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer, updateCustomerProfile } from "@/lib/customer";
 import { createClient } from "@/lib/supabase/server";
 
