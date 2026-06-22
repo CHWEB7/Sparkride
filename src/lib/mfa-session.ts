@@ -10,6 +10,28 @@ import {
 } from "@/lib/daily-mfa";
 import { NextRequest, NextResponse } from "next/server";
 
+export const OTP_RESEND_COOLDOWN_SEC = 60;
+
+export async function getOtpResendIn(userId: string): Promise<number> {
+  const session = await prisma.customerMfaSession.findUnique({
+    where: { userId },
+    select: { lastOtpSentAt: true },
+  });
+  if (!session?.lastOtpSentAt) return 0;
+  const elapsedSec = (Date.now() - session.lastOtpSentAt.getTime()) / 1000;
+  return Math.max(0, Math.ceil(OTP_RESEND_COOLDOWN_SEC - elapsedSec));
+}
+
+export async function recordOtpSent(userId: string) {
+  const today = getLondonDateString();
+  const expiresAt = getMidnightLondonExpiry();
+  await prisma.customerMfaSession.upsert({
+    where: { userId },
+    create: { userId, validDate: today, expiresAt, lastOtpSentAt: new Date() },
+    update: { lastOtpSentAt: new Date() },
+  });
+}
+
 export async function isDailyMfaVerified(userId: string, req: NextRequest): Promise<boolean> {
   const cookieValue = req.cookies.get(MFA_COOKIE_NAME)?.value;
   const fromCookie = parseMfaCookie(cookieValue);

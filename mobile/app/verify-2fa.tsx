@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -18,25 +19,32 @@ import { sendMfaEmailCode, verifyMfaEmailCode } from "../lib/customer-auth";
 import { supabase } from "../lib/supabase";
 import { COLORS } from "../lib/theme";
 
-const RESEND_COOLDOWN_SEC = 60;
+const OTP_STORAGE_KEY = "sparkride_otp_requested";
 
 export default function Verify2faScreen() {
   const router = useRouter();
+  const initialSendStarted = useRef(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [resendIn, setResendIn] = useState(0);
 
   const sendCode = useCallback(async () => {
     setSending(true);
     setError("");
+    setInfo("");
     try {
-      await sendMfaEmailCode();
+      const result = await sendMfaEmailCode();
       setCodeSent(true);
-      setResendIn(RESEND_COOLDOWN_SEC);
+      setResendIn(result.resendIn);
+      await AsyncStorage.setItem(OTP_STORAGE_KEY, String(Date.now()));
+      if (result.skipped) {
+        setInfo("A code was sent recently. Check your inbox or wait to resend.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send code");
     } finally {
@@ -55,9 +63,22 @@ export default function Verify2faScreen() {
   }, [router]);
 
   useEffect(() => {
-    if (!email || codeSent) return;
-    void sendCode();
-  }, [email, codeSent, sendCode]);
+    if (!email || initialSendStarted.current) return;
+    initialSendStarted.current = true;
+
+    void (async () => {
+      const lastRequested = await AsyncStorage.getItem(OTP_STORAGE_KEY);
+      if (lastRequested) {
+        const elapsed = (Date.now() - Number(lastRequested)) / 1000;
+        if (elapsed < 60) {
+          setCodeSent(true);
+          setResendIn(Math.ceil(60 - elapsed));
+          return;
+        }
+      }
+      await sendCode();
+    })();
+  }, [email, sendCode]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -71,6 +92,7 @@ export default function Verify2faScreen() {
     setError("");
     try {
       await verifyMfaEmailCode(email, code.trim());
+      await AsyncStorage.removeItem(OTP_STORAGE_KEY);
       router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid code");
@@ -93,44 +115,63 @@ export default function Verify2faScreen() {
             </View>
             <Text style={styles.title}>Verify your email</Text>
             <Text style={styles.subtitle}>
-              Enter the 6-digit code we sent. Required once per day; your session ends at midnight.
+              {codeSent
+                ? "Enter the 6-digit code we sent. Required once per day; your session ends at midnight."
+                : "We will email you a one-time code to continue."}
             </Text>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
+            {info ? <Text style={styles.info}>{info}</Text> : null}
 
             {email ? (
               <Text style={styles.emailLine}>
-                Code sent to <Text style={styles.emailHighlight}>{email}</Text>
+                {codeSent ? "Code sent to" : "Code will be sent to"}{" "}
+                <Text style={styles.emailHighlight}>{email}</Text>
               </Text>
             ) : null}
 
-            <Text style={styles.label}>Verification code</Text>
-            <TextInput
-              style={[styles.input, styles.codeInput]}
-              value={code}
-              onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
-              keyboardType="number-pad"
-              maxLength={6}
-              placeholder="000000"
-              placeholderTextColor="rgba(255,255,255,0.3)"
-            />
+            {!codeSent ? (
+              <PrimaryButton
+                label={sending ? "Sending..." : "Send verification code"}
+                onPress={sendCode}
+                disabled={sending || !email}
+                style={styles.btn}
+              />
+            ) : (
+              <>
+                <Text style={styles.label}>Verification code</Text>
+                <TextInput
+                  style={[styles.input, styles.codeInput]}
+                  value={code}
+                  onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  placeholder="000000"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                />
 
-            <PrimaryButton
-              label={loading ? "Verifying..." : "Verify and continue"}
-              onPress={handleVerify}
-              disabled={loading || code.length < 6}
-              style={styles.btn}
-            />
+                <PrimaryButton
+                  label={loading ? "Verifying..." : "Verify and continue"}
+                  onPress={handleVerify}
+                  disabled={loading || code.length < 6}
+                  style={styles.btn}
+                />
 
-            <Pressable onPress={sendCode} disabled={sending || resendIn > 0} style={styles.linkWrap}>
-              <Text style={[styles.link, (sending || resendIn > 0) && styles.linkDisabled]}>
-                {sending
-                  ? "Sending..."
-                  : resendIn > 0
-                    ? `Resend code in ${resendIn}s`
-                    : "Resend code"}
-              </Text>
-            </Pressable>
+                <Pressable
+                  onPress={sendCode}
+                  disabled={sending || resendIn > 0}
+                  style={styles.linkWrap}
+                >
+                  <Text style={[styles.link, (sending || resendIn > 0) && styles.linkDisabled]}>
+                    {sending
+                      ? "Sending..."
+                      : resendIn > 0
+                        ? `Resend code in ${resendIn}s`
+                        : "Resend code"}
+                  </Text>
+                </Pressable>
+              </>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -193,6 +234,7 @@ const styles = StyleSheet.create({
   },
   btn: { marginTop: 24 },
   error: { marginTop: 16, color: COLORS.danger, fontSize: 14, textAlign: "center" },
+  info: { marginTop: 16, color: COLORS.brandEnd, fontSize: 14, textAlign: "center" },
   linkWrap: { marginTop: 20, alignItems: "center" },
   link: { color: COLORS.brandEnd, fontSize: 15, fontWeight: "600" },
   linkDisabled: { opacity: 0.5 },

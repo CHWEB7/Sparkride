@@ -1,43 +1,60 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, Mail, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
 
-const RESEND_COOLDOWN_SEC = 60;
+const OTP_SESSION_KEY = "sparkride_otp_requested";
+
+type SendCodeResult = {
+  ok?: boolean;
+  skipped?: boolean;
+  resendIn?: number;
+  error?: string;
+  message?: string;
+};
 
 export function CustomerVerify2faForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/book";
+  const initialSendStarted = useRef(false);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [resendIn, setResendIn] = useState(0);
 
   const sendCode = useCallback(async () => {
-    if (!email) return;
     setSending(true);
     setError("");
+    setInfo("");
 
     const res = await fetch("/api/auth/mfa/send", { method: "POST" });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as SendCodeResult;
 
     setSending(false);
+
     if (!res.ok) {
       setError(data.error || "Failed to send verification code");
+      if (data.resendIn) setResendIn(data.resendIn);
       return;
     }
 
     setCodeSent(true);
-    setResendIn(RESEND_COOLDOWN_SEC);
-  }, [email]);
+    setResendIn(data.resendIn ?? 60);
+    sessionStorage.setItem(OTP_SESSION_KEY, String(Date.now()));
+
+    if (data.skipped) {
+      setInfo(data.message || "A code was sent recently. Check your inbox or wait to resend.");
+    }
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -51,9 +68,21 @@ export function CustomerVerify2faForm() {
   }, [redirect, router]);
 
   useEffect(() => {
-    if (!email || codeSent) return;
+    if (!email || initialSendStarted.current) return;
+    initialSendStarted.current = true;
+
+    const lastRequested = sessionStorage.getItem(OTP_SESSION_KEY);
+    if (lastRequested) {
+      const elapsed = (Date.now() - Number(lastRequested)) / 1000;
+      if (elapsed < 60) {
+        setCodeSent(true);
+        setResendIn(Math.ceil(60 - elapsed));
+        return;
+      }
+    }
+
     void sendCode();
-  }, [email, codeSent, sendCode]);
+  }, [email, sendCode]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -81,6 +110,8 @@ export function CustomerVerify2faForm() {
       return;
     }
 
+    sessionStorage.removeItem(OTP_SESSION_KEY);
+
     const completeRes = await fetch("/api/auth/mfa/complete", { method: "POST" });
     if (!completeRes.ok) {
       setError("Verification succeeded but session could not be saved. Try again.");
@@ -101,7 +132,9 @@ export function CustomerVerify2faForm() {
             Verify your email
           </h1>
           <p className="mt-2 text-muted text-sm">
-            Enter the 6-digit code we sent to complete sign-in
+            {codeSent
+              ? "Enter the 6-digit code we sent to complete sign-in"
+              : "We will email you a one-time code to continue"}
           </p>
         </div>
 
@@ -122,52 +155,76 @@ export function CustomerVerify2faForm() {
               {error}
             </div>
           )}
+          {info && (
+            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-sm">
+              {info}
+            </div>
+          )}
 
           {email && (
             <p className="text-sm text-muted text-center">
-              Code sent to <span className="font-medium text-dark dark:text-white">{email}</span>
+              {codeSent ? "Code sent to" : "Code will be sent to"}{" "}
+              <span className="font-medium text-dark dark:text-white">{email}</span>
             </p>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-muted mb-1.5">
-              Verification code
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              required
-              maxLength={6}
-              pattern="[0-9]{6}"
-              placeholder="000000"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-dark dark:text-white focus:border-brand outline-none text-sm text-center text-lg tracking-[0.3em] font-mono"
-            />
-          </div>
+          {!codeSent ? (
+            <button
+              type="button"
+              onClick={sendCode}
+              disabled={sending || !email}
+              className="w-full py-3 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Mail className="w-4 h-4" />
+              )}
+              {sending ? "Sending..." : "Send verification code"}
+            </button>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-muted mb-1.5">
+                  Verification code
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-dark dark:text-white focus:border-brand outline-none text-sm text-center text-lg tracking-[0.3em] font-mono"
+                />
+              </div>
 
-          <button
-            type="submit"
-            disabled={loading || code.length < 6}
-            className="w-full py-3 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            Verify and continue
-          </button>
+              <button
+                type="submit"
+                disabled={loading || code.length < 6}
+                className="w-full py-3 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Verify and continue
+              </button>
 
-          <button
-            type="button"
-            onClick={sendCode}
-            disabled={sending || resendIn > 0}
-            className="w-full text-sm text-brand-start hover:underline disabled:opacity-50 disabled:no-underline"
-          >
-            {sending
-              ? "Sending..."
-              : resendIn > 0
-                ? `Resend code in ${resendIn}s`
-                : "Resend code"}
-          </button>
+              <button
+                type="button"
+                onClick={sendCode}
+                disabled={sending || resendIn > 0}
+                className="w-full text-sm text-brand-start hover:underline disabled:opacity-50 disabled:no-underline"
+              >
+                {sending
+                  ? "Sending..."
+                  : resendIn > 0
+                    ? `Resend code in ${resendIn}s`
+                    : "Resend code"}
+              </button>
+            </>
+          )}
         </form>
       </div>
     </div>
