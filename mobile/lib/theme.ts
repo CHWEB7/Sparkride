@@ -24,12 +24,46 @@ export function formatStatus(status: string) {
   return status.replace(/_/g, " ");
 }
 
+const HUB_SALOON_ESTATE_PRICES: Record<string, { saloon: number; estate?: number }> = {
+  LBA: { saloon: 45, estate: 53 },
+  MAN: { saloon: 100, estate: 105 },
+  LPL: { saloon: 110 },
+  EMA: { saloon: 110 },
+  BHX: { saloon: 160 },
+  LHR: { saloon: 375 },
+  LGW: { saloon: 400 },
+  STN: { saloon: 300 },
+  LTN: { saloon: 300 },
+  NCL: { saloon: 150 },
+  HUL: { saloon: 100 },
+  DOV: { saloon: 400 },
+  SOU: { saloon: 400 },
+  DCT: { saloon: 400 },
+  LCT: { saloon: 120 },
+  PRT: { saloon: 150 },
+};
+
+function getHubVehiclePrice(hubCode: string, _vehicleType: string): number | null {
+  const tier = HUB_SALOON_ESTATE_PRICES[hubCode];
+  if (!tier) return null;
+  return tier.estate ? Math.max(tier.saloon, tier.estate) : tier.saloon;
+}
+
 export function estimatePrice(
   vehicleType: string,
   tripType: string,
   journeyType: string,
-  serviceType: string
+  serviceType: string,
+  hubCode?: string | null
 ): number {
+  if (hubCode && serviceType !== "PRE_BOOKED") {
+    const oneWay = getHubVehiclePrice(hubCode, vehicleType);
+    if (oneWay !== null) {
+      if (journeyType === "RETURN") return oneWay * 2;
+      return oneWay;
+    }
+  }
+
   const prices: Record<string, number> = {
     SALOON: 45,
     ESTATE: 55,
@@ -37,12 +71,8 @@ export function estimatePrice(
     EXECUTIVE: 85,
   };
   const base = prices[vehicleType] ?? 45;
-  const isAirport = serviceType === "AIRPORT_TRANSFER";
-  const outbound = isAirport && tripType === "FROM_AIRPORT" ? base + 5 : base;
-
   if (journeyType === "RETURN") {
-    const inbound = isAirport ? base + 5 : base;
-    return Math.round((outbound + inbound) * 0.9);
+    return base * 2;
   }
-  return outbound;
+  return base;
 }

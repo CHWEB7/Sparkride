@@ -1,3 +1,5 @@
+import { isBookableHub, estimateHubPrice } from "./hub-pricing";
+
 export type Airport = {
   code: string;
   name: string;
@@ -5,7 +7,7 @@ export type Airport = {
   region: string;
 };
 
-export const AIRPORTS: Airport[] = [
+const ALL_AIRPORTS: Airport[] = [
   { code: "LBA", name: "Leeds Bradford", city: "Leeds", region: "Yorkshire" },
   { code: "MAN", name: "Manchester", city: "Manchester", region: "North West" },
   { code: "LPL", name: "Liverpool John Lennon", city: "Liverpool", region: "North West" },
@@ -16,14 +18,15 @@ export const AIRPORTS: Airport[] = [
   { code: "STN", name: "Stansted", city: "London", region: "London" },
   { code: "LTN", name: "Luton", city: "London", region: "London" },
   { code: "NCL", name: "Newcastle", city: "Newcastle", region: "North East" },
-  { code: "EDI", name: "Edinburgh", city: "Edinburgh", region: "Scotland" },
-  { code: "GLA", name: "Glasgow", city: "Glasgow", region: "Scotland" },
 ];
+
+export const AIRPORTS = ALL_AIRPORTS.filter((airport) => isBookableHub(airport.code));
 
 export function getAirport(code: string): Airport | undefined {
   return AIRPORTS.find((a) => a.code === code);
 }
 
+/** Fallback vehicle tiers for pre-booked journeys without a fixed hub price. */
 export const VEHICLE_PRICES: Record<string, number> = {
   SALOON: 45,
   ESTATE: 55,
@@ -31,22 +34,21 @@ export const VEHICLE_PRICES: Record<string, number> = {
   EXECUTIVE: 85,
 };
 
-import { usesHubPricing } from "./hubs";
-
 export function estimatePrice(
   vehicleType: string,
   tripType: string,
   journeyType: string = "SINGLE",
-  serviceType: string = "AIRPORT_TRANSFER"
+  serviceType: string = "AIRPORT_TRANSFER",
+  hubCode?: string | null
 ): number {
-  const base = VEHICLE_PRICES[vehicleType] ?? 45;
-  const isHub = usesHubPricing(serviceType);
-  const outbound = isHub && tripType === "FROM_AIRPORT" ? base + 5 : base;
-
-  if (journeyType === "RETURN") {
-    const inbound = isHub ? base + 5 : base;
-    return Math.round((outbound + inbound) * 0.9);
+  if (hubCode && serviceType !== "PRE_BOOKED") {
+    const hubPrice = estimateHubPrice(hubCode, vehicleType, journeyType);
+    if (hubPrice !== null) return hubPrice;
   }
 
-  return outbound;
+  const base = VEHICLE_PRICES[vehicleType] ?? 45;
+  if (journeyType === "RETURN") {
+    return base * 2;
+  }
+  return base;
 }

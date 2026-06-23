@@ -5,6 +5,7 @@ const serviceTypeEnum = z.enum([
   "AIRPORT_TRANSFER",
   "FERRY_PORT_TRANSFER",
   "CRUISE_TERMINAL_TRANSFER",
+  "PORT_TRANSFER",
   "PRE_BOOKED",
 ]);
 

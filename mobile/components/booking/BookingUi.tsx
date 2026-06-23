@@ -87,7 +87,9 @@ export function QuoteCard({
       <View style={styles.quoteTotal}>
         <Text style={styles.quoteTotalLabel}>Estimated total</Text>
         <Text style={styles.quotePrice}>£{price}</Text>
-        {isReturn && <Text style={styles.discount}>Includes 10% return discount</Text>}
+        {isReturn && (
+          <Text style={styles.discount}>Return fare is double the single journey price</Text>
+        )}
       </View>
     </View>
   );

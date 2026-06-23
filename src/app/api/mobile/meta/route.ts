@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { AIRPORTS, VEHICLE_PRICES } from "@/lib/airports";
+import { getCombinedPorts } from "@/lib/hubs";
 import { CRUISE_TERMINALS } from "@/lib/cruise-terminals";
 import { FERRY_PORTS } from "@/lib/ferry-ports";
 
@@ -19,6 +20,7 @@ export async function GET() {
       airports: AIRPORTS,
       ferryPorts: FERRY_PORTS,
       cruiseTerminals: CRUISE_TERMINALS,
+      ports: getCombinedPorts(),
       vehiclePrices: VEHICLE_PRICES,
       vehicleTypes: [
         { value: "SALOON", label: "Saloon", desc: "Up to 3 passengers" },

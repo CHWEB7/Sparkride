@@ -194,7 +194,7 @@ export function BookingWizard() {
               <OptionCard
                 icon="swap-horizontal-outline"
                 label="Return journey"
-                description="Outbound and return — save 10%"
+                description="Outbound and return trip"
                 selected={form.journeyType === "RETURN"}
                 onPress={() => selectJourney("RETURN")}
               />

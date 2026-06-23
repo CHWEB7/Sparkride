@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
+import { normalizeServiceType } from "@/lib/hubs";
 
 const savedDetailsSchema = z.object({
   label: z.string().min(1, "Label is required"),
@@ -10,6 +11,7 @@ const savedDetailsSchema = z.object({
     "AIRPORT_TRANSFER",
     "FERRY_PORT_TRANSFER",
     "CRUISE_TERMINAL_TRANSFER",
+    "PORT_TRANSFER",
     "PRE_BOOKED",
   ]),
   journeyType: z.enum(["SINGLE", "RETURN"]),
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
     data: {
       customerId: customer.id,
       label: data.label,
-      serviceType: data.serviceType,
+      serviceType: normalizeServiceType(data.serviceType, data.airportCode),
       journeyType: data.journeyType,
       tripType: data.tripType,
       airportCode: data.airportCode || null,

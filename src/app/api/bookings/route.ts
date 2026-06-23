@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
-import { getHub, formatHubLabel, isHubTransfer } from "@/lib/hubs";
+import { getHub, formatHubLabel, isHubTransfer, normalizeServiceType } from "@/lib/hubs";
 import { estimatePrice } from "@/lib/airports";
 import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+    const storedServiceType = normalizeServiceType(data.serviceType, data.airportCode);
     const hub =
       isHubTransfer(data.serviceType) && data.airportCode
         ? getHub(data.airportCode, data.serviceType)
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         reference: generateReference(),
         customerId: customer.id,
         driverId: driver.id,
-        serviceType: data.serviceType,
+        serviceType: storedServiceType,
         journeyType: data.journeyType,
         tripType: data.tripType,
         airportCode: hub?.code ?? null,
@@ -100,7 +101,8 @@ export async function POST(req: NextRequest) {
           driver.vehicleType,
           data.tripType,
           data.journeyType,
-          data.serviceType
+          data.serviceType,
+          data.airportCode
         ),
       },
     });
@@ -113,7 +115,7 @@ export async function POST(req: NextRequest) {
         data: {
           customerId: customer.id,
           label,
-          serviceType: data.serviceType,
+          serviceType: storedServiceType,
           journeyType: data.journeyType,
           tripType: data.tripType,
           airportCode: hub?.code ?? null,

@@ -24,7 +24,7 @@ export type Booking = {
 };
 
 export type BookingInput = {
-  serviceType: "AIRPORT_TRANSFER" | "FERRY_PORT_TRANSFER" | "CRUISE_TERMINAL_TRANSFER" | "PRE_BOOKED";
+  serviceType: "AIRPORT_TRANSFER" | "FERRY_PORT_TRANSFER" | "CRUISE_TERMINAL_TRANSFER" | "PORT_TRANSFER" | "PRE_BOOKED";
   journeyType: "SINGLE" | "RETURN";
   tripType: "TO_AIRPORT" | "FROM_AIRPORT";
   airportCode?: string;

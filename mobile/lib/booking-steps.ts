@@ -19,7 +19,7 @@ export const STEP_META: Record<StepId, { label: string }> = {
 
 export type WizardForm = {
   journeyType: "" | "SINGLE" | "RETURN";
-  serviceType: "" | "AIRPORT_TRANSFER" | "FERRY_PORT_TRANSFER" | "CRUISE_TERMINAL_TRANSFER" | "PRE_BOOKED";
+  serviceType: "" | "AIRPORT_TRANSFER" | "FERRY_PORT_TRANSFER" | "CRUISE_TERMINAL_TRANSFER" | "PORT_TRANSFER" | "PRE_BOOKED";
   tripType: "TO_AIRPORT" | "FROM_AIRPORT";
   airportCode: string;
   pickupAddress: string;
@@ -66,7 +66,7 @@ export function getSteps(journeyType: string, serviceType: string): StepId[] {
   if (!journeyType) return steps;
   steps.push("service");
   if (!serviceType) return steps;
-  if (journeyType === "SINGLE" && ["AIRPORT_TRANSFER", "FERRY_PORT_TRANSFER", "CRUISE_TERMINAL_TRANSFER"].includes(serviceType)) {
+  if (journeyType === "SINGLE" && ["AIRPORT_TRANSFER", "FERRY_PORT_TRANSFER", "CRUISE_TERMINAL_TRANSFER", "PORT_TRANSFER"].includes(serviceType)) {
     steps.push("direction");
   }
   steps.push("route", "schedule", "contact");
@@ -75,7 +75,7 @@ export function getSteps(journeyType: string, serviceType: string): StepId[] {
 
 export function validateStep(step: StepId, form: WizardForm): string | null {
   const isReturn = form.journeyType === "RETURN";
-  const isHub = ["AIRPORT_TRANSFER", "FERRY_PORT_TRANSFER", "CRUISE_TERMINAL_TRANSFER"].includes(form.serviceType);
+  const isHub = ["AIRPORT_TRANSFER", "FERRY_PORT_TRANSFER", "CRUISE_TERMINAL_TRANSFER", "PORT_TRANSFER"].includes(form.serviceType);
 
   switch (step) {
     case "route":
@@ -103,7 +103,7 @@ export function validateStep(step: StepId, form: WizardForm): string | null {
 
 export function toBookingPayload(form: WizardForm): BookingInput {
   const isReturn = form.journeyType === "RETURN";
-  const isHub = ["AIRPORT_TRANSFER", "FERRY_PORT_TRANSFER", "CRUISE_TERMINAL_TRANSFER"].includes(form.serviceType);
+  const isHub = ["AIRPORT_TRANSFER", "FERRY_PORT_TRANSFER", "CRUISE_TERMINAL_TRANSFER", "PORT_TRANSFER"].includes(form.serviceType);
 
   return {
     journeyType: form.journeyType as "SINGLE" | "RETURN",

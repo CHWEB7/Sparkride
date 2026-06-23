@@ -1,10 +1,11 @@
-import { Suspense } from "react";
-import { CustomerVerify2faForm } from "@/components/customer/CustomerVerify2faForm";
+import { redirect } from "next/navigation";
 
-export default function Verify2faPage() {
-  return (
-    <Suspense>
-      <CustomerVerify2faForm />
-    </Suspense>
-  );
+type Props = {
+  searchParams: Promise<{ redirect?: string }>;
+};
+
+export default async function Verify2faPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const redirectTo = params.redirect || "/book";
+  redirect(`/login?verify=required&redirect=${encodeURIComponent(redirectTo)}`);
 }

@@ -15,11 +15,12 @@ function redirectToLogin(request: NextRequest, error?: string) {
   return NextResponse.redirect(url);
 }
 
-function redirectToVerify2fa(request: NextRequest) {
+function redirectToLoginVerify(request: NextRequest) {
   const url = request.nextUrl.clone();
   const redirect = request.nextUrl.pathname + request.nextUrl.search;
-  url.pathname = "/verify-2fa";
+  url.pathname = "/login";
   url.search = "";
+  url.searchParams.set("verify", "required");
   url.searchParams.set("redirect", redirect);
   return NextResponse.redirect(url);
 }
@@ -61,6 +62,10 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/account") ||
     pathname.startsWith("/booking/");
 
+  if (isVerify2fa && user) {
+    return redirectToLoginVerify(request);
+  }
+
   if (!user && (isProtected || isVerify2fa)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -84,23 +89,14 @@ export async function updateSession(request: NextRequest) {
       }
 
       if (isProtected) {
-        return redirectToVerify2fa(request);
-      }
-
-      if (isAuthPage) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/verify-2fa";
-        url.searchParams.set(
-          "redirect",
-          request.nextUrl.searchParams.get("redirect") || "/book"
-        );
-        return NextResponse.redirect(url);
+        return redirectToLoginVerify(request);
       }
     } else {
       if (isVerify2fa || isAuthPage) {
         const url = request.nextUrl.clone();
         url.pathname = request.nextUrl.searchParams.get("redirect") || "/book";
         url.searchParams.delete("redirect");
+        url.searchParams.delete("verify");
         return NextResponse.redirect(url);
       }
     }

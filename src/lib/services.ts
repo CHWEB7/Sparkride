@@ -50,12 +50,12 @@ export const SERVICES: ServiceItem[] = [
   {
     id: "ferry-ports",
     slug: "ferry-ports",
-    title: "Ferry ports",
-    teaser: "Door-to-port transfers for cross-channel and UK sailings.",
+    title: "Ferry & cruise ports",
+    teaser: "Fixed-price transfers to Hull, Dover, Southampton and more.",
     description:
-      "Relaxed pickup times and generous luggage space for Hull, Dover, Liverpool and other ferry terminals.",
+      "Door-to-port transfers for cross-channel sailings and UK cruise terminals — fixed pricing from West Yorkshire pickup areas.",
     href: "/services/ferry-ports",
-    cta: "Book ferry transfer",
+    cta: "Book port transfer",
     image: "/images/Services/ferry-ports.jpg",
     buttonClass: "bg-sky-400 text-[#0c2238] hover:bg-sky-300",
   },

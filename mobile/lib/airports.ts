@@ -11,6 +11,4 @@ export const DEFAULT_AIRPORTS: Airport[] = [
   { code: "STN", name: "Stansted", city: "London", region: "London" },
   { code: "LTN", name: "Luton", city: "London", region: "London" },
   { code: "NCL", name: "Newcastle", city: "Newcastle", region: "North East" },
-  { code: "EDI", name: "Edinburgh", city: "Edinburgh", region: "Scotland" },
-  { code: "GLA", name: "Glasgow", city: "Glasgow", region: "Scotland" },
 ];

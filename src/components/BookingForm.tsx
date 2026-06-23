@@ -13,6 +13,9 @@ import {
   getHubPickerLabel,
   getServiceLabel,
   isHubTransfer,
+  isPortTransferCategory,
+  normalizeServiceType,
+  PORT_TRANSFER,
 } from "@/lib/hubs";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 import {
@@ -24,7 +27,6 @@ import {
   MapPin,
   Plane,
   Ship,
-  Anchor,
   User,
   Check,
   Clock,
@@ -159,7 +161,8 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
           priceVehicleType,
           form.tripType,
           form.journeyType,
-          form.serviceType
+          form.serviceType,
+          form.airportCode
         )
       : 0;
 
@@ -309,8 +312,10 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
         ? getHub(form.airportCode, form.serviceType)
         : null;
       const hubLabel = hub ? formatHubLabel(hub, form.serviceType) : "";
+      const storedServiceType = normalizeServiceType(form.serviceType, form.airportCode);
       const payload = {
         ...form,
+        serviceType: storedServiceType,
         ...(form.journeyType === "RETURN" && isHubTransfer(form.serviceType)
           ? { tripType: "TO_AIRPORT", dropoffAddress: hubLabel || form.dropoffAddress }
           : {}),
@@ -418,7 +423,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                       {
                         value: "RETURN",
                         label: "Return journey",
-                        desc: "Outbound and return trip — save 10%",
+                        desc: "Outbound and return trip",
                         icon: ArrowLeftRight,
                       },
                     ].map((opt) => (
@@ -453,16 +458,10 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                         icon: Plane,
                       },
                       {
-                        value: "FERRY_PORT_TRANSFER",
-                        label: "Ferry port transfer",
-                        desc: "To or from UK ferry terminals",
+                        value: PORT_TRANSFER,
+                        label: "Ferry & cruise ports",
+                        desc: "To or from UK ferry and cruise terminals",
                         icon: Ship,
-                      },
-                      {
-                        value: "CRUISE_TERMINAL_TRANSFER",
-                        label: "Cruise terminal transfer",
-                        desc: "To or from UK cruise ports",
-                        icon: Anchor,
                       },
                       {
                         value: "PRE_BOOKED",
@@ -498,12 +497,8 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                         onClick={() => selectDirection(opt.value)}
                         className={bigCard(form.tripType === opt.value)}
                       >
-                        {form.serviceType === "FERRY_PORT_TRANSFER" ? (
+                        {isPortTransferCategory(form.serviceType) ? (
                           <Ship
-                            className={`w-10 h-10 text-brand mb-4 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
-                          />
-                        ) : form.serviceType === "CRUISE_TERMINAL_TRANSFER" ? (
-                          <Anchor
                             className={`w-10 h-10 text-brand mb-4 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
                           />
                         ) : (
@@ -922,7 +917,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
             <div className="text-sm text-muted">Estimated total</div>
             <div className="text-4xl font-bold text-brand-gradient mt-1">£{price}</div>
             {isReturn && (
-              <div className="text-xs text-brand mt-1">Includes 10% return discount</div>
+              <div className="text-xs text-muted mt-1">Return fare is double the single journey price</div>
             )}
             <div className="text-xs text-muted mt-2">Fixed price · Pay driver on the day</div>
           </div>
