@@ -51,18 +51,22 @@ export function LocationSection() {
           className="absolute inset-y-0 left-[38%] sm:left-[42%] lg:left-[46%] xl:left-[48%] right-0 overflow-hidden"
           aria-hidden
         >
-          <Image
-            src="/images/location/west-yorkshire-map.png"
-            alt=""
-            fill
-            className="object-cover scale-[1.14] min-w-full"
-            style={{ objectPosition: "72% center" }}
-            sizes="(max-width: 1024px) 60vw, 52vw"
-            priority={false}
-          />
-          <div className="absolute inset-0 bg-[#6a68de]/8 dark:bg-[#6a68de]/12 mix-blend-multiply dark:mix-blend-soft-light" />
-          <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-app-bg via-app-bg/70 to-transparent dark:from-dark dark:via-dark/70" />
-          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-app-bg to-transparent dark:from-dark opacity-90" />
+          <div className="absolute inset-0">
+            <Image
+              src="/images/location/west-yorkshire-map.png"
+              alt=""
+              fill
+              className="object-cover scale-[1.14] min-w-full saturate-[0.72] contrast-[0.9] brightness-[1.06] hue-rotate-[8deg] dark:saturate-[0.58] dark:brightness-[0.82] dark:contrast-[0.95] dark:hue-rotate-[12deg]"
+              style={{ objectPosition: "72% center" }}
+              sizes="(max-width: 1024px) 60vw, 52vw"
+              priority={false}
+            />
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6a68de]/30 via-[#7a9ee8]/12 to-[#82dbdf]/22 mix-blend-soft-light dark:from-[#6a68de]/35 dark:via-[#5a58c8]/18 dark:to-[#82dbdf]/15 dark:mix-blend-color" />
+          <div className="absolute inset-0 bg-app-bg/25 dark:bg-dark/35" />
+          <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-app-bg via-app-bg/75 to-transparent dark:from-dark dark:via-dark/75" />
+          <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-app-bg to-transparent dark:from-dark opacity-95" />
         </div>
 
         <div
