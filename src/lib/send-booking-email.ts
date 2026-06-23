@@ -1,3 +1,5 @@
+import { getSiteUrl } from "@/lib/site-url";
+
 type SendResult = { ok: true } | { ok: false; error: string };
 
 function emailFromAddress(): string {
@@ -56,6 +58,9 @@ export async function sendBookingConfirmedEmail(
   to: string,
   booking: BookingConfirmedDetails
 ): Promise<SendResult> {
+  const siteUrl = getSiteUrl();
+  const bookingPageUrl = `${siteUrl}/booking/${booking.reference}`;
+
   const dateStr = booking.pickupDate.toLocaleString("en-GB", {
     weekday: "short",
     day: "numeric",
@@ -69,15 +74,33 @@ export async function sendBookingConfirmedEmail(
   const showPayButton =
     booking.paymentStatus === "AWAITING_PAYMENT" && booking.paymentLinkUrl;
 
+  const nextSteps = showPayButton
+    ? `
+      <ol style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.7;">
+        <li><strong>Pay online now</strong> using the button below (secure Square checkout).</li>
+        <li>Keep your reference <strong>${booking.reference}</strong> — you can also pay from your Sparkride booking page.</li>
+        <li>Your driver will contact you before pickup if they need any further details.</li>
+        <li>On travel day, be ready at the pickup location at the agreed time.</li>
+      </ol>
+    `
+    : `
+      <ol style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.7;">
+        <li>View your booking on Sparkride using the link below.</li>
+        <li>Your driver will confirm payment arrangements if online pay is not yet available.</li>
+        <li>Keep your reference <strong>${booking.reference}</strong> for any enquiries.</li>
+        <li>On travel day, be ready at the pickup location at the agreed time.</li>
+      </ol>
+    `;
+
   const payBlock = showPayButton
     ? `
       <div style="margin: 28px 0; text-align: center;">
         <a href="${booking.paymentLinkUrl}"
            style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
-          Pay securely with Square
+          Pay now — £${booking.estimatedPrice ?? ""}
         </a>
         <p style="color: #6b7280; font-size: 13px; margin-top: 12px; line-height: 1.5;">
-          You will complete payment on Square&apos;s secure checkout. Sparkride does not store your card details.
+          Secure payment via Square. Sparkride does not store your card details.
         </p>
       </div>
     `
@@ -96,16 +119,31 @@ export async function sendBookingConfirmedEmail(
         <tr><td style="padding: 8px 0; color: #6b7280;">Driver</td><td style="padding: 8px 0;">${booking.driverName}${booking.vehicleLabel ? ` · ${booking.vehicleLabel}` : ""}</td></tr>
         ${booking.estimatedPrice ? `<tr><td style="padding: 8px 0; color: #6b7280;">Fare</td><td style="padding: 8px 0;">£${booking.estimatedPrice}</td></tr>` : ""}
       </table>
+
+      <h3 style="color: #191c23; font-size: 16px; margin: 24px 0 12px;">Next steps</h3>
+      ${nextSteps}
+
       ${payBlock}
+
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${bookingPageUrl}"
+           style="display: inline-block; border: 2px solid #6a68de; color: #6a68de; text-decoration: none; font-weight: 600; padding: 12px 24px; border-radius: 999px;">
+          View booking on Sparkride
+        </a>
+        <p style="color: #6b7280; font-size: 13px; margin-top: 12px; line-height: 1.5;">
+          Sign in to track your trip, pay online, and see booking details.
+        </p>
+      </div>
+
       <p style="color: #9ca3af; font-size: 13px;">
-        Questions? Reply to this email or contact Sparkride support.
+        Questions? Reply to this email or visit <a href="${siteUrl}/payments" style="color: #6a68de;">how payments work</a>.
       </p>
     </div>
   `.trim();
 
   return sendResendEmail(
     to,
-    `Booking ${booking.reference} confirmed — Sparkride`,
+    `Booking ${booking.reference} confirmed — pay online`,
     html
   );
 }

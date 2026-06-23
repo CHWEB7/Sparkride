@@ -1,8 +1,8 @@
 import type { PaymentStatus } from "@prisma/client";
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  NOT_REQUIRED: "Pay on travel day",
-  AWAITING_PAYMENT: "Payment due",
+  NOT_REQUIRED: "Payment with driver",
+  AWAITING_PAYMENT: "Pay now",
   PAID: "Paid",
   FAILED: "Payment failed",
   REFUNDED: "Refunded",
@@ -15,3 +15,21 @@ export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
   FAILED: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
   REFUNDED: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300",
 };
+
+type PayableBooking = {
+  status: string;
+  paymentStatus: PaymentStatus;
+  squarePaymentLinkUrl?: string | null;
+};
+
+export function canPayOnline(booking: PayableBooking): boolean {
+  return (
+    booking.status === "CONFIRMED" &&
+    booking.paymentStatus === "AWAITING_PAYMENT" &&
+    Boolean(booking.squarePaymentLinkUrl)
+  );
+}
+
+export function showPaymentStatus(booking: PayableBooking): boolean {
+  return booking.status === "CONFIRMED" || booking.paymentStatus === "PAID";
+}

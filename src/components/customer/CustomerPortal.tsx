@@ -14,7 +14,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import type { CustomerProfile } from "@/lib/customer";
 import { BookingForm } from "@/components/BookingForm";
-import { SavedDetailsManager } from "@/components/customer/SavedDetailsManager";
+import { BookingTripPaymentActions } from "@/components/booking/BookingTripPaymentActions";
+import type { PaymentStatus } from "@prisma/client";
 
 type PortalView = "home" | "wizard" | "active" | "history" | "saved";
 
@@ -25,6 +26,10 @@ type BookingRow = {
   pickupDate: string;
   pickupAddress: string;
   dropoffAddress: string;
+  paymentStatus: PaymentStatus;
+  squarePaymentLinkUrl?: string | null;
+  amountDue?: number | null;
+  estimatedPrice?: number | null;
 };
 
 type SavedTemplate = {
@@ -289,6 +294,14 @@ function TripList({
                 <p className="text-sm text-muted mt-1">
                   {booking.pickupAddress} → {booking.dropoffAddress}
                 </p>
+                <BookingTripPaymentActions
+                  reference={booking.reference}
+                  status={booking.status}
+                  paymentStatus={booking.paymentStatus}
+                  squarePaymentLinkUrl={booking.squarePaymentLinkUrl}
+                  amountDue={booking.amountDue}
+                  estimatedPrice={booking.estimatedPrice}
+                />
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-light dark:bg-brand/10 text-brand">
                 {booking.status.replace(/_/g, " ")}

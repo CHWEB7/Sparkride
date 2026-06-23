@@ -49,7 +49,7 @@ export function BookingPaymentSection({
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-brand-gradient text-white font-semibold rounded-full hover:opacity-90 transition-opacity"
           >
-            Pay securely with Square
+            Pay now
             <ExternalLink className="w-4 h-4" />
           </a>
           <p className="text-xs text-muted leading-relaxed">
@@ -71,7 +71,9 @@ export function BookingPaymentSection({
 
       {paymentStatus === "NOT_REQUIRED" && (
         <p className="mt-4 text-sm text-muted leading-relaxed">
-          Your driver will confirm payment arrangements if online payment is not available for this booking.
+          Online payment is not available for this booking yet. View your booking here anytime — if your
+          driver connects Square, a pay link will appear. Otherwise your driver will confirm payment
+          arrangements directly.
         </p>
       )}
 
