@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { KeyRound, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -10,11 +10,18 @@ import {
   authLabelClass,
 } from "@/components/driver/DriverAuthShell";
 import { DriverTotpSetup } from "@/components/driver/DriverTotpSetup";
+import { DriverSetPasswordForm } from "@/components/driver/DriverSetPasswordForm";
 
-type Step = "bootstrap" | "mfa";
+type Step = "bootstrap" | "mfa" | "password";
+
+function driverPasswordIsSet(user: { user_metadata?: Record<string, unknown> }) {
+  return user.user_metadata?.driver_password_set === true;
+}
 
 export function DriverEnrollForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const passwordReset = searchParams.get("reset") === "1";
   const [step, setStep] = useState<Step>("bootstrap");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -31,21 +38,41 @@ export function DriverEnrollForm() {
 
       if (user?.app_metadata?.role === "driver") {
         const { data: factors } = await supabase.auth.mfa.listFactors();
-        if ((factors?.totp?.length ?? 0) > 0) {
+        const hasVerifiedTotp =
+          factors?.totp?.some((factor) => factor.status === "verified") ?? false;
+
+        if (passwordReset && hasVerifiedTotp) {
+          setStep("password");
+          setLoading(false);
+          return;
+        }
+
+        if (hasVerifiedTotp) {
+          if (!driverPasswordIsSet(user)) {
+            setStep("password");
+            setLoading(false);
+            return;
+          }
+
           const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
           if (aal?.currentLevel === "aal2") {
             router.replace("/driver/dashboard");
             return;
           }
         }
-        setStep("mfa");
+
+        if (hasVerifiedTotp) {
+          setStep("password");
+        } else {
+          setStep("mfa");
+        }
       }
 
       setLoading(false);
     }
 
     checkSession();
-  }, [router]);
+  }, [router, passwordReset]);
 
   async function handleBootstrap(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +89,17 @@ export function DriverEnrollForm() {
       if (signInError) throw signInError;
 
       if (data.user?.app_metadata?.role !== "driver") {
+        const claimRes = await fetch("/api/driver/ensure-role", { method: "POST" });
+        if (claimRes.ok) {
+          await supabase.auth.refreshSession();
+          const {
+            data: { user: refreshed },
+          } = await supabase.auth.getUser();
+          if (refreshed?.app_metadata?.role === "driver") {
+            setStep("mfa");
+            return;
+          }
+        }
         await supabase.auth.signOut();
         throw new Error("This account is not authorised for the driver portal.");
       }
@@ -80,9 +118,26 @@ export function DriverEnrollForm() {
   }
 
   function handleMfaComplete() {
+    setStep("password");
+  }
+
+  function handlePasswordComplete() {
     router.push("/driver/dashboard");
     router.refresh();
   }
+
+  const titles: Record<Step, string> = {
+    bootstrap: "Verify your account",
+    mfa: "Set up authenticator",
+    password: "Choose your password",
+  };
+
+  const subtitles: Record<Step, string> = {
+    bootstrap: "Sign in once with your one-time password from Sparkride.",
+    mfa: "Scan the QR code with your MFA app. This is required before you can access bookings.",
+    password:
+      "Replace your one-time password with a personal password you will use for future sign-ins.",
+  };
 
   if (loading) {
     return (
@@ -95,12 +150,8 @@ export function DriverEnrollForm() {
   return (
     <DriverAuthShell
       mode="enroll"
-      title={step === "bootstrap" ? "Verify your account" : "Set up authenticator"}
-      subtitle={
-        step === "bootstrap"
-          ? "Sign in once with your one-time password from Sparkride."
-          : "Scan the QR code with your MFA app. This is required before you can access bookings."
-      }
+      title={titles[step]}
+      subtitle={subtitles[step]}
     >
       {error && (
         <div className="p-3 rounded-xl bg-red-500/10 text-red-600 text-sm mb-4">{error}</div>
@@ -132,8 +183,8 @@ export function DriverEnrollForm() {
               className={authInputClass}
             />
             <p className="mt-2 text-xs text-muted leading-relaxed">
-              Provided by Sparkride when your driver account was created. Used only for this
-              one-time setup.
+              Provided by Sparkride when your driver account was created. You will choose a
+              new password after MFA setup.
             </p>
           </div>
           <button
@@ -151,8 +202,10 @@ export function DriverEnrollForm() {
             )}
           </button>
         </form>
-      ) : (
+      ) : step === "mfa" ? (
         <DriverTotpSetup onComplete={handleMfaComplete} />
+      ) : (
+        <DriverSetPasswordForm onComplete={handlePasswordComplete} />
       )}
     </DriverAuthShell>
   );

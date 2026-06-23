@@ -1,25 +1,29 @@
 /** Shared Supabase environment helpers (used by server + browser clients). */
 
 export function getSupabaseUrl() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   if (!url) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set");
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL is not set");
   }
   return url;
 }
 
 export function getSupabaseAnonKey() {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
   if (!key) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is not set");
+    throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY is not set");
   }
   return key;
 }
 
 export function getSupabaseServiceRoleKey() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   if (!key) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY is not set"
+    );
   }
   return key;
 }

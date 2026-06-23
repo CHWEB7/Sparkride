@@ -8,6 +8,12 @@ import {
 } from "@/lib/bookable-drivers";
 import { DRIVER_ROLE } from "@/lib/driver-auth";
 
+export type DriverAuthSyncResult = {
+  email: string;
+  authUserId: string;
+  action: "created" | "updated";
+};
+
 function bootstrapPasswordForEmail(email: string): string {
   const seed = BOOKABLE_DRIVER_SEEDS.find(
     (entry) => entry.email.toLowerCase() === email.toLowerCase()
@@ -49,11 +55,14 @@ async function upsertAuthUser(
   if (existing) {
     const { data, error } = await admin.auth.admin.updateUserById(existing.id, {
       password,
-      app_metadata: { role: DRIVER_ROLE },
+      app_metadata: {
+        ...(existing.app_metadata ?? {}),
+        role: DRIVER_ROLE,
+      },
       email_confirm: true,
     });
     if (error) throw error;
-    return data.user;
+    return { user: data.user, action: "updated" as const };
   }
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -63,34 +72,49 @@ async function upsertAuthUser(
     app_metadata: { role: DRIVER_ROLE },
   });
   if (error) throw error;
-  return data.user;
+  return { user: data.user, action: "created" as const };
 }
 
-export async function syncAllDriverAuthUsers() {
+export async function syncDriverAuthUser(
+  email: string
+): Promise<DriverAuthSyncResult> {
+  const driver = await prisma.driver.findUnique({
+    where: { email: email.toLowerCase() },
+  });
+
+  if (!driver) {
+    throw new Error(
+      `No driver row found for ${email}. Add them to the database first (npm run db:seed).`
+    );
+  }
+
   const admin = createAdminClient();
+  const password = bootstrapPasswordForEmail(driver.email);
+  const { user, action } = await upsertAuthUser(admin, driver.email, password);
+
+  if (!user?.id) {
+    throw new Error(`Failed to sync auth user for ${driver.email}`);
+  }
+
+  await prisma.driver.update({
+    where: { id: driver.id },
+    data: { authUserId: user.id },
+  });
+
+  return {
+    email: driver.email,
+    authUserId: user.id,
+    action,
+  };
+}
+
+export async function syncAllDriverAuthUsers(): Promise<DriverAuthSyncResult[]> {
   const drivers = await prisma.driver.findMany({ orderBy: { email: "asc" } });
-  const results: { email: string; authUserId: string; action: "created" | "updated" }[] =
-    [];
+  const results: DriverAuthSyncResult[] = [];
 
   for (const driver of drivers) {
-    const password = bootstrapPasswordForEmail(driver.email);
-    const existing = await findUserByEmail(admin, driver.email);
-    const authUser = await upsertAuthUser(admin, driver.email, password);
-
-    if (!authUser?.id) {
-      throw new Error(`Failed to sync auth user for ${driver.email}`);
-    }
-
-    await prisma.driver.update({
-      where: { id: driver.id },
-      data: { authUserId: authUser.id },
-    });
-
-    results.push({
-      email: driver.email,
-      authUserId: authUser.id,
-      action: existing ? "updated" : "created",
-    });
+    const result = await syncDriverAuthUser(driver.email);
+    results.push(result);
   }
 
   return results;

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
+import { BookingPaymentSection } from "@/components/booking/BookingPaymentSection";
 import { CheckCircle, Calendar, MapPin, Car, User, ArrowLeftRight } from "lucide-react";
 import { format } from "date-fns";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
@@ -25,6 +26,7 @@ export default async function BookingConfirmationPage({
 
   const isReturn = booking.journeyType === "RETURN";
   const isHub = isHubTransfer(booking.serviceType);
+  const isConfirmed = booking.status !== "PENDING";
 
   const statusColors: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400",
@@ -43,12 +45,27 @@ export default async function BookingConfirmationPage({
             <div className="w-16 h-16 rounded-full bg-brand-light dark:bg-brand/10 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-brand" />
             </div>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight dark:text-white">Booking confirmed</h1>
+            <h1 className="mt-6 text-4xl font-bold tracking-tight dark:text-white">
+              {isConfirmed ? "Booking confirmed" : "Booking received"}
+            </h1>
             <p className="mt-3 text-lg text-muted">
               Your reference number is{" "}
               <span className="font-bold text-dark dark:text-white">{booking.reference}</span>
             </p>
           </div>
+
+          {booking.status === "CONFIRMED" && (
+            <div className="mb-6">
+              <BookingPaymentSection
+                reference={booking.reference}
+                paymentStatus={booking.paymentStatus}
+                amountDue={booking.amountDue}
+                estimatedPrice={booking.estimatedPrice}
+                paymentLinkUrl={booking.squarePaymentLinkUrl}
+                paidAt={booking.paidAt}
+              />
+            </div>
+          )}
 
           <div className="bg-booking-bg dark:bg-dark-elevated rounded-3xl p-6 sm:p-8 shadow-md dark:shadow-sm border-0 dark:border dark:border-white/10 space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -143,7 +160,7 @@ export default async function BookingConfirmationPage({
 
             {booking.estimatedPrice && (
               <div className="pt-4 flex justify-between items-center dark:border-t dark:border-white/10">
-                <span className="text-muted">Estimated price</span>
+                <span className="text-muted">Fare</span>
                 <span className="text-2xl font-bold text-brand-gradient">£{booking.estimatedPrice}</span>
               </div>
             )}
@@ -151,7 +168,11 @@ export default async function BookingConfirmationPage({
 
           <div className="mt-8">
             <p className="text-sm text-muted mb-4">
-              Save your reference number. We&apos;ll confirm your booking shortly.
+              {booking.status === "PENDING"
+                ? "Your driver will confirm this booking shortly."
+                : booking.paymentStatus === "AWAITING_PAYMENT"
+                  ? "Please complete payment before your travel date."
+                  : "Save your reference number for your records."}
             </p>
             <Link
               href="/"

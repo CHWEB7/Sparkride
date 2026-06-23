@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { KeyRound, Loader2, Smartphone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 import {
   DriverAuthShell,
   authInputClass,
@@ -22,6 +23,7 @@ export function DriverLoginForm() {
   const [bootstrappingMfa, setBootstrappingMfa] = useState(mfaRequired);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [factorId, setFactorId] = useState<string | null>(null);
@@ -70,15 +72,43 @@ export function DriverLoginForm() {
     prepareMfaStep();
   }, [mfaRequired, router]);
 
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setError("Enter your email first");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setMessage("");
+    const supabase = createClient();
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: getAuthCallbackUrl("/driver/enroll?reset=1"),
+    });
+    if (resetError) {
+      setError(resetError.message);
+    } else {
+      setMessage("Password reset email sent — open the link to choose a new password.");
+    }
+    setLoading(false);
+  }
+
   async function assertDriverRole(supabase: ReturnType<typeof createClient>) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (user?.app_metadata?.role !== "driver") {
-      await supabase.auth.signOut();
-      throw new Error("This account is not authorised for the driver portal.");
+    if (user?.app_metadata?.role === "driver") return user;
+
+    const claimRes = await fetch("/api/driver/ensure-role", { method: "POST" });
+    if (claimRes.ok) {
+      await supabase.auth.refreshSession();
+      const {
+        data: { user: refreshed },
+      } = await supabase.auth.getUser();
+      if (refreshed?.app_metadata?.role === "driver") return refreshed;
     }
-    return user;
+
+    await supabase.auth.signOut();
+    throw new Error("This account is not authorised for the driver portal.");
   }
 
   async function handleCredentials(e: React.FormEvent) {
@@ -178,6 +208,9 @@ export function DriverLoginForm() {
         {error && (
           <div className="p-3 rounded-xl bg-red-500/10 text-red-600 text-sm">{error}</div>
         )}
+        {message && (
+          <div className="p-3 rounded-xl bg-green-500/10 text-green-700 text-sm">{message}</div>
+        )}
 
         {bootstrappingMfa ? (
           <div className="flex items-center justify-center py-10">
@@ -209,6 +242,14 @@ export function DriverLoginForm() {
                 className={authInputClass}
               />
             </div>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={loading}
+              className="text-sm font-medium text-muted hover:text-dark transition-colors"
+            >
+              Forgot password?
+            </button>
             <button
               type="submit"
               disabled={loading}

@@ -6,7 +6,10 @@ import {
   canDriverManageBooking,
   driverBookingsFilter,
 } from "@/lib/driver-access";
-import { sendBookingConfirmedEmail } from "@/lib/send-booking-email";
+import {
+  canSetEnRoute,
+  handleBookingConfirmed,
+} from "@/lib/booking-confirmation";
 
 export async function GET() {
   const session = await requireDriverSessionWithMfa();
@@ -54,6 +57,16 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    if (
+      parsed.data.status === "EN_ROUTE" &&
+      !canSetEnRoute(existing.paymentStatus)
+    ) {
+      return NextResponse.json(
+        { error: "Customer must pay online before the trip can be marked en route" },
+        { status: 409 }
+      );
+    }
+
     const booking = await prisma.booking.update({
       where: { id },
       data: { status: parsed.data.status },
@@ -63,24 +76,16 @@ export async function PATCH(req: NextRequest) {
     const justConfirmed =
       parsed.data.status === "CONFIRMED" && existing.status !== "CONFIRMED";
 
-    if (justConfirmed && booking.customerEmail) {
-      const emailResult = await sendBookingConfirmedEmail(booking.customerEmail, {
-        reference: booking.reference,
-        customerName: booking.customerName,
-        pickupAddress: booking.pickupAddress,
-        dropoffAddress: booking.dropoffAddress,
-        pickupDate: booking.pickupDate,
-        driverName: booking.driver?.name ?? session.name,
-        vehicleLabel: booking.driver?.vehicleLabel,
-        estimatedPrice: booking.estimatedPrice,
-      });
-
-      if (!emailResult.ok) {
-        console.error("Booking confirmation email failed:", emailResult.error);
-      }
+    if (justConfirmed) {
+      await handleBookingConfirmed(booking.id);
     }
 
-    return NextResponse.json(booking);
+    const refreshed = await prisma.booking.findUnique({
+      where: { id: booking.id },
+      include: { driver: { select: { name: true, vehicleLabel: true } } },
+    });
+
+    return NextResponse.json(refreshed ?? booking);
   } catch (error) {
     console.error("Update error:", error);
     return NextResponse.json({ error: "Failed to update booking" }, { status: 400 });

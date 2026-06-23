@@ -31,18 +31,24 @@ model CustomerMfaSession {
 }
 
 model Driver {
-  id            String    @id @default(cuid())
-  authUserId    String?   @unique
-  email         String    @unique
-  passwordHash  String?
-  name          String
-  phone         String?
-  vehicleLabel  String?
-  vehicleType   VehicleType @default(SALOON)
-  maxSeats      Int       @default(4)
-  bookable      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  bookings      Booking[]
+  id                    String    @id @default(cuid())
+  authUserId            String?   @unique
+  email                 String    @unique
+  passwordHash          String?
+  name                  String
+  phone                 String?
+  vehicleLabel          String?
+  vehicleType           VehicleType @default(SALOON)
+  maxSeats              Int       @default(4)
+  bookable              Boolean   @default(false)
+  squareMerchantId      String?
+  squareLocationId      String?
+  squareAccessTokenEnc  String?   @db.Text
+  squareRefreshTokenEnc String?   @db.Text
+  squareTokenExpiresAt  DateTime?
+  squareConnectedAt     DateTime?
+  createdAt             DateTime  @default(now())
+  bookings              Booking[]
 }
 
 model SavedBookingDetails {
@@ -87,13 +93,19 @@ model Booking {
   flightNumber       String?
   returnFlightNumber String?
   notes              String?
-  estimatedPrice     Float?
-  driverId           String?
-  driver             Driver?       @relation(fields: [driverId], references: [id])
-  customerId         String?
-  customer           Customer?     @relation(fields: [customerId], references: [id])
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  estimatedPrice       Float?
+  paymentStatus        PaymentStatus @default(NOT_REQUIRED)
+  amountDue            Float?
+  squarePaymentLinkId  String?
+  squarePaymentLinkUrl String?
+  squarePaymentId      String?
+  paidAt               DateTime?
+  driverId             String?
+  driver               Driver?       @relation(fields: [driverId], references: [id])
+  customerId           String?
+  customer             Customer?     @relation(fields: [customerId], references: [id])
+  createdAt            DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 }
 
 enum ServiceType {
@@ -114,6 +126,14 @@ enum BookingStatus {
   EN_ROUTE
   COMPLETED
   CANCELLED
+}
+
+enum PaymentStatus {
+  NOT_REQUIRED
+  AWAITING_PAYMENT
+  PAID
+  FAILED
+  REFUNDED
 }
 
 enum TripType {

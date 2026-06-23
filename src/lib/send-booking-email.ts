@@ -48,6 +48,8 @@ export type BookingConfirmedDetails = {
   driverName: string;
   vehicleLabel?: string | null;
   estimatedPrice?: number | null;
+  paymentLinkUrl?: string | null;
+  paymentStatus?: string | null;
 };
 
 export async function sendBookingConfirmedEmail(
@@ -64,6 +66,23 @@ export async function sendBookingConfirmedEmail(
     timeZone: "Europe/London",
   });
 
+  const showPayButton =
+    booking.paymentStatus === "AWAITING_PAYMENT" && booking.paymentLinkUrl;
+
+  const payBlock = showPayButton
+    ? `
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${booking.paymentLinkUrl}"
+           style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
+          Pay securely with Square
+        </a>
+        <p style="color: #6b7280; font-size: 13px; margin-top: 12px; line-height: 1.5;">
+          You will complete payment on Square&apos;s secure checkout. Sparkride does not store your card details.
+        </p>
+      </div>
+    `
+    : "";
+
   const html = `
     <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
       <h2 style="color: #191c23; margin-bottom: 8px;">Your transfer is confirmed</h2>
@@ -75,8 +94,9 @@ export async function sendBookingConfirmedEmail(
         <tr><td style="padding: 8px 0; color: #6b7280;">Drop-off</td><td style="padding: 8px 0;">${booking.dropoffAddress}</td></tr>
         <tr><td style="padding: 8px 0; color: #6b7280;">Date & time</td><td style="padding: 8px 0;">${dateStr}</td></tr>
         <tr><td style="padding: 8px 0; color: #6b7280;">Driver</td><td style="padding: 8px 0;">${booking.driverName}${booking.vehicleLabel ? ` · ${booking.vehicleLabel}` : ""}</td></tr>
-        ${booking.estimatedPrice ? `<tr><td style="padding: 8px 0; color: #6b7280;">Price</td><td style="padding: 8px 0;">£${booking.estimatedPrice}</td></tr>` : ""}
+        ${booking.estimatedPrice ? `<tr><td style="padding: 8px 0; color: #6b7280;">Fare</td><td style="padding: 8px 0;">£${booking.estimatedPrice}</td></tr>` : ""}
       </table>
+      ${payBlock}
       <p style="color: #9ca3af; font-size: 13px;">
         Questions? Reply to this email or contact Sparkride support.
       </p>

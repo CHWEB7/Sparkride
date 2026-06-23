@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { statusSchema } from "@/lib/validation";
+import {
+  canSetEnRoute,
+  handleBookingConfirmed,
+} from "@/lib/booking-confirmation";
 
 /**
  * Temporary mobile API — no authentication yet.
@@ -43,12 +47,35 @@ export async function PATCH(req: NextRequest) {
       return json({ error: "Invalid input" }, 400);
     }
 
+    const existing = await prisma.booking.findUnique({ where: { id } });
+    if (!existing) {
+      return json({ error: "Booking not found" }, 404);
+    }
+
+    if (
+      parsed.data.status === "EN_ROUTE" &&
+      !canSetEnRoute(existing.paymentStatus)
+    ) {
+      return json(
+        { error: "Customer must pay online before the trip can be marked en route" },
+        409
+      );
+    }
+
     const booking = await prisma.booking.update({
       where: { id },
       data: { status: parsed.data.status },
     });
 
-    return json(booking);
+    const justConfirmed =
+      parsed.data.status === "CONFIRMED" && existing.status !== "CONFIRMED";
+
+    if (justConfirmed) {
+      await handleBookingConfirmed(booking.id);
+    }
+
+    const refreshed = await prisma.booking.findUnique({ where: { id: booking.id } });
+    return json(refreshed ?? booking);
   } catch (error) {
     console.error("Mobile bookings PATCH error:", error);
     return json({ error: "Failed to update booking" }, 500);

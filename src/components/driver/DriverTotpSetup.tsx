@@ -47,6 +47,7 @@ export function DriverTotpSetup({ onComplete }: DriverTotpSetupProps) {
         const { data, error: enrollError } = await supabase.auth.mfa.enroll({
           factorType: "totp",
           friendlyName: "Sparkride Driver",
+          issuer: "Sparkride Driver",
         });
         if (enrollError) throw enrollError;
         if (!data?.id || !data.totp) {

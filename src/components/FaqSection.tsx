@@ -7,6 +7,11 @@ import { SiteContainer } from "@/components/SiteContainer";
 
 const FAQS = [
   {
+    question: "How do I pay for my booking?",
+    answer:
+      "After your driver confirms the booking, you will receive a secure Square payment link by email and on your booking page. Payment is completed on Square's hosted checkout — Sparkride never stores your card details. Funds go directly to your driver's Square account.",
+  },
+  {
     question: "How do I book a transfer?",
     answer:
       "Choose your service, enter your pickup and drop-off details, select your vehicle, and confirm online. You will receive a reference number straight away and your driver will confirm the booking.",
@@ -19,7 +24,7 @@ const FAQS = [
   {
     question: "Is the price fixed when I book?",
     answer:
-      "Yes. The price you see at checkout is the price you pay — no surge pricing and no hidden fees. Payment is made to your driver on the day of travel.",
+      "Yes. The price you see when booking is the fixed fare for your trip. After your driver confirms the booking, you can pay online via a secure Square payment link sent by email and shown on your booking page. Sparkride does not store card details.",
   },
   {
     question: "What if I am collected from a non-fixed-price location?",

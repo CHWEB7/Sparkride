@@ -919,7 +919,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
             {isReturn && (
               <div className="text-xs text-muted mt-1">Return fare is double the single journey price</div>
             )}
-            <div className="text-xs text-muted mt-2">Fixed price · Pay driver on the day</div>
+            <div className="text-xs text-muted mt-2">Fixed price · Pay online after driver confirms</div>
           </div>
         </aside>
       )}

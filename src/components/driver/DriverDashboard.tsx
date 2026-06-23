@@ -34,6 +34,10 @@ type Booking = {
   returnFlightNumber: string | null;
   notes: string | null;
   estimatedPrice: number | null;
+  paymentStatus?: string;
+  amountDue?: number | null;
+  squarePaymentLinkUrl?: string | null;
+  paidAt?: string | null;
 };
 
 const STATUSES = ["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"];
@@ -202,6 +206,11 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
                   </div>
                   {booking.estimatedPrice && (
                     <div className="text-brand-end font-bold">£{booking.estimatedPrice}</div>
+                  )}
+                  {booking.paymentStatus && booking.paymentStatus !== "NOT_REQUIRED" && (
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      Payment: {booking.paymentStatus.replace("_", " ")}
+                    </div>
                   )}
                   {booking.notes && (
                     <div className="text-gray-500 italic">Note: {booking.notes}</div>
