@@ -48,26 +48,29 @@ export function LocationSection() {
     <section id="locations" className="border-y border-black/5 dark:border-white/5">
       <div className="relative overflow-hidden bg-app-bg dark:bg-dark">
         <div
-          className="absolute inset-y-0 right-0 w-full sm:w-[85%] lg:w-[68%] xl:w-[62%]"
+          className="absolute inset-y-0 left-[38%] sm:left-[42%] lg:left-[46%] xl:left-[48%] right-0 overflow-hidden"
           aria-hidden
         >
           <Image
             src="/images/location/west-yorkshire-map.png"
             alt=""
             fill
-            className="object-cover object-[right_center] scale-[1.03]"
-            sizes="(max-width: 1024px) 100vw, 62vw"
+            className="object-cover scale-[1.14] min-w-full"
+            style={{ objectPosition: "72% center" }}
+            sizes="(max-width: 1024px) 60vw, 52vw"
             priority={false}
           />
-          <div className="absolute inset-0 bg-[#6a68de]/10 dark:bg-[#6a68de]/15 mix-blend-multiply dark:mix-blend-soft-light" />
+          <div className="absolute inset-0 bg-[#6a68de]/8 dark:bg-[#6a68de]/12 mix-blend-multiply dark:mix-blend-soft-light" />
+          <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-app-bg via-app-bg/70 to-transparent dark:from-dark dark:via-dark/70" />
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-app-bg to-transparent dark:from-dark opacity-90" />
         </div>
 
         <div
-          className="absolute inset-0 bg-gradient-to-r from-app-bg from-[28%] via-app-bg/88 via-[42%] to-transparent to-[78%] dark:from-dark dark:via-dark/88 sm:from-[24%] sm:via-[38%] sm:to-[72%] lg:from-[22%] lg:via-[36%] lg:to-[68%]"
+          className="absolute inset-0 bg-gradient-to-r from-app-bg from-[0%] via-app-bg/95 via-[34%] to-transparent to-[62%] dark:from-dark dark:via-dark/95 sm:via-[36%] sm:to-[58%] lg:via-[38%] lg:to-[54%]"
           aria-hidden
         />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-app-bg/80 via-transparent to-app-bg/30 dark:from-dark/80 dark:to-dark/30 sm:hidden"
+          className="absolute inset-0 bg-gradient-to-t from-app-bg/85 via-transparent to-app-bg/40 dark:from-dark/85 dark:to-dark/40 sm:hidden"
           aria-hidden
         />
 
@@ -79,18 +82,18 @@ export function LocationSection() {
             </div>
 
             <h2 className="font-display mt-6 text-4xl sm:text-5xl lg:text-[3.25rem] dark:text-white leading-[1.05] tracking-[-0.02em]">
-              Pickups across West Yorkshire
+              Fixed pricing for Castleford and surrounding areas
             </h2>
 
             <p className="mt-5 text-lg text-muted dark:text-gray-200 leading-relaxed">
-              Based in Castleford, Sparkride collects passengers across Leeds, Wakefield,
-              Pontefract, and the surrounding Five Towns — plus airport and long-distance
-              transfers nationwide.
+              We use fixed pricing for many of our services — including airport, ferry port,
+              and cruise terminal transfers when you are collected from certain West Yorkshire
+              areas. You will know what the cost is before you travel, with no surprises.
             </p>
 
             <p className="mt-4 text-base text-muted leading-relaxed max-w-md">
-              Door-to-door electric transfers from your postcode to airports, stations,
-              and events.
+              Drop-off fees that some airports charge us are covered by Sparkride, not passed on
+              to you.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">

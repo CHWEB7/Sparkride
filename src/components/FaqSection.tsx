@@ -22,6 +22,11 @@ const FAQS = [
       "Yes. The price you see at checkout is the price you pay — no surge pricing and no hidden fees. Payment is made to your driver on the day of travel.",
   },
   {
+    question: "What if I am collected from a non-fixed-price location?",
+    answer:
+      "The system will detect this when you make a booking. Our drivers have to confirm the trips that you book, and the driver will send you a custom quote via email for you to review. If you choose to accept, that price is then fixed for your trip.",
+  },
+  {
     question: "Which airports do you cover?",
     answer:
       "We cover major UK airports including Leeds Bradford, Manchester, Heathrow, Gatwick, Birmingham, Liverpool, Newcastle, and more. Airport transfers can be booked as single or return journeys.",
@@ -126,7 +131,9 @@ export function FaqSection() {
                   index % 2 === 0
                     ? "lg:border-r lg:border-black/8 lg:dark:border-white/10"
                     : "",
-                  index >= FAQS.length - 2 ? "lg:border-b-0" : "",
+                  index >= FAQS.length - (FAQS.length % 2 === 0 ? 2 : 1)
+                    ? "lg:border-b-0"
+                    : "",
                   index === FAQS.length - 1 ? "border-b-0" : "",
                 ]
                   .filter(Boolean)
