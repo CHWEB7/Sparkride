@@ -66,17 +66,24 @@ export async function clearPendingOtp(userId: string) {
   });
 }
 
-export async function isDailyMfaVerified(userId: string, req: NextRequest): Promise<boolean> {
-  const cookieValue = req.cookies.get(MFA_COOKIE_NAME)?.value;
-  const fromCookie = parseMfaCookie(cookieValue);
-  if (fromCookie?.userId === userId) return true;
-
+export async function isDailyMfaVerifiedInDb(userId: string): Promise<boolean> {
   const today = getLondonDateString();
   const session = await prisma.customerMfaSession.findUnique({ where: { userId } });
   if (!session) return false;
   if (session.validDate !== today) return false;
   if (session.expiresAt < new Date()) return false;
   return true;
+}
+
+export function hasValidMfaCookie(req: NextRequest, userId: string): boolean {
+  const cookieValue = req.cookies.get(MFA_COOKIE_NAME)?.value;
+  const fromCookie = parseMfaCookie(cookieValue);
+  return fromCookie?.userId === userId;
+}
+
+export async function isDailyMfaVerified(userId: string, req: NextRequest): Promise<boolean> {
+  if (hasValidMfaCookie(req, userId)) return true;
+  return isDailyMfaVerifiedInDb(userId);
 }
 
 export async function recordDailyMfaVerification(userId: string): Promise<{

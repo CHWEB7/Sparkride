@@ -32,33 +32,36 @@ export function CustomerLoginForm() {
   useEffect(() => {
     async function prepareVerifyStep() {
       setBootstrapping(true);
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      if (!user?.email) {
-        if (verifyRequired) setStep("credentials");
-        setBootstrapping(false);
-        return;
-      }
-
-      const statusRes = await fetch("/api/auth/mfa/status");
-      if (statusRes.ok) {
-        const data = (await statusRes.json()) as { verified?: boolean };
-        if (data.verified) {
-          if (verifyRequired) {
-            router.replace(redirect);
-            router.refresh();
-          }
-          setBootstrapping(false);
+        if (!user?.email) {
+          if (verifyRequired) setStep("credentials");
           return;
         }
-      }
 
-      setEmail(user.email);
-      setStep("verify");
-      setBootstrapping(false);
+        const statusRes = await fetch("/api/auth/mfa/status");
+        if (statusRes.ok) {
+          const data = (await statusRes.json()) as { verified?: boolean };
+          if (data.verified) {
+            if (verifyRequired) {
+              router.replace(redirect);
+              router.refresh();
+            }
+            return;
+          }
+        }
+
+        setEmail(user.email);
+        setStep("verify");
+      } catch {
+        if (verifyRequired) setStep("credentials");
+      } finally {
+        setBootstrapping(false);
+      }
     }
 
     if (verifyRequired) {
@@ -67,19 +70,22 @@ export function CustomerLoginForm() {
   }, [verifyRequired, redirect, router]);
 
   async function continueAfterAuth(userEmail: string) {
-    const statusRes = await fetch("/api/auth/mfa/status");
-    if (statusRes.ok) {
-      const data = (await statusRes.json()) as { verified?: boolean };
-      if (data.verified) {
-        router.push(redirect);
-        router.refresh();
-        return;
+    try {
+      const statusRes = await fetch("/api/auth/mfa/status");
+      if (statusRes.ok) {
+        const data = (await statusRes.json()) as { verified?: boolean };
+        if (data.verified) {
+          router.push(redirect);
+          router.refresh();
+          return;
+        }
       }
-    }
 
-    setEmail(userEmail);
-    setStep("verify");
-    setLoading(false);
+      setEmail(userEmail);
+      setStep("verify");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {

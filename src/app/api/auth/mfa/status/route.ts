@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomerUserFromRequest } from "@/lib/customer-auth";
 import { getMidnightLondonExpiry } from "@/lib/daily-mfa";
-import { isDailyMfaVerified } from "@/lib/mfa-session";
+import {
+  attachMfaCookie,
+  hasValidMfaCookie,
+  isDailyMfaVerifiedInDb,
+  recordDailyMfaVerification,
+} from "@/lib/mfa-session";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,11 +24,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
   }
 
-  const verified = await isDailyMfaVerified(user.id, req);
+  if (hasValidMfaCookie(req, user.id)) {
+    return NextResponse.json(
+      {
+        verified: true,
+        expiresAt: getMidnightLondonExpiry().toISOString(),
+      },
+      { headers: corsHeaders }
+    );
+  }
+
+  // Already verified today on another browser — issue MFA cookie for this browser.
+  if (await isDailyMfaVerifiedInDb(user.id)) {
+    const { cookieValue, maxAge, expiresAt } = await recordDailyMfaVerification(user.id);
+    const res = NextResponse.json(
+      {
+        verified: true,
+        expiresAt: expiresAt.toISOString(),
+        restored: true,
+      },
+      { headers: corsHeaders }
+    );
+    attachMfaCookie(res, cookieValue, maxAge);
+    return res;
+  }
+
   return NextResponse.json(
     {
-      verified,
-      expiresAt: verified ? getMidnightLondonExpiry().toISOString() : null,
+      verified: false,
+      expiresAt: null,
     },
     { headers: corsHeaders }
   );
