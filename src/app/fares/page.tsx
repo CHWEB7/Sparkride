@@ -3,9 +3,8 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
-import { FaresTable } from "@/components/FaresTable";
+import { FaresSections } from "@/components/FaresSections";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
-import { FARE_SECTIONS } from "@/lib/fares";
 
 export const metadata: Metadata = {
   title: "Fixed fares | Sparkride",
@@ -31,12 +30,13 @@ export default function FaresPage() {
               surrounding West Yorkshire areas. Return journeys are priced at twice the single fare.
               Airport drop-off fees charged to us are included — not passed on to you.
             </p>
+            <p className="mt-4 inline-flex items-center rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 px-4 py-2 text-sm font-medium text-dark dark:text-white">
+              Valid from <span className="ml-1.5 font-semibold">06/2026</span>
+            </p>
           </div>
 
-          <div className="mt-12 sm:mt-16 space-y-14 sm:space-y-16">
-            {FARE_SECTIONS.map((section) => (
-              <FaresTable key={section.title} section={section} />
-            ))}
+          <div className="mt-12 sm:mt-16">
+            <FaresSections />
           </div>
 
           <div className="mt-14 sm:mt-16 pt-10 border-t border-black/8 dark:border-white/10 flex flex-col sm:flex-row gap-3">
