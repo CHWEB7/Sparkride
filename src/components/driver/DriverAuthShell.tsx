@@ -23,12 +23,12 @@ const HERO_COPY: Record<DriverAuthMode, { headline: string; subline: string }> =
   login: {
     headline: "Driver portal",
     subline:
-      "Sign in with your passkey to view assigned bookings, confirm trips, and keep customers updated.",
+      "Sign in with your email, password, and authenticator app to view assigned bookings and confirm trips.",
   },
   enroll: {
-    headline: "Set up your driver passkey",
+    headline: "Set up driver MFA",
     subline:
-      "Register once on this device for secure, passwordless access to the Sparkride driver portal.",
+      "Register an authenticator app on first login. Every future sign-in requires a code from that app.",
   },
 };
 
@@ -61,7 +61,7 @@ function DriverAuthTabs({ mode }: { mode: DriverAuthMode }) {
             : "text-muted hover:text-dark"
         }`}
       >
-        Set up passkey
+        Set up authenticator
       </Link>
     </div>
   );
@@ -77,7 +77,8 @@ export function DriverAuthShell({
   const alternateHref = mode === "login" ? "/driver/enroll" : "/driver/login";
   const alternateLabel =
     mode === "login" ? "First time on this device?" : "Already registered?";
-  const alternateAction = mode === "login" ? "Set up passkey" : "Sign in with passkey";
+  const alternateAction =
+    mode === "login" ? "Set up authenticator" : "Sign in with MFA";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#12151c]">

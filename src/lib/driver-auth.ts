@@ -3,6 +3,10 @@ import type { User } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  driverHasVerifiedTotp,
+  driverSessionIsMfaComplete,
+} from "@/lib/driver-mfa";
 
 export type DriverSession = {
   driverId: string;
@@ -88,31 +92,15 @@ export async function getDriverSessionFromRequest(
   };
 }
 
-export async function driverHasPasskey(authUserId: string): Promise<boolean> {
-  try {
-    const admin = createAdminClient();
-    const { data, error } = await admin.auth.admin.passkey.listPasskeys({
-      userId: authUserId,
-    });
-    if (error) {
-      console.error("Passkey list error:", error.message);
-      return false;
-    }
-    return (data?.length ?? 0) > 0;
-  } catch (error) {
-    console.error("Passkey list failed:", error);
-    return false;
-  }
-}
-
-export async function requireDriverSessionWithPasskey(): Promise<
-  DriverSession | null
-> {
+export async function requireDriverSessionWithMfa(): Promise<DriverSession | null> {
   const session = await getDriverSession();
   if (!session) return null;
 
-  const hasPasskey = await driverHasPasskey(session.authUserId);
-  if (!hasPasskey) return null;
+  const hasTotp = await driverHasVerifiedTotp(session.authUserId);
+  if (!hasTotp) return null;
+
+  const mfaComplete = await driverSessionIsMfaComplete();
+  if (!mfaComplete) return null;
 
   return session;
 }

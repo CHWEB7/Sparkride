@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getDriverSession } from "@/lib/driver-auth";
 import {
-  driverHasPasskey,
-  getDriverSession,
-} from "@/lib/driver-auth";
+  driverHasVerifiedTotp,
+  driverSessionIsMfaComplete,
+} from "@/lib/driver-mfa";
 import { driverBookingsFilter, isTestDriver } from "@/lib/driver-access";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { Plane } from "lucide-react";
@@ -14,8 +15,11 @@ export default async function DriverDashboardPage() {
   const session = await getDriverSession();
   if (!session) redirect("/driver/login");
 
-  const hasPasskey = await driverHasPasskey(session.authUserId);
-  if (!hasPasskey) redirect("/driver/enroll");
+  const hasTotp = await driverHasVerifiedTotp(session.authUserId);
+  if (!hasTotp) redirect("/driver/enroll");
+
+  const mfaComplete = await driverSessionIsMfaComplete();
+  if (!mfaComplete) redirect("/driver/login?mfa=required");
 
   const bookings = await prisma.booking.findMany({
     where: driverBookingsFilter(session),

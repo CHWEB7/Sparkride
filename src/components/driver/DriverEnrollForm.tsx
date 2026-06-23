@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Fingerprint, KeyRound, Loader2 } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   DriverAuthShell,
   authInputClass,
   authLabelClass,
 } from "@/components/driver/DriverAuthShell";
+import { DriverTotpSetup } from "@/components/driver/DriverTotpSetup";
 
-type Step = "bootstrap" | "passkey";
+type Step = "bootstrap" | "mfa";
 
 export function DriverEnrollForm() {
   const router = useRouter();
@@ -29,12 +30,15 @@ export function DriverEnrollForm() {
       } = await supabase.auth.getUser();
 
       if (user?.app_metadata?.role === "driver") {
-        const { data: passkeys } = await supabase.auth.passkey.list();
-        if ((passkeys?.length ?? 0) > 0) {
-          router.replace("/driver/dashboard");
-          return;
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        if ((factors?.totp?.length ?? 0) > 0) {
+          const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+          if (aal?.currentLevel === "aal2") {
+            router.replace("/driver/dashboard");
+            return;
+          }
         }
-        setStep("passkey");
+        setStep("mfa");
       }
 
       setLoading(false);
@@ -62,7 +66,7 @@ export function DriverEnrollForm() {
         throw new Error("This account is not authorised for the driver portal.");
       }
 
-      setStep("passkey");
+      setStep("mfa");
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Sign-in failed";
       const message =
@@ -75,27 +79,9 @@ export function DriverEnrollForm() {
     }
   }
 
-  async function handleRegisterPasskey() {
-    setSubmitting(true);
-    setError("");
-
-    try {
-      const supabase = createClient();
-      const { error: registerError } = await supabase.auth.registerPasskey();
-
-      if (registerError) throw registerError;
-
-      router.push("/driver/dashboard");
-      router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Passkey registration failed. Use the same device you will drive with."
-      );
-    } finally {
-      setSubmitting(false);
-    }
+  function handleMfaComplete() {
+    router.push("/driver/dashboard");
+    router.refresh();
   }
 
   if (loading) {
@@ -109,11 +95,11 @@ export function DriverEnrollForm() {
   return (
     <DriverAuthShell
       mode="enroll"
-      title={step === "bootstrap" ? "Verify your account" : "Register passkey"}
+      title={step === "bootstrap" ? "Verify your account" : "Set up authenticator"}
       subtitle={
         step === "bootstrap"
           ? "Sign in once with your one-time password from Sparkride."
-          : "Create a passkey on this device for all future sign-ins."
+          : "Scan the QR code with your MFA app. This is required before you can access bookings."
       }
     >
       {error && (
@@ -166,26 +152,7 @@ export function DriverEnrollForm() {
           </button>
         </form>
       ) : (
-        <div className="space-y-4">
-          <button
-            type="button"
-            onClick={handleRegisterPasskey}
-            disabled={submitting}
-            className="w-full py-3.5 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            {submitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <Fingerprint className="w-5 h-5" />
-                Register passkey
-              </>
-            )}
-          </button>
-          <p className="text-xs text-muted text-center leading-relaxed">
-            After this step you will only sign in with your passkey.
-          </p>
-        </div>
+        <DriverTotpSetup onComplete={handleMfaComplete} />
       )}
     </DriverAuthShell>
   );

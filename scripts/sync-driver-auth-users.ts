@@ -23,7 +23,7 @@ async function main() {
     console.log(`${result.action}:`, result.email, "→", result.authUserId);
   }
 
-  console.log(`\nSynced ${results.length} driver(s). Visit /driver/enroll to register passkeys.`);
+  console.log(`\nSynced ${results.length} driver(s). Visit /driver/enroll to set up MFA.`);
 }
 
 main()

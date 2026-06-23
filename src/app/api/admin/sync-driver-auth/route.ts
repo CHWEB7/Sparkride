@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       synced: results.length,
       drivers: results.map(({ email, authUserId, action }) => ({ email, authUserId, action })),
-      nextStep: "Each driver should visit /driver/enroll to register a passkey.",
+      nextStep: "Each driver should visit /driver/enroll to set up their authenticator app.",
     });
   } catch (error) {
     console.error("Driver auth sync failed:", error);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireDriverSessionWithPasskey } from "@/lib/driver-auth";
+import { requireDriverSessionWithMfa } from "@/lib/driver-auth";
 import { statusSchema } from "@/lib/validation";
 import {
   canDriverManageBooking,
@@ -9,7 +9,7 @@ import {
 import { sendBookingConfirmedEmail } from "@/lib/send-booking-email";
 
 export async function GET() {
-  const session = await requireDriverSessionWithPasskey();
+  const session = await requireDriverSessionWithMfa();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await requireDriverSessionWithPasskey();
+  const session = await requireDriverSessionWithMfa();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -13,9 +13,6 @@ export async function updateDriverSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      auth: {
-        experimental: { passkey: true },
-      },
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -48,11 +45,39 @@ export async function updateDriverSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isDriverUser(user) && pathname === "/driver/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/driver/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
+  if (user && isDriverUser(user)) {
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const hasVerifiedTotp = (factors?.totp?.length ?? 0) > 0;
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const mfaComplete = aal?.currentLevel === "aal2";
+
+    if (!hasVerifiedTotp && isProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/driver/enroll";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    if (hasVerifiedTotp && !mfaComplete && isProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/driver/login";
+      url.searchParams.set("mfa", "required");
+      return NextResponse.redirect(url);
+    }
+
+    if (pathname === "/driver/login" && hasVerifiedTotp && mfaComplete) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/driver/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    if (pathname === "/driver/enroll" && hasVerifiedTotp && mfaComplete) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/driver/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   if (user && !isDriverUser(user) && isProtected) {

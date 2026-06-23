@@ -41,6 +41,7 @@ const NAV_TABS: NavTab[] = [
           { label: "Manchester", href: "/airports/manchester" },
           { label: "Heathrow", href: "/airports/heathrow" },
           { label: "Sustainable travel", href: "/#sustainability" },
+          { label: "Pickup locations", href: "/#locations" },
         ],
       },
       {
