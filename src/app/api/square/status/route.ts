@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireDriverSessionWithMfa } from "@/lib/driver-auth";
 import { prisma } from "@/lib/prisma";
-import { isSquareConfigured } from "@/lib/square/config";
+import {
+  isSquareConfigured,
+  squareApplicationIdDiagnostics,
+  squareCredentialMismatchMessage,
+  squareCredentialsMatchEnvironment,
+  squareEnvironment,
+  squareOAuthAuthorizeUrl,
+  squareSetupHints,
+} from "@/lib/square/config";
 import { driverHasSquareConnected } from "@/lib/square/driver-tokens";
 
 export async function GET() {
@@ -30,5 +38,11 @@ export async function GET() {
     merchantId: driver.squareMerchantId,
     locationId: driver.squareLocationId,
     connectedAt: driver.squareConnectedAt,
+    environment: squareEnvironment(),
+    oauthHost: squareOAuthAuthorizeUrl().replace("/oauth2/authorize", ""),
+    credentialsMatchEnvironment: squareCredentialsMatchEnvironment(),
+    credentialMismatch: squareCredentialMismatchMessage(),
+    applicationId: squareApplicationIdDiagnostics(),
+    setupHints: squareSetupHints(),
   });
 }

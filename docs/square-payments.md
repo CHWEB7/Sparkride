@@ -13,12 +13,31 @@ Sparkride uses **Square Connect** so each driver receives card payments on their
 
 ## 2. Register OAuth redirect URL
 
-In the Square Developer Dashboard → OAuth:
+In the Square Developer Dashboard → your app → **OAuth**:
 
-| Environment | Redirect URL |
-|-------------|--------------|
-| Sandbox / Production | `https://sparkride-umber.vercel.app/api/square/oauth/callback` |
-| Local dev | `http://localhost:3000/api/square/oauth/callback` |
+1. Set **Redirect URL** to exactly (no trailing slash):
+
+   `https://sparkride-umber.vercel.app/api/square/oauth/callback`
+
+2. Save. The `redirect_uri` in the authorize request must match **byte-for-byte**.
+
+| Environment | OAuth base URL | Application ID prefix |
+|-------------|----------------|------------------------|
+| Sandbox | `https://connect.squareupsandbox.com/oauth2/authorize` | `sandbox-sq0idp-...` |
+| Production | `https://connect.squareup.com/oauth2/authorize` | `sq0idp-...` |
+
+**Common failure:** `SQUARE_ENVIRONMENT=sandbox` but `SQUARE_APPLICATION_ID` is a production ID (`sq0idp-...` without `sandbox-`). Square then shows “unable to find client” or the page fails to load. Use the **Sandbox** credentials from the Developer Dashboard when testing.
+
+### Sandbox testing (required)
+
+Square Sandbox OAuth does **not** work like production:
+
+1. In [developer.squareup.com/apps](https://developer.squareup.com/apps), open your app
+2. Under **Sandbox test accounts**, click **Open** on a test seller account (opens Sandbox Seller Dashboard)
+3. Keep that tab logged in
+4. In another tab, on Sparkride driver dashboard, click **Connect Square**
+
+Without step 2–3, the Square authorize page often errors or redirects incorrectly.
 
 ## 3. Register webhook subscription
 

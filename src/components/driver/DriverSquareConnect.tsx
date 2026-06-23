@@ -10,11 +10,42 @@ type SquareStatus = {
   merchantId?: string | null;
   locationId?: string | null;
   connectedAt?: string | null;
+  environment?: "sandbox" | "production";
+  oauthHost?: string;
+  credentialsMatchEnvironment?: boolean;
+  credentialMismatch?: string | null;
+  applicationId?: {
+    configured: boolean;
+    prefix: string;
+    last4: string;
+    looksSandbox: boolean;
+    looksProduction: boolean;
+  };
+  setupHints?: string[];
 };
+
+const SQUARE_ERROR_HELP: Record<string, string> = {
+  invalid_state:
+    "Your OAuth session expired or could not be verified. Click Connect Square again in one go. If it keeps failing, set SQUARE_OAUTH_STATE_SECRET in Vercel and redeploy.",
+  token_exchange_failed:
+    "Square rejected the token exchange. Usually the application secret is wrong, or the redirect URL in Vercel does not match Square Dashboard exactly.",
+  missing_code_or_state:
+    "Square did not return an authorization code. Try connecting again without using the browser back button.",
+  save_failed:
+    "Sparkride could not save your Square tokens. The database may need the payment-columns migration.",
+  access_denied: "You declined Square permissions. Click Connect Square and approve the requested access.",
+};
+
+function squareErrorHelp(reason: string | null): string | null {
+  if (!reason) return null;
+  return SQUARE_ERROR_HELP[reason] ?? null;
+}
 
 export function DriverSquareConnect() {
   const searchParams = useSearchParams();
   const squareParam = searchParams.get("square");
+  const squareReason = searchParams.get("reason");
+  const squareDetail = searchParams.get("detail");
   const [status, setStatus] = useState<SquareStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,8 +76,31 @@ export function DriverSquareConnect() {
 
   if (squareParam === "error") {
     return (
-      <div className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-red-100 text-sm">
-        Square connection failed. Please try again or contact support.
+      <div className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-red-100 text-sm space-y-3">
+        <p>Square connection failed. Please try again or contact support.</p>
+        {squareReason && (
+          <p className="text-xs text-red-200/80">Reason: {squareReason.replace(/_/g, " ")}</p>
+        )}
+        {squareErrorHelp(squareReason) && (
+          <p className="text-xs text-red-200/90">{squareErrorHelp(squareReason)}</p>
+        )}
+        {squareDetail && <p className="text-xs text-red-200/80">{squareDetail}</p>}
+        {!squareDetail && status?.credentialMismatch && (
+          <p className="text-xs text-red-200/80">{status.credentialMismatch}</p>
+        )}
+        {status?.setupHints && status.setupHints.length > 0 && (
+          <ul className="list-disc pl-5 space-y-1 text-red-100/90">
+            {status.setupHints.map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
+        )}
+        <a
+          href="/api/square/oauth/authorize"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/15 transition-colors shrink-0"
+        >
+          Try again
+        </a>
       </div>
     );
   }
@@ -93,6 +147,27 @@ export function DriverSquareConnect() {
             Link your Square merchant account once. After you confirm bookings, customers pay on Square&apos;s
             secure checkout — Sparkride never sees card details.
           </p>
+          {status.environment === "sandbox" && (
+            <p className="mt-3 text-xs text-amber-200/90 leading-relaxed max-w-xl">
+              Sandbox mode: open your Sandbox Seller Dashboard from{" "}
+              <a
+                href="https://developer.squareup.com/apps"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-amber-100"
+              >
+                developer.squareup.com
+              </a>{" "}
+              (Apps → test account → Open) in another tab, then connect here.
+            </p>
+          )}
+          {status.credentialsMatchEnvironment === false && status.setupHints && (
+            <ul className="mt-3 text-xs text-amber-200/90 list-disc pl-5 space-y-1 max-w-xl">
+              {status.setupHints.map((hint) => (
+                <li key={hint}>{hint}</li>
+              ))}
+            </ul>
+          )}
         </div>
         <a
           href="/api/square/oauth/authorize"

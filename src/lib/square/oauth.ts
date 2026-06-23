@@ -2,6 +2,9 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import {
   SQUARE_OAUTH_SCOPES,
+  squareApplicationId,
+  squareApplicationSecret,
+  squareEnvironment,
   squareOAuthAuthorizeUrl,
   squareOAuthRedirectUri,
   squareOAuthTokenUrl,
@@ -10,6 +13,7 @@ import { squareRequest } from "./client";
 
 type OAuthStatePayload = {
   driverId: string;
+  redirectUri: string;
 };
 
 function oauthStateSecret(): Uint8Array {
@@ -20,8 +24,11 @@ function oauthStateSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export async function createOAuthState(driverId: string): Promise<string> {
-  return new SignJWT({ driverId } satisfies OAuthStatePayload)
+export async function createOAuthState(
+  driverId: string,
+  redirectUri: string
+): Promise<string> {
+  return new SignJWT({ driverId, redirectUri } satisfies OAuthStatePayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("15m")
@@ -34,15 +41,16 @@ export async function verifyOAuthState(
   try {
     const { payload } = await jwtVerify(state, oauthStateSecret());
     const driverId = payload.driverId;
-    if (typeof driverId !== "string") return null;
-    return { driverId };
+    const redirectUri = payload.redirectUri;
+    if (typeof driverId !== "string" || typeof redirectUri !== "string") return null;
+    return { driverId, redirectUri };
   } catch {
     return null;
   }
 }
 
-export function buildSquareAuthorizeUrl(state: string): string {
-  const clientId = process.env.SQUARE_APPLICATION_ID;
+export function buildSquareAuthorizeUrl(state: string, redirectUri: string): string {
+  const clientId = squareApplicationId();
   if (!clientId) {
     throw new Error("SQUARE_APPLICATION_ID is not configured");
   }
@@ -50,10 +58,14 @@ export function buildSquareAuthorizeUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: clientId,
     scope: SQUARE_OAUTH_SCOPES,
-    session: "false",
     state,
-    redirect_uri: squareOAuthRedirectUri(),
+    redirect_uri: redirectUri,
   });
+
+  // session=false forces login in production; ignored (and omitted) in sandbox.
+  if (squareEnvironment() === "production") {
+    params.set("session", "false");
+  }
 
   return `${squareOAuthAuthorizeUrl()}?${params.toString()}`;
 }
@@ -65,8 +77,22 @@ type TokenResponse = {
   merchant_id: string;
 };
 
+type SquareApiErrors = {
+  message?: string;
+  errors?: Array<{ detail?: string; code?: string; category?: string }>;
+};
+
+function formatSquareApiError(data: SquareApiErrors, fallback: string): string {
+  const fromErrors = data.errors
+    ?.map((e) => e.detail || e.code)
+    .filter(Boolean)
+    .join("; ");
+  return fromErrors || data.message || fallback;
+}
+
 export async function exchangeSquareOAuthCode(
-  code: string
+  code: string,
+  redirectUri: string
 ): Promise<
   | {
       ok: true;
@@ -77,8 +103,8 @@ export async function exchangeSquareOAuthCode(
     }
   | { ok: false; error: string }
 > {
-  const clientId = process.env.SQUARE_APPLICATION_ID;
-  const clientSecret = process.env.SQUARE_APPLICATION_SECRET;
+  const clientId = squareApplicationId();
+  const clientSecret = squareApplicationSecret();
   if (!clientId || !clientSecret) {
     return { ok: false, error: "Square application credentials are not configured" };
   }
@@ -91,16 +117,17 @@ export async function exchangeSquareOAuthCode(
       client_secret: clientSecret,
       grant_type: "authorization_code",
       code,
-      redirect_uri: squareOAuthRedirectUri(),
+      redirect_uri: redirectUri,
     }),
   });
 
-  const data = (await res.json().catch(() => ({}))) as TokenResponse & {
-    message?: string;
-  };
+  const data = (await res.json().catch(() => ({}))) as TokenResponse & SquareApiErrors;
 
   if (!res.ok || !data.access_token || !data.refresh_token) {
-    return { ok: false, error: data.message || "Failed to exchange Square OAuth code" };
+    return {
+      ok: false,
+      error: formatSquareApiError(data, "Failed to exchange Square OAuth code"),
+    };
   }
 
   return {
@@ -123,8 +150,8 @@ export async function refreshSquareAccessToken(
     }
   | { ok: false; error: string }
 > {
-  const clientId = process.env.SQUARE_APPLICATION_ID;
-  const clientSecret = process.env.SQUARE_APPLICATION_SECRET;
+  const clientId = squareApplicationId();
+  const clientSecret = squareApplicationSecret();
   if (!clientId || !clientSecret) {
     return { ok: false, error: "Square application credentials are not configured" };
   }
@@ -140,12 +167,13 @@ export async function refreshSquareAccessToken(
     }),
   });
 
-  const data = (await res.json().catch(() => ({}))) as TokenResponse & {
-    message?: string;
-  };
+  const data = (await res.json().catch(() => ({}))) as TokenResponse & SquareApiErrors;
 
   if (!res.ok || !data.access_token || !data.refresh_token) {
-    return { ok: false, error: data.message || "Failed to refresh Square access token" };
+    return {
+      ok: false,
+      error: formatSquareApiError(data, "Failed to refresh Square access token"),
+    };
   }
 
   return {
