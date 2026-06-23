@@ -21,6 +21,59 @@ export function squareApplicationSecret(): string {
   return process.env.SQUARE_APPLICATION_SECRET?.trim() ?? "";
 }
 
+export function squareApplicationSecretDiagnostics(): {
+  configured: boolean;
+  prefix: string;
+  last4: string;
+  looksLikeOAuthSecret: boolean;
+  looksLikeAccessToken: boolean;
+} {
+  const secret = squareApplicationSecret();
+  if (!secret) {
+    return {
+      configured: false,
+      prefix: "",
+      last4: "",
+      looksLikeOAuthSecret: false,
+      looksLikeAccessToken: false,
+    };
+  }
+
+  const looksLikeOAuthSecret =
+    secret.startsWith("sq0csp-") ||
+    secret.startsWith("sandbox-sq0csp-") ||
+    secret.startsWith("sandbox-sq0csb-");
+
+  const looksLikeAccessToken =
+    secret.startsWith("EAAA") ||
+    secret.startsWith("sandbox-sq0atb-") ||
+    secret.startsWith("sq0atb-");
+
+  return {
+    configured: true,
+    prefix: secret.slice(0, 16),
+    last4: secret.slice(-4),
+    looksLikeOAuthSecret,
+    looksLikeAccessToken,
+  };
+}
+
+export function squareApplicationSecretMismatchMessage(): string | null {
+  const secret = squareApplicationSecret();
+  if (!secret) return null;
+
+  const { looksLikeOAuthSecret, looksLikeAccessToken, prefix, last4 } =
+    squareApplicationSecretDiagnostics();
+
+  if (looksLikeOAuthSecret) return null;
+
+  if (looksLikeAccessToken) {
+    return `SQUARE_APPLICATION_SECRET (${prefix}…${last4}) looks like a Square access token. Use the Application secret from developer.squareup.com → your app → OAuth (starts with sandbox-sq0csp- or sandbox-sq0csb-), not the Sandbox access token on the Credentials tab.`;
+  }
+
+  return `SQUARE_APPLICATION_SECRET (${prefix}…${last4}) does not look like a Square OAuth Application secret. Copy it from developer.squareup.com → your app → OAuth page, not the Credentials tab.`;
+}
+
 export function squareApplicationIdDiagnostics(): {
   configured: boolean;
   prefix: string;
@@ -107,6 +160,9 @@ export function squareSetupHints(): string[] {
     const mismatch = squareCredentialMismatchMessage();
     if (mismatch) hints.push(mismatch);
   }
+
+  const secretMismatch = squareApplicationSecretMismatchMessage();
+  if (secretMismatch) hints.push(secretMismatch);
 
   hints.push(
     `Register this exact redirect URL in Square → OAuth: ${redirectUri}`

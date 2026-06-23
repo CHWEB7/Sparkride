@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import {
+  SQUARE_API_VERSION,
   SQUARE_OAUTH_SCOPES,
   squareApplicationId,
   squareApplicationSecret,
@@ -111,7 +112,10 @@ export async function exchangeSquareOAuthCode(
 
   const res = await fetch(squareOAuthTokenUrl(), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Square-Version": SQUARE_API_VERSION,
+    },
     body: JSON.stringify({
       client_id: clientId,
       client_secret: clientSecret,
@@ -158,7 +162,10 @@ export async function refreshSquareAccessToken(
 
   const res = await fetch(squareOAuthTokenUrl(), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Square-Version": SQUARE_API_VERSION,
+    },
     body: JSON.stringify({
       client_id: clientId,
       client_secret: clientSecret,

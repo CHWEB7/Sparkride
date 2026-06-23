@@ -6,10 +6,18 @@ Sparkride uses **Square Connect** so each driver receives card payments on their
 
 1. Sign in at [developer.squareup.com](https://developer.squareup.com).
 2. Create an application and enable **Square Connect (OAuth)**.
-3. Copy **Sandbox** credentials first:
-   - Application ID → `SQUARE_APPLICATION_ID`
-   - Application secret → `SQUARE_APPLICATION_SECRET`
-   - Webhook signature key → `SQUARE_WEBHOOK_SIGNATURE_KEY`
+3. **Toggle Sandbox** at the top of the dashboard.
+4. Copy credentials from the correct tabs:
+
+| Vercel variable | Square Dashboard location | Prefix (sandbox) |
+|-----------------|---------------------------|------------------|
+| `SQUARE_APPLICATION_ID` | **Credentials** tab → Application ID | `sandbox-sq0idp-` or `sandbox-sq0idb-` |
+| `SQUARE_APPLICATION_SECRET` | **OAuth** tab → Application secret | `sandbox-sq0csp-` or `sandbox-sq0csb-` |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | **Webhooks** tab | (varies) |
+
+**Critical:** Do **not** put the **Sandbox access token** (Credentials tab) into `SQUARE_APPLICATION_SECRET`. That token is for direct API calls, not OAuth. Using it causes `Not Authorized` on the token exchange step.
+
+To view or rotate the Application secret: Developer Dashboard → your app → **OAuth** → Application secret.
 
 ## 2. Register OAuth redirect URL
 

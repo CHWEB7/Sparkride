@@ -28,7 +28,9 @@ const SQUARE_ERROR_HELP: Record<string, string> = {
   invalid_state:
     "Your OAuth session expired or could not be verified. Click Connect Square again in one go. If it keeps failing, set SQUARE_OAUTH_STATE_SECRET in Vercel and redeploy.",
   token_exchange_failed:
-    "Square rejected the token exchange. Usually the application secret is wrong, or the redirect URL in Vercel does not match Square Dashboard exactly.",
+    "Square rejected the token exchange. The Application secret in Vercel is usually wrong — copy it from the OAuth page (sandbox-sq0csp-…), not the Sandbox access token on the Credentials tab.",
+  wrong_application_secret:
+    "SQUARE_APPLICATION_SECRET is not the OAuth Application secret. Update it in Vercel from Square → OAuth, then redeploy.",
   missing_code_or_state:
     "Square did not return an authorization code. Try connecting again without using the browser back button.",
   save_failed:

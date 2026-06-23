@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireDriverSessionWithMfa } from "@/lib/driver-auth";
 import { prisma } from "@/lib/prisma";
-import { isSquareConfigured, squareCredentialMismatchMessage, squareCredentialsMatchEnvironment, squareOAuthRedirectUri } from "@/lib/square/config";
+import { isSquareConfigured, squareApplicationSecretMismatchMessage, squareCredentialMismatchMessage, squareCredentialsMatchEnvironment, squareOAuthRedirectUri } from "@/lib/square/config";
 import { buildSquareAuthorizeUrl, createOAuthState } from "@/lib/square/oauth";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -24,6 +24,13 @@ export async function GET() {
       "Square application credentials do not match SQUARE_ENVIRONMENT.";
     return NextResponse.redirect(
       `${getSiteUrl()}/driver/dashboard?square=error&reason=${encodeURIComponent("credential_mismatch")}&detail=${encodeURIComponent(message)}`
+    );
+  }
+
+  const secretMismatch = squareApplicationSecretMismatchMessage();
+  if (secretMismatch) {
+    return NextResponse.redirect(
+      `${getSiteUrl()}/driver/dashboard?square=error&reason=${encodeURIComponent("wrong_application_secret")}&detail=${encodeURIComponent(secretMismatch)}`
     );
   }
 

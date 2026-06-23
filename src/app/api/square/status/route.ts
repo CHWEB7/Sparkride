@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import {
   isSquareConfigured,
   squareApplicationIdDiagnostics,
+  squareApplicationSecretDiagnostics,
+  squareApplicationSecretMismatchMessage,
   squareCredentialMismatchMessage,
   squareCredentialsMatchEnvironment,
   squareEnvironment,
@@ -43,6 +45,8 @@ export async function GET() {
     credentialsMatchEnvironment: squareCredentialsMatchEnvironment(),
     credentialMismatch: squareCredentialMismatchMessage(),
     applicationId: squareApplicationIdDiagnostics(),
+    applicationSecret: squareApplicationSecretDiagnostics(),
+    secretMismatch: squareApplicationSecretMismatchMessage(),
     setupHints: squareSetupHints(),
   });
 }
