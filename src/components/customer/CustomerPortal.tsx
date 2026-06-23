@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import type { CustomerProfile } from "@/lib/customer";
 import { BookingForm } from "@/components/BookingForm";
+import { SavedDetailsManager } from "@/components/customer/SavedDetailsManager";
 import { BookingTripPaymentActions } from "@/components/booking/BookingTripPaymentActions";
 import type { PaymentStatus } from "@prisma/client";
 
