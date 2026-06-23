@@ -43,83 +43,74 @@ const PICKUP_AREAS = [
   },
 ] as const;
 
-const MAP_MARKERS = [
-  { label: "Leeds", top: "18%", left: "22%" },
-  { label: "Castleford", top: "42%", left: "52%" },
-  { label: "Wakefield", top: "58%", left: "38%" },
-  { label: "Pontefract", top: "72%", left: "62%" },
-] as const;
-
 export function LocationSection() {
   return (
-    <section
-      id="locations"
-      className="py-20 sm:py-24 bg-app-bg dark:bg-dark border-y border-black/5 dark:border-white/5"
-    >
-      <SiteContainer>
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
-            <MapPin className="h-3.5 w-3.5" strokeWidth={2} />
-            Service area
-          </div>
-          <h2 className="font-display mt-6 text-4xl sm:text-5xl dark:text-white leading-[1.05]">
-            Pickups across West Yorkshire
-          </h2>
-          <p className="mt-5 text-lg text-muted leading-relaxed">
-            Based in Castleford, Sparkride collects passengers across Leeds, Wakefield,
-            Pontefract, and the surrounding Five Towns — plus airport and long-distance
-            transfers nationwide.
-          </p>
+    <section id="locations" className="border-y border-black/5 dark:border-white/5">
+      <div className="relative overflow-hidden bg-app-bg dark:bg-dark">
+        <div
+          className="absolute inset-y-0 right-0 w-full sm:w-[85%] lg:w-[68%] xl:w-[62%]"
+          aria-hidden
+        >
+          <Image
+            src="/images/location/west-yorkshire-map.png"
+            alt=""
+            fill
+            className="object-cover object-[right_center] scale-[1.03]"
+            sizes="(max-width: 1024px) 100vw, 62vw"
+            priority={false}
+          />
+          <div className="absolute inset-0 bg-[#6a68de]/10 dark:bg-[#6a68de]/15 mix-blend-multiply dark:mix-blend-soft-light" />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start">
-          <div className="relative overflow-hidden rounded-[28px] min-h-[320px] sm:min-h-[400px] lg:min-h-[520px] shadow-[0_24px_60px_-24px_rgba(106,104,222,0.35)] ring-1 ring-black/5 dark:ring-white/10">
-            <Image
-              src="/images/location/west-yorkshire-map.png"
-              alt="Map showing Sparkride pickup areas across Leeds, Castleford, Wakefield, and Pontefract"
-              fill
-              className="object-cover object-center scale-[1.02]"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority={false}
-            />
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-app-bg from-[28%] via-app-bg/88 via-[42%] to-transparent to-[78%] dark:from-dark dark:via-dark/88 sm:from-[24%] sm:via-[38%] sm:to-[72%] lg:from-[22%] lg:via-[36%] lg:to-[68%]"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-app-bg/80 via-transparent to-app-bg/30 dark:from-dark/80 dark:to-dark/30 sm:hidden"
+          aria-hidden
+        />
 
-            <div
-              className="absolute inset-0 bg-gradient-to-tr from-[#6a68de]/85 via-[#6a68de]/45 to-[#82dbdf]/25 dark:from-[#6a68de]/90 dark:via-[#4f4db8]/55 dark:to-[#82dbdf]/20"
-              aria-hidden
-            />
-            <div
-              className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/10 dark:from-black/50"
-              aria-hidden
-            />
+        <SiteContainer className="relative z-10 py-16 sm:py-20 lg:py-24">
+          <div className="max-w-xl lg:max-w-lg xl:max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
+              <MapPin className="h-3.5 w-3.5" strokeWidth={2} />
+              Service area
+            </div>
 
-            {MAP_MARKERS.map((marker) => (
-              <div
-                key={marker.label}
-                className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
-                style={{ top: marker.top, left: marker.left }}
+            <h2 className="font-display mt-6 text-4xl sm:text-5xl lg:text-[3.25rem] dark:text-white leading-[1.05] tracking-[-0.02em]">
+              Pickups across West Yorkshire
+            </h2>
+
+            <p className="mt-5 text-lg text-muted dark:text-gray-200 leading-relaxed">
+              Based in Castleford, Sparkride collects passengers across Leeds, Wakefield,
+              Pontefract, and the surrounding Five Towns — plus airport and long-distance
+              transfers nationwide.
+            </p>
+
+            <p className="mt-4 text-base text-muted leading-relaxed max-w-md">
+              Door-to-door electric transfers from your postcode to airports, stations,
+              and events.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <AnimatedGradientButton href="/book" className="px-7 py-3.5 text-sm">
+                Book from your location
+              </AnimatedGradientButton>
+              <Link
+                href="/services/private-hire"
+                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 backdrop-blur-sm px-7 py-3.5 text-sm font-semibold hover:bg-white dark:hover:bg-white/10 transition-colors"
               >
-                <span className="relative flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70 opacity-60" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-white bg-brand shadow-[0_0_12px_rgba(255,255,255,0.6)]" />
-                </span>
-                <span className="absolute left-1/2 top-4 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 dark:bg-dark/95 px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] text-dark dark:text-white shadow-sm">
-                  {marker.label}
-                </span>
-              </div>
-            ))}
-
-            <div className="absolute bottom-0 left-0 right-0 z-10 p-6 sm:p-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-white/80">
-                West Yorkshire coverage
-              </p>
-              <p className="mt-2 max-w-sm text-lg font-medium leading-snug text-white">
-                Door-to-door electric transfers from your postcode to airports, stations,
-                and events.
-              </p>
+                Local private hire
+              </Link>
             </div>
           </div>
+        </SiteContainer>
+      </div>
 
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
+      <div className="bg-app-bg dark:bg-dark py-16 sm:py-20 lg:py-24">
+        <SiteContainer>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {PICKUP_AREAS.map((area) => (
               <article
                 key={area.name}
@@ -142,20 +133,8 @@ export function LocationSection() {
               </article>
             ))}
           </div>
-        </div>
-
-        <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <AnimatedGradientButton href="/book" className="px-7 py-3.5 text-sm">
-            Book from your location
-          </AnimatedGradientButton>
-          <Link
-            href="/services/private-hire"
-            className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 px-7 py-3.5 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          >
-            Local private hire
-          </Link>
-        </div>
-      </SiteContainer>
+        </SiteContainer>
+      </div>
     </section>
   );
 }
