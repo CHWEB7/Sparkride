@@ -9,6 +9,10 @@ import { CheckCircle, Calendar, MapPin, Car, User, ArrowLeftRight } from "lucide
 import { format } from "date-fns";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
+import {
+  ensureBookingPaymentLink,
+  paymentLinkSkipMessage,
+} from "@/lib/booking-confirmation";
 import { getServiceLabel, isHubTransfer } from "@/lib/hubs";
 
 export default async function BookingConfirmationPage({
@@ -21,8 +25,24 @@ export default async function BookingConfirmationPage({
   if (!user) redirect(`/login?redirect=/booking/${reference}`);
 
   const customer = await ensureCustomer(user);
-  const booking = await prisma.booking.findUnique({ where: { reference } });
+  let booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.customerId !== customer.id) notFound();
+
+  let paymentSetupNote: string | null = null;
+
+  if (
+    booking.status === "CONFIRMED" &&
+    booking.paymentStatus !== "PAID" &&
+    !booking.squarePaymentLinkUrl
+  ) {
+    const paymentResult = await ensureBookingPaymentLink(booking.id);
+    if (paymentResult.created) {
+      booking =
+        (await prisma.booking.findUnique({ where: { reference } })) ?? booking;
+    } else {
+      paymentSetupNote = paymentLinkSkipMessage(paymentResult);
+    }
+  }
 
   const isReturn = booking.journeyType === "RETURN";
   const isHub = isHubTransfer(booking.serviceType);
@@ -63,6 +83,7 @@ export default async function BookingConfirmationPage({
                 estimatedPrice={booking.estimatedPrice}
                 paymentLinkUrl={booking.squarePaymentLinkUrl}
                 paidAt={booking.paidAt}
+                paymentSetupNote={paymentSetupNote}
               />
             </div>
           )}

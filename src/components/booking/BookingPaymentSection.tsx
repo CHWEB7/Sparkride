@@ -10,6 +10,7 @@ type BookingPaymentSectionProps = {
   estimatedPrice?: number | null;
   paymentLinkUrl?: string | null;
   paidAt?: Date | null;
+  paymentSetupNote?: string | null;
 };
 
 export function BookingPaymentSection({
@@ -18,6 +19,7 @@ export function BookingPaymentSection({
   estimatedPrice,
   paymentLinkUrl,
   paidAt,
+  paymentSetupNote,
 }: BookingPaymentSectionProps) {
   const fare = amountDue ?? estimatedPrice;
 
@@ -71,9 +73,8 @@ export function BookingPaymentSection({
 
       {paymentStatus === "NOT_REQUIRED" && (
         <p className="mt-4 text-sm text-muted leading-relaxed">
-          Online payment is not available for this booking yet. View your booking here anytime — if your
-          driver connects Square, a pay link will appear. Otherwise your driver will confirm payment
-          arrangements directly.
+          {paymentSetupNote ??
+            "Online payment is not available for this booking yet. If your driver has connected Square, refresh this page in a moment."}
         </p>
       )}
 

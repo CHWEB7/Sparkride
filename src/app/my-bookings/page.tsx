@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
+import { ensureBookingPaymentLink } from "@/lib/booking-confirmation";
 import { prisma } from "@/lib/prisma";
 
 export default async function MyBookingsPage() {
@@ -14,6 +15,22 @@ export default async function MyBookingsPage() {
   if (!user) redirect("/login?redirect=/my-bookings");
 
   const customer = await ensureCustomer(user);
+
+  const initialBookings = await prisma.booking.findMany({
+    where: { customerId: customer.id },
+    orderBy: { pickupDate: "desc" },
+  });
+
+  for (const booking of initialBookings) {
+    if (
+      booking.status === "CONFIRMED" &&
+      booking.paymentStatus !== "PAID" &&
+      !booking.squarePaymentLinkUrl
+    ) {
+      await ensureBookingPaymentLink(booking.id);
+    }
+  }
+
   const bookings = await prisma.booking.findMany({
     where: { customerId: customer.id },
     orderBy: { pickupDate: "desc" },

@@ -6,6 +6,7 @@ import {
   verifyOAuthState,
 } from "@/lib/square/oauth";
 import { saveDriverSquareTokens } from "@/lib/square/driver-tokens";
+import { backfillDriverPaymentLinks } from "@/lib/booking-confirmation";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -62,6 +63,10 @@ export async function GET(req: NextRequest) {
       accessToken: tokenResult.accessToken,
       refreshToken: tokenResult.refreshToken,
       expiresAt: tokenResult.expiresAt,
+    });
+
+    await backfillDriverPaymentLinks(statePayload.driverId).catch((err) => {
+      console.error("Square payment link backfill failed:", err);
     });
 
     return NextResponse.redirect(`${dashboardUrl}?square=connected`);
