@@ -319,6 +319,10 @@ html.dark .hero-ambient-readability {
   background: rgba(122, 158, 232, 0.28);
 }
 
+.hero-ambient--forced-dark .hero-ambient-readability {
+  display: none;
+}
+
 .hero-ambient--forced-dark .hero-ambient-vignette {
   background: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 35%, rgba(0, 0, 0, 0.35) 100%);
 }

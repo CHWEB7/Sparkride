@@ -108,7 +108,7 @@ export function HeroAmbientBackground({ forceDark = false }: { forceDark?: boole
       <div className="hero-ambient-orb hero-ambient-orb--5" />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full pointer-events-none" />
       <div className="hero-ambient-vignette" />
-      <div className="hero-ambient-readability" />
+      {!forceDark && <div className="hero-ambient-readability" />}
     </div>
   );
 }

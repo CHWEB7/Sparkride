@@ -219,15 +219,15 @@ export function DriverLoginForm() {
     <DriverAuthShell mode="login" title={titles[step]} subtitle={subtitles[step]}>
       <div className="space-y-4">
         {notDriver && (
-          <div className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-200">
+          <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
             That account is for customers, not drivers.
           </div>
         )}
         {error && (
-          <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
         )}
         {message && (
-          <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-400">{message}</div>
+          <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">{message}</div>
         )}
 
         {bootstrappingMfa ? (
@@ -260,8 +260,8 @@ export function DriverLoginForm() {
         ) : step === "password" ? (
           <form onSubmit={handlePassword} className="space-y-4">
             <div className={driverAuthChipClass}>
-              <span className="text-gray-400">Signing in as </span>
-              <span className="font-medium text-white">{email}</span>
+              <span className="text-gray-500">Signing in as </span>
+              <span className="font-medium text-gray-900">{email}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -294,7 +294,7 @@ export function DriverLoginForm() {
               type="button"
               onClick={handleForgotPassword}
               disabled={loading}
-              className="text-sm font-medium text-gray-400 transition-colors hover:text-white"
+              className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
             >
               Forgot password?
             </button>
@@ -312,8 +312,8 @@ export function DriverLoginForm() {
         ) : (
           <form onSubmit={handleMfa} className="space-y-4">
             <div className={driverAuthChipClass}>
-              <span className="text-gray-400">Account </span>
-              <span className="font-medium text-white">{email}</span>
+              <span className="text-gray-500">Account </span>
+              <span className="font-medium text-gray-900">{email}</span>
             </div>
             <div>
               <label htmlFor="driver-mfa" className="sr-only">
@@ -355,7 +355,7 @@ export function DriverLoginForm() {
                 setMfaCode("");
                 setError("");
               }}
-              className="w-full text-sm font-medium text-gray-400 transition-colors hover:text-white"
+              className="w-full text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
             >
               Back to password
             </button>
