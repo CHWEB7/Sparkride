@@ -135,13 +135,37 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
   });
 
   useEffect(() => {
-    fetch("/api/drivers")
+    const params = new URLSearchParams();
+    if (form.pickupDate && form.pickupTime) {
+      params.set("pickupDate", form.pickupDate);
+      params.set("pickupTime", form.pickupTime);
+      if (form.journeyType === "RETURN" && form.returnDate && form.returnTime) {
+        params.set("returnDate", form.returnDate);
+        params.set("returnTime", form.returnTime);
+      }
+    }
+
+    const query = params.toString();
+    fetch(`/api/drivers${query ? `?${query}` : ""}`)
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) setDrivers(data);
+        if (!Array.isArray(data)) return;
+        setDrivers(data);
+        setForm((prev) => {
+          if (prev.driverId && !data.some((d: BookableDriver) => d.id === prev.driverId)) {
+            return { ...prev, driverId: "" };
+          }
+          return prev;
+        });
       })
       .catch(() => {});
-  }, []);
+  }, [
+    form.pickupDate,
+    form.pickupTime,
+    form.returnDate,
+    form.returnTime,
+    form.journeyType,
+  ]);
 
   const steps = useMemo(
     () => getSteps(form.journeyType, form.serviceType),
@@ -735,7 +759,11 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                     ))}
                   </div>
                   {drivers.length === 0 && (
-                    <p className="text-sm text-muted">Loading drivers…</p>
+                    <p className="text-sm text-muted">
+                      {form.pickupDate && form.pickupTime
+                        ? "No drivers are available on your selected dates. Try different dates or contact us."
+                        : "Complete the schedule step first to see available drivers."}
+                    </p>
                   )}
                 </div>
               )}

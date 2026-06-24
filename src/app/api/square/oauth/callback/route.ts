@@ -13,14 +13,14 @@ export async function GET(req: NextRequest) {
   const error = searchParams.get("error");
   const code = searchParams.get("code");
   const state = searchParams.get("state");
-  const dashboardUrl = `${getSiteUrl()}/driver/dashboard`;
+  const settingsUrl = `${getSiteUrl()}/driver/settings`;
 
   function redirectWithSquareError(reason: string, detail?: string) {
     const params = new URLSearchParams({ square: "error", reason });
     if (detail) {
       params.set("detail", detail.slice(0, 300));
     }
-    return NextResponse.redirect(`${dashboardUrl}?${params.toString()}`);
+    return NextResponse.redirect(`${settingsUrl}?${params.toString()}`);
   }
 
   try {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     const locationId = await fetchDefaultSquareLocationId(tokenResult.accessToken);
     if (!locationId) {
       console.error("Square OAuth: no active location found for merchant");
-      return NextResponse.redirect(`${dashboardUrl}?square=no_location`);
+      return NextResponse.redirect(`${settingsUrl}?square=no_location`);
     }
 
     await saveDriverSquareTokens(statePayload.driverId, {
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
       console.error("Square payment link backfill failed:", err);
     });
 
-    return NextResponse.redirect(`${dashboardUrl}?square=connected`);
+    return NextResponse.redirect(`${settingsUrl}?square=connected`);
   } catch (err) {
     console.error("Square OAuth callback failed:", err);
     const message =

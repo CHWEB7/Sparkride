@@ -23,14 +23,14 @@ export async function GET() {
       squareCredentialMismatchMessage() ??
       "Square application credentials do not match SQUARE_ENVIRONMENT.";
     return NextResponse.redirect(
-      `${getSiteUrl()}/driver/dashboard?square=error&reason=${encodeURIComponent("credential_mismatch")}&detail=${encodeURIComponent(message)}`
+      `${getSiteUrl()}/driver/settings?square=error&reason=${encodeURIComponent("credential_mismatch")}&detail=${encodeURIComponent(message)}`
     );
   }
 
   const secretMismatch = squareApplicationSecretMismatchMessage();
   if (secretMismatch) {
     return NextResponse.redirect(
-      `${getSiteUrl()}/driver/dashboard?square=error&reason=${encodeURIComponent("wrong_application_secret")}&detail=${encodeURIComponent(secretMismatch)}`
+      `${getSiteUrl()}/driver/settings?square=error&reason=${encodeURIComponent("wrong_application_secret")}&detail=${encodeURIComponent(secretMismatch)}`
     );
   }
 

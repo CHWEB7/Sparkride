@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isDriverAvailableForBooking } from "@/lib/driver-availability";
 import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
 import { getHub, formatHubLabel, isHubTransfer, normalizeServiceType } from "@/lib/hubs";
@@ -72,6 +73,18 @@ export async function POST(req: NextRequest) {
     });
     if (!driver) {
       return json({ error: "Please select a valid driver" }, 400);
+    }
+
+    const driverAvailable = await isDriverAvailableForBooking(
+      driver.id,
+      pickupDate,
+      returnPickupDate
+    );
+    if (!driverAvailable) {
+      return json(
+        { error: "The selected driver is not available on your travel dates. Please choose another driver." },
+        400
+      );
     }
 
     const booking = await prisma.booking.create({

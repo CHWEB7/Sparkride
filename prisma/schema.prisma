@@ -49,6 +49,20 @@ model Driver {
   squareConnectedAt     DateTime?
   createdAt             DateTime  @default(now())
   bookings              Booking[]
+  blockOuts             DriverBlockOut[]
+}
+
+model DriverBlockOut {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  label     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([driverId, startDate, endDate])
 }
 
 model SavedBookingDetails {

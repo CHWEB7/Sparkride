@@ -1,0 +1,43 @@
+import { prisma } from "@/lib/prisma";
+import { getDriverSession } from "@/lib/driver-auth";
+import { driverBookingsFilter, isTestDriver } from "@/lib/driver-access";
+import { DriverDashboard } from "@/components/driver/DriverDashboard";
+
+export default async function DriverBookingsPage() {
+  const session = await getDriverSession();
+  if (!session) return null;
+
+  let bookings: Awaited<ReturnType<typeof prisma.booking.findMany>> = [];
+  let dbError: string | null = null;
+  try {
+    bookings = await prisma.booking.findMany({
+      where: driverBookingsFilter(session),
+      orderBy: { pickupDate: "asc" },
+    });
+  } catch (error) {
+    console.error("Driver dashboard bookings query failed:", error);
+    dbError =
+      "The database needs a one-time update. In Supabase SQL Editor, run prisma/sql/add-payment-columns.sql, then reload this page.";
+  }
+
+  const scopeLabel = isTestDriver(session.email)
+    ? "All bookings (test account)"
+    : "Your assigned bookings";
+
+  return (
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Bookings</h1>
+        <p className="mt-1 text-sm text-gray-500">{scopeLabel}</p>
+      </div>
+
+      {dbError ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 leading-relaxed">
+          {dbError}
+        </div>
+      ) : (
+        <DriverDashboard bookings={JSON.parse(JSON.stringify(bookings))} theme="light" />
+      )}
+    </div>
+  );
+}

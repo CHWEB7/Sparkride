@@ -42,7 +42,7 @@ type Booking = {
 
 const STATUSES = ["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"];
 
-const statusColors: Record<string, string> = {
+const statusColorsDark: Record<string, string> = {
   PENDING: "bg-yellow-500/20 text-yellow-400",
   CONFIRMED: "bg-blue-500/20 text-blue-400",
   EN_ROUTE: "bg-purple-500/20 text-purple-400",
@@ -50,7 +50,23 @@ const statusColors: Record<string, string> = {
   CANCELLED: "bg-red-500/20 text-red-400",
 };
 
-export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) {
+const statusColorsLight: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  CONFIRMED: "bg-blue-100 text-blue-800",
+  EN_ROUTE: "bg-purple-100 text-purple-800",
+  COMPLETED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-red-100 text-red-800",
+};
+
+export function DriverDashboard({
+  bookings: initial,
+  theme = "dark",
+}: {
+  bookings: Booking[];
+  theme?: "dark" | "light";
+}) {
+  const isLight = theme === "light";
+  const statusColors = isLight ? statusColorsLight : statusColorsDark;
   const [bookings, setBookings] = useState(initial);
   const [updating, setUpdating] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
@@ -90,7 +106,13 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
         <button
           onClick={() => setFilter("ALL")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            filter === "ALL" ? "bg-brand-gradient text-white" : "bg-white/5 text-gray-400 hover:text-white"
+            filter === "ALL"
+              ? isLight
+                ? "bg-emerald-500 text-white"
+                : "bg-brand-gradient text-white"
+              : isLight
+                ? "bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
+                : "bg-white/5 text-gray-400 hover:text-white"
           }`}
         >
           All ({bookings.length})
@@ -100,7 +122,13 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
             key={s}
             onClick={() => setFilter(s)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              filter === s ? "bg-brand-gradient text-white" : "bg-white/5 text-gray-400 hover:text-white"
+              filter === s
+                ? isLight
+                  ? "bg-emerald-500 text-white"
+                  : "bg-brand-gradient text-white"
+                : isLight
+                  ? "bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
+                  : "bg-white/5 text-gray-400 hover:text-white"
             }`}
           >
             {s.replace("_", " ")} ({counts[s] || 0})
@@ -118,12 +146,18 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
           {filtered.map((booking) => (
             <div
               key={booking.id}
-              className="bg-dark-elevated rounded-2xl p-6 border border-white/5"
+              className={
+                isLight
+                  ? "rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+                  : "bg-dark-elevated rounded-2xl p-6 border border-white/5"
+              }
             >
               <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                 <div>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-bold text-lg text-white">{booking.reference}</span>
+                    <span className={`font-bold text-lg ${isLight ? "text-gray-900" : "text-white"}`}>
+                      {booking.reference}
+                    </span>
                     {booking.journeyType === "RETURN" && (
                       <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-brand/20 text-brand-end">
                         RETURN
@@ -138,7 +172,7 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
                       {booking.status.replace("_", " ")}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-400">
+                  <div className={`flex items-center gap-2 mt-1 text-sm ${isLight ? "text-gray-500" : "text-gray-400"}`}>
                     <Calendar className="w-4 h-4" />
                     Out: {format(new Date(booking.pickupDate), "EEE d MMM yyyy · HH:mm")}
                     {booking.returnPickupDate && (
@@ -154,10 +188,14 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
                     value={booking.status}
                     disabled={updating === booking.id}
                     onChange={(e) => updateStatus(booking.id, e.target.value)}
-                    className="appearance-none pl-4 pr-10 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium cursor-pointer focus:border-brand outline-none"
+                    className={`appearance-none pl-4 pr-10 py-2 rounded-xl text-sm font-medium cursor-pointer outline-none ${
+                      isLight
+                        ? "bg-gray-50 border border-gray-200 text-gray-900 focus:border-emerald-500"
+                        : "bg-white/5 border border-white/10 text-white focus:border-brand"
+                    }`}
                   >
                     {STATUSES.map((s) => (
-                      <option key={s} value={s} className="bg-dark">
+                      <option key={s} value={s} className={isLight ? "bg-white" : "bg-dark"}>
                         {s.replace("_", " ")}
                       </option>
                     ))}
@@ -174,7 +212,7 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-brand mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-gray-400">
+                    <div className={isLight ? "text-gray-500" : "text-gray-400"}>
                       {booking.serviceType === "PRE_BOOKED"
                         ? booking.journeyType === "RETURN"
                           ? "Pre-booked return"
@@ -183,15 +221,15 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
                           ? `Return trip · ${booking.airportName}`
                           : `${booking.tripType === "TO_AIRPORT" ? "To" : "From"} ${booking.airportName}`}
                     </div>
-                    <div className="text-white">{booking.pickupAddress}</div>
-                    <div className="text-gray-500">→ {booking.dropoffAddress}</div>
+                    <div className={isLight ? "text-gray-900" : "text-white"}>{booking.pickupAddress}</div>
+                    <div className={isLight ? "text-gray-500" : "text-gray-500"}>→ {booking.dropoffAddress}</div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-brand" />
-                    <span className="text-white">{booking.customerName}</span>
+                    <span className={isLight ? "text-gray-900" : "text-white"}>{booking.customerName}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-brand" />
@@ -199,7 +237,7 @@ export function DriverDashboard({ bookings: initial }: { bookings: Booking[] }) 
                       {booking.customerPhone}
                     </a>
                   </div>
-                  <div className="text-gray-400">
+                  <div className={isLight ? "text-gray-500" : "text-gray-400"}>
                     {booking.vehicleType} · {booking.passengers} pax · {booking.luggage} bags
                     {booking.flightNumber && ` · Out: ${booking.flightNumber}`}
                     {booking.returnFlightNumber && ` · Ret: ${booking.returnFlightNumber}`}
