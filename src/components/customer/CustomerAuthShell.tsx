@@ -115,24 +115,17 @@ export function CustomerAuthShell({
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="px-4 sm:px-8 pt-6 flex items-center justify-between">
-          <Logo
-            href="/"
-            light
-            size="header"
-            className={mode === "login" ? "lg:hidden" : ""}
-          />
+        <header className="flex items-center justify-between px-4 pt-6 sm:px-8 lg:justify-end">
+          <Logo href="/" light size="header" className="lg:hidden" />
           <ThemeToggle light />
         </header>
 
         <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">
           <div className="hidden lg:flex lg:justify-end text-white pr-2 xl:pr-4">
             <div className="max-w-md xl:max-w-lg">
-              {mode === "login" && (
-                <div className="mb-8">
-                  <Logo href="/" light size="xl" />
-                </div>
-              )}
+              <div className="mb-8">
+                <Logo href="/" light size="xl" />
+              </div>
               <h1 className="text-4xl xl:text-5xl font-semibold leading-[1.08] tracking-[-0.03em]">
                 {hero.headline}
               </h1>
