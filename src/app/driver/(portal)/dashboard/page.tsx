@@ -1,23 +1,32 @@
 import { prisma } from "@/lib/prisma";
 import { getDriverSession } from "@/lib/driver-auth";
 import { driverBookingsFilter, isTestDriver } from "@/lib/driver-access";
-import { DriverBookingsTable } from "@/components/driver/DriverBookingsTable";
+import { DriverPerformanceDashboard } from "@/components/driver/DriverPerformanceDashboard";
 
-export default async function DriverBookingsPage() {
+export default async function DriverDashboardPage() {
   const session = await getDriverSession();
   if (!session) return null;
 
-  let bookings: Awaited<ReturnType<typeof prisma.booking.findMany>> = [];
-  let dbError: string | null = null;
+  let bookings: Array<{
+    status: string;
+    pickupDate: Date;
+    estimatedPrice: number | null;
+    paymentStatus: string;
+  }> = [];
+
   try {
     bookings = await prisma.booking.findMany({
       where: driverBookingsFilter(session),
-      orderBy: { pickupDate: "asc" },
+      select: {
+        status: true,
+        pickupDate: true,
+        estimatedPrice: true,
+        paymentStatus: true,
+      },
+      orderBy: { pickupDate: "desc" },
     });
   } catch (error) {
-    console.error("Driver dashboard bookings query failed:", error);
-    dbError =
-      "The database needs a one-time update. In Supabase SQL Editor, run prisma/sql/add-payment-columns.sql, then reload this page.";
+    console.error("Driver dashboard stats query failed:", error);
   }
 
   const scopeLabel = isTestDriver(session.email)
@@ -25,19 +34,11 @@ export default async function DriverBookingsPage() {
     : "Your assigned bookings";
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Bookings Manager</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{scopeLabel}</p>
-      </div>
-
-      {dbError ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 leading-relaxed dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-          {dbError}
-        </div>
-      ) : (
-        <DriverBookingsTable bookings={JSON.parse(JSON.stringify(bookings))} />
-      )}
+    <div className="h-full min-h-0">
+      <DriverPerformanceDashboard
+        bookings={JSON.parse(JSON.stringify(bookings))}
+        scopeLabel={scopeLabel}
+      />
     </div>
   );
 }

@@ -81,9 +81,11 @@ function shortAddress(address: string): string {
 export function DriverBookingsTable({
   bookings: initial,
   theme: themeProp,
+  fullHeight = false,
 }: {
   bookings: Booking[];
   theme?: "dark" | "light";
+  fullHeight?: boolean;
 }) {
   const { theme: contextTheme } = useTheme();
   const theme = themeProp ?? contextTheme;
@@ -219,8 +221,8 @@ export function DriverBookingsTable({
     : "rounded-xl border border-white/10 bg-dark-elevated overflow-hidden";
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className={fullHeight ? "flex h-full min-h-0 flex-col gap-4" : "space-y-4"}>
+      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
@@ -287,7 +289,7 @@ export function DriverBookingsTable({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex shrink-0 flex-wrap gap-2">
         <button
           type="button"
           onClick={() => setStatusFilter("ALL")}
@@ -324,13 +326,17 @@ export function DriverBookingsTable({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="py-16 text-center text-gray-500">
-          <Plane className="mx-auto mb-4 h-12 w-12 opacity-30" />
-          <p>No bookings found</p>
+        <div className="flex flex-1 items-center justify-center py-16 text-center text-gray-500">
+          <div>
+            <Plane className="mx-auto mb-4 h-12 w-12 opacity-30" />
+            <p>No bookings found</p>
+          </div>
         </div>
       ) : (
-        <div className={tableWrap}>
-          <div className="overflow-x-auto">
+        <div
+          className={`${tableWrap} ${fullHeight ? "flex min-h-0 flex-1 flex-col" : ""}`}
+        >
+          <div className={`overflow-x-auto ${fullHeight ? "min-h-0 flex-1 overflow-y-auto" : ""}`}>
             <table className="w-full min-w-[1100px] border-collapse">
               <thead>
                 <tr className={isLight ? "border-b border-gray-200" : "border-b border-white/10"}>
@@ -506,7 +512,7 @@ export function DriverBookingsTable({
             </table>
           </div>
           <div
-            className={`px-4 py-2 text-xs ${
+            className={`shrink-0 px-4 py-2 text-xs ${
               isLight ? "border-t border-gray-100 text-gray-500" : "border-t border-white/10 text-gray-400"
             }`}
           >

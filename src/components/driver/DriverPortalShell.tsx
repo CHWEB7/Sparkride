@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
   LayoutGrid,
   Settings,
   Users,
@@ -25,10 +26,19 @@ type DriverPortalShellProps = {
 };
 
 const topNavItems = [
-  { href: "/driver/dashboard", label: "Bookings Manager", icon: LayoutGrid },
+  { href: "/driver/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/driver/bookings", label: "Bookings Manager", icon: LayoutGrid },
   { href: "/driver/calendar", label: "Bookings Calendar", icon: CalendarDays },
   { href: "/driver/customers", label: "Customers", icon: Users },
 ];
+
+function pageTitle(pathname: string): string {
+  if (pathname.startsWith("/driver/bookings")) return "Bookings Manager";
+  if (pathname.startsWith("/driver/calendar")) return "Bookings Calendar";
+  if (pathname.startsWith("/driver/customers")) return "Customers";
+  if (pathname.startsWith("/driver/settings")) return "Settings";
+  return "Dashboard";
+}
 
 const settingsSubItems = [
   { href: "/driver/settings/integrations", label: "Integrations" },
@@ -171,11 +181,11 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
         </div>
       </aside>
 
-      <div className={`flex min-h-screen flex-col transition-all duration-200 ${collapsed ? "pl-[72px]" : "pl-60"}`}>
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-gray-200 bg-white/90 px-6 backdrop-blur dark:border-white/10 dark:bg-dark/90">
+      <div className={`flex h-screen flex-col transition-all duration-200 ${collapsed ? "pl-[72px]" : "pl-60"}`}>
+        <header className="z-30 flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white/90 px-4 backdrop-blur dark:border-white/10 dark:bg-dark/90 lg:px-5">
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <LayoutGrid className="h-4 w-4" />
-            <span>Driver portal</span>
+            <LayoutDashboard className="h-4 w-4" />
+            <span>{pageTitle(pathname)}</span>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
             <ThemeToggle />
@@ -184,7 +194,9 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
           </div>
         </header>
 
-        <main className="flex-1 px-6 py-8">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4 lg:px-5 lg:py-5">
+          {children}
+        </main>
       </div>
     </div>
   );
