@@ -30,17 +30,21 @@ function LocationMapVisual({
         sizes={sizes}
         priority={priority}
       />
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/50" aria-hidden />
+      <div className="absolute inset-0 bg-black/50 dark:bg-black/60" aria-hidden />
       <div
-        className="absolute inset-0 bg-gradient-to-br from-[#6a68de]/20 via-transparent to-[#82dbdf]/10"
+        className="absolute inset-0 bg-gradient-to-br from-[#6a68de]/25 via-[#5a58c8]/10 to-[#82dbdf]/15 mix-blend-soft-light dark:from-[#6a68de]/30 dark:via-[#4a48b8]/15 dark:to-[#82dbdf]/10"
         aria-hidden
       />
       {blendTop && (
         <div
-          className="absolute inset-x-0 top-0 z-[1] h-20 bg-gradient-to-b from-app-bg dark:from-dark to-transparent"
+          className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-app-bg dark:from-dark to-transparent"
           aria-hidden
         />
       )}
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-app-bg/90 via-transparent to-transparent dark:from-dark/90 sm:hidden"
+        aria-hidden
+      />
     </div>
   );
 }
@@ -48,9 +52,28 @@ function LocationMapVisual({
 export function LocationSection() {
   return (
     <section id="locations" className="border-y border-black/5 dark:border-white/5">
-      <div className="relative overflow-hidden bg-app-bg dark:bg-dark sm:flex sm:min-h-[520px]">
-        <SiteContainer className="relative z-10 py-12 sm:py-20 lg:py-24 sm:w-[42%] sm:max-w-none sm:shrink-0 lg:w-[44%]">
-          <div className="max-w-xl">
+      <div className="relative overflow-hidden bg-app-bg dark:bg-dark">
+        {/* Desktop: map on the right */}
+        <div
+          className="absolute inset-y-0 left-[38%] sm:left-[42%] lg:left-[46%] xl:left-[48%] right-0 hidden sm:block"
+          aria-hidden
+        >
+          <LocationMapVisual
+            className="absolute inset-0"
+            imageClassName="scale-[1.08] min-w-full saturate-[0.65] contrast-[0.95] brightness-[0.72] object-[72%_center]"
+            sizes="(max-width: 1024px) 60vw, 52vw"
+          />
+          <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-app-bg via-app-bg/80 to-transparent dark:from-dark dark:via-dark/80" />
+          <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-app-bg to-transparent dark:from-dark opacity-95" />
+        </div>
+
+        <div
+          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-app-bg from-[0%] via-app-bg/95 via-[34%] to-transparent to-[62%] dark:from-dark dark:via-dark/95 sm:block sm:via-[36%] sm:to-[58%] lg:via-[38%] lg:to-[54%]"
+          aria-hidden
+        />
+
+        <SiteContainer className="relative z-10 py-12 sm:py-20 lg:py-24">
+          <div className="max-w-xl lg:max-w-lg xl:max-w-xl">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
               <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} />
               Service area
@@ -91,24 +114,11 @@ export function LocationSection() {
           </div>
         </SiteContainer>
 
-        {/* Desktop: image panel */}
-        <div className="relative hidden sm:block sm:flex-1 sm:min-h-[520px]">
+        {/* Mobile: full-width map below content */}
+        <div className="relative z-0 sm:hidden">
           <LocationMapVisual
-            className="absolute inset-0"
-            imageClassName="brightness-[0.78] saturate-[0.85] object-center"
-            sizes="58vw"
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-24 bg-gradient-to-r from-app-bg dark:from-dark to-transparent"
-            aria-hidden
-          />
-        </div>
-
-        {/* Mobile: image below copy */}
-        <div className="relative w-full sm:hidden">
-          <LocationMapVisual
-            className="relative aspect-[16/10] min-h-[220px] w-full"
-            imageClassName="brightness-[0.75] saturate-[0.85] object-center"
+            className="relative aspect-[16/10] min-h-[200px] max-h-[280px] w-full"
+            imageClassName="object-[center_42%] saturate-[0.7] contrast-[0.95] brightness-[0.68]"
             sizes="100vw"
             blendTop
           />
