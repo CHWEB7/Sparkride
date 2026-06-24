@@ -20,7 +20,7 @@ function LocationMapVisual({
   blendTop?: boolean;
 }) {
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`overflow-hidden ${className}`}>
       <Image
         src={SERVICE_AREA_IMAGE}
         alt="Castleford and West Yorkshire service area"
@@ -107,7 +107,7 @@ export function LocationSection() {
         {/* Mobile: image below copy */}
         <div className="relative w-full sm:hidden">
           <LocationMapVisual
-            className="aspect-[16/10] min-h-[220px] w-full"
+            className="relative aspect-[16/10] min-h-[220px] w-full"
             imageClassName="brightness-[0.75] saturate-[0.85] object-center"
             sizes="100vw"
             blendTop
