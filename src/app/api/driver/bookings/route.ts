@@ -10,6 +10,7 @@ import {
   canSetPaid,
   handleBookingConfirmed,
 } from "@/lib/booking-confirmation";
+import { isCalendarBookingStatus } from "@/lib/booking-status";
 
 export async function GET(req: NextRequest) {
   const session = await requireDriverSessionWithMfa();
@@ -19,21 +20,35 @@ export async function GET(req: NextRequest) {
 
   const calendar = req.nextUrl.searchParams.get("calendar") === "1";
 
-  const bookings = await prisma.booking.findMany({
-    where: {
-      ...driverBookingsFilter(session),
-      ...(calendar
-        ? {
-            status: "PAID",
-            paymentStatus: { in: ["PAID", "NOT_REQUIRED"] },
-          }
-        : {}),
-    },
-    orderBy: { pickupDate: "asc" },
-    include: { driver: { select: { name: true, vehicleLabel: true } } },
-  });
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: {
+        ...driverBookingsFilter(session),
+        ...(calendar
+          ? {
+              paymentStatus: { in: ["PAID", "NOT_REQUIRED"] },
+            }
+          : {}),
+      },
+      orderBy: { pickupDate: "asc" },
+      include: { driver: { select: { name: true, vehicleLabel: true } } },
+    });
 
-  return NextResponse.json(bookings);
+    if (!calendar) {
+      return NextResponse.json(bookings);
+    }
+
+    const paidBookings = bookings.filter((booking) =>
+      isCalendarBookingStatus(booking.status)
+    );
+    return NextResponse.json(paidBookings);
+  } catch (error) {
+    console.error("Driver bookings fetch error:", error);
+    if (calendar) {
+      return NextResponse.json([]);
+    }
+    return NextResponse.json({ error: "Failed to load bookings" }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: NextRequest) {

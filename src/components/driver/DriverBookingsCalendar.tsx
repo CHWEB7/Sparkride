@@ -80,29 +80,38 @@ export function DriverBookingsCalendar() {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [bookings, setBookings] = useState<CalendarBooking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [bookingsWarning, setBookingsWarning] = useState<string | null>(null);
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<CalendarEntry | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    setLoadingBookings(true);
+    setBookingsWarning(null);
 
     fetch("/api/driver/bookings?calendar=1")
       .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load calendar bookings");
-        return res.json() as Promise<CalendarBooking[]>;
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(
+            typeof data?.error === "string" ? data.error : "Failed to load calendar bookings"
+          );
+        }
+        return data;
       })
       .then((data) => {
-        if (!cancelled) setBookings(data);
+        if (cancelled) return;
+        setBookings(Array.isArray(data) ? data : []);
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load paid bookings for the calendar.");
+        if (!cancelled) {
+          setBookings([]);
+          setBookingsWarning("Could not load paid bookings. The calendar is still available.");
+        }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadingBookings(false);
       });
 
     return () => {
@@ -220,14 +229,17 @@ export function DriverBookingsCalendar() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="py-16 text-center text-sm text-gray-500">Loading calendar…</div>
-        ) : error ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-            {error}
+        {bookingsWarning && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+            {bookingsWarning}
           </div>
-        ) : (
-          <>
+        )}
+
+        {loadingBookings && (
+          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">Loading paid bookings…</p>
+        )}
+
+        <>
             <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
               {WEEKDAYS.map((label) => (
                 <div
@@ -304,8 +316,7 @@ export function DriverBookingsCalendar() {
                 );
               })}
             </div>
-          </>
-        )}
+        </>
       </div>
 
       <aside className={`w-full shrink-0 xl:w-[380px] ${panelCard} p-4 sm:p-6`}>

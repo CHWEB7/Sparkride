@@ -33,5 +33,11 @@ export const BOOKING_STATUS_COLORS_LIGHT: Record<BookingStatusValue, string> = {
 };
 
 export function formatBookingStatus(status: string): string {
+  if (status === "EN_ROUTE") return "Paid";
   return BOOKING_STATUS_LABELS[status as BookingStatusValue] ?? status.replace(/_/g, " ");
+}
+
+/** Bookings shown on the driver calendar (paid trip status). */
+export function isCalendarBookingStatus(status: string): boolean {
+  return status === "PAID" || status === "EN_ROUTE";
 }
