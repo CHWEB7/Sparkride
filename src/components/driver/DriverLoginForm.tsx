@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { KeyRound, Loader2, Smartphone } from "lucide-react";
+import { ArrowRight, Loader2, Smartphone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/site-url";
 import {
   DriverAuthShell,
-  authInputClass,
-  authLabelClass,
+  driverAuthButtonClass,
+  driverAuthInputClass,
 } from "@/components/driver/DriverAuthShell";
 
-type Step = "credentials" | "mfa";
+type Step = "email" | "password" | "mfa";
 
 export function DriverLoginForm() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export function DriverLoginForm() {
   const notDriver = searchParams.get("error") === "not_driver";
   const mfaRequired = searchParams.get("mfa") === "required";
 
-  const [step, setStep] = useState<Step>(mfaRequired ? "mfa" : "credentials");
+  const [step, setStep] = useState<Step>(mfaRequired ? "mfa" : "email");
   const [bootstrappingMfa, setBootstrappingMfa] = useState(mfaRequired);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,9 +42,11 @@ export function DriverLoginForm() {
           data: { user },
         } = await supabase.auth.getUser();
         if (!user || user.app_metadata?.role !== "driver") {
-          setStep("credentials");
+          setStep("email");
           return;
         }
+
+        setEmail(user.email ?? "");
 
         const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
         if (factorsError) throw factorsError;
@@ -63,7 +65,7 @@ export function DriverLoginForm() {
             ? err.message
             : "Could not prepare MFA sign-in. Sign in again."
         );
-        setStep("credentials");
+        setStep("email");
       } finally {
         setBootstrappingMfa(false);
       }
@@ -111,7 +113,18 @@ export function DriverLoginForm() {
     throw new Error("This account is not authorised for the driver portal.");
   }
 
-  async function handleCredentials(e: React.FormEvent) {
+  function handleEmailContinue(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    if (!email.trim()) {
+      setError("Enter your email address");
+      return;
+    }
+    setStep("password");
+  }
+
+  async function handlePassword(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -152,7 +165,7 @@ export function DriverLoginForm() {
       const raw = err instanceof Error ? err.message : "Sign-in failed";
       const message =
         raw.toLowerCase().includes("invalid login credentials")
-          ? "Invalid email or password. First-time drivers should use Set up authenticator."
+          ? "Invalid email or password."
           : raw;
       setError(message);
     } finally {
@@ -189,109 +202,151 @@ export function DriverLoginForm() {
     }
   }
 
+  const titles: Record<Step, string> = {
+    email: "Welcome back",
+    password: "Enter your password",
+    mfa: "Authenticator code",
+  };
+
+  const subtitles: Record<Step, string> = {
+    email: "Sign in to your driver account to continue",
+    password: "Enter the password for your Sparkride driver account",
+    mfa: "Enter the 6-digit code from your authenticator app",
+  };
+
   return (
-    <DriverAuthShell
-      mode="login"
-      title={step === "credentials" ? "Sign in" : "Authenticator code"}
-      subtitle={
-        step === "credentials"
-          ? "Use your driver email and password, then confirm with your MFA app."
-          : "Enter the 6-digit code from your authenticator app."
-      }
-    >
+    <DriverAuthShell mode="login" title={titles[step]} subtitle={subtitles[step]}>
       <div className="space-y-4">
         {notDriver && (
-          <div className="p-3 rounded-xl bg-amber-500/10 text-amber-800 text-sm">
+          <div className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
             That account is for customers, not drivers.
           </div>
         )}
         {error && (
-          <div className="p-3 rounded-xl bg-red-500/10 text-red-600 text-sm">{error}</div>
+          <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
         )}
         {message && (
-          <div className="p-3 rounded-xl bg-green-500/10 text-green-700 text-sm">{message}</div>
+          <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+            {message}
+          </div>
         )}
 
         {bootstrappingMfa ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-7 h-7 text-brand animate-spin" />
+            <Loader2 className="h-7 w-7 animate-spin text-brand" />
           </div>
-        ) : step === "credentials" ? (
-          <form onSubmit={handleCredentials} className="space-y-4">
+        ) : step === "email" ? (
+          <form onSubmit={handleEmailContinue} className="space-y-4">
             <div>
-              <label className={authLabelClass}>Email</label>
+              <label htmlFor="driver-email" className="sr-only">
+                Email
+              </label>
               <input
+                id="driver-email"
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="Enter email address"
+                autoFocus
+                placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={authInputClass}
+                className={driverAuthInputClass}
               />
             </div>
+            <button type="submit" className={driverAuthButtonClass}>
+              Continue
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        ) : step === "password" ? (
+          <form onSubmit={handlePassword} className="space-y-4">
+            <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm dark:border-white/10 dark:bg-white/5">
+              <span className="text-gray-500 dark:text-gray-400">Signing in as </span>
+              <span className="font-medium text-gray-900 dark:text-white">{email}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("email");
+                  setPassword("");
+                  setError("");
+                }}
+                className="ml-2 font-medium text-brand hover:underline"
+              >
+                Change
+              </button>
+            </div>
             <div>
-              <label className={authLabelClass}>Password</label>
+              <label htmlFor="driver-password" className="sr-only">
+                Password
+              </label>
               <input
+                id="driver-password"
                 type="password"
                 required
                 autoComplete="current-password"
+                autoFocus
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={authInputClass}
+                className={driverAuthInputClass}
               />
             </div>
             <button
               type="button"
               onClick={handleForgotPassword}
               disabled={loading}
-              className="text-sm font-medium text-muted hover:text-dark transition-colors"
+              className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
             >
               Forgot password?
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
-            >
+            <button type="submit" disabled={loading} className={driverAuthButtonClass}>
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
-                  <KeyRound className="w-5 h-5" />
-                  Continue
+                  Sign in
+                  <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
           </form>
         ) : (
           <form onSubmit={handleMfa} className="space-y-4">
+            <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm dark:border-white/10 dark:bg-white/5">
+              <span className="text-gray-500 dark:text-gray-400">Account </span>
+              <span className="font-medium text-gray-900 dark:text-white">{email}</span>
+            </div>
             <div>
-              <label className={authLabelClass}>6-digit code</label>
+              <label htmlFor="driver-mfa" className="sr-only">
+                6-digit code
+              </label>
               <input
+                id="driver-mfa"
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 pattern="[0-9]{6}"
                 maxLength={6}
                 required
+                autoFocus
                 placeholder="000000"
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className={authInputClass}
+                className={`${driverAuthInputClass} text-center text-lg tracking-[0.3em]`}
               />
             </div>
             <button
               type="submit"
               disabled={loading || mfaCode.length !== 6}
-              className="w-full py-3.5 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+              className={driverAuthButtonClass}
             >
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
-                  <Smartphone className="w-5 h-5" />
+                  <Smartphone className="h-5 w-5" />
                   Verify and sign in
                 </>
               )}
@@ -299,20 +354,19 @@ export function DriverLoginForm() {
             <button
               type="button"
               onClick={() => {
-                setStep("credentials");
+                setStep("password");
                 setMfaCode("");
                 setError("");
               }}
-              className="w-full text-sm font-medium text-muted hover:text-dark transition-colors"
+              className="w-full text-sm font-medium text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
             >
-              Back to email and password
+              Back to password
             </button>
           </form>
         )}
 
-        <p className="text-xs text-muted text-center leading-relaxed pt-1">
-          MFA is required for every driver sign-in. Sparkride never sees your authenticator
-          secret.
+        <p className="text-center text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+          MFA is required for every driver sign-in. Sparkride never sees your authenticator secret.
         </p>
       </div>
     </DriverAuthShell>

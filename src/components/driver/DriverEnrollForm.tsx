@@ -6,8 +6,8 @@ import { KeyRound, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   DriverAuthShell,
-  authInputClass,
-  authLabelClass,
+  driverAuthButtonClass,
+  driverAuthInputClass,
 } from "@/components/driver/DriverAuthShell";
 import { DriverTotpSetup } from "@/components/driver/DriverTotpSetup";
 import { DriverSetPasswordForm } from "@/components/driver/DriverSetPasswordForm";
@@ -160,43 +160,45 @@ export function DriverEnrollForm() {
       {step === "bootstrap" ? (
         <form onSubmit={handleBootstrap} className="space-y-4">
           <div>
-            <label className={authLabelClass}>Email</label>
+            <label htmlFor="enroll-email" className="sr-only">
+              Email
+            </label>
             <input
+              id="enroll-email"
               type="email"
               required
               autoComplete="email"
-              placeholder="Enter email address"
+              placeholder="you@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={authInputClass}
+              className={driverAuthInputClass}
             />
           </div>
           <div>
-            <label className={authLabelClass}>One-time password</label>
+            <label htmlFor="enroll-password" className="sr-only">
+              One-time password
+            </label>
             <input
+              id="enroll-password"
               type="password"
               required
               autoComplete="current-password"
               placeholder="Enter your one-time password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={authInputClass}
+              className={driverAuthInputClass}
             />
-            <p className="mt-2 text-xs text-muted leading-relaxed">
-              Provided by Sparkride when your driver account was created. You will choose a
-              new password after MFA setup.
+            <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+              Provided by Sparkride when your driver account was created. You will choose a new
+              password after MFA setup.
             </p>
           </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3.5 bg-brand-gradient hover:opacity-90 disabled:opacity-50 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
-          >
+          <button type="submit" disabled={submitting} className={driverAuthButtonClass}>
             {submitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <>
-                <KeyRound className="w-5 h-5" />
+                <KeyRound className="h-5 w-5" />
                 Continue
               </>
             )}

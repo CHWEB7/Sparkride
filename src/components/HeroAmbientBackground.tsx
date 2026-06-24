@@ -26,7 +26,7 @@ function createParticles(count: number, width: number, height: number): Particle
   }));
 }
 
-export function HeroAmbientBackground() {
+export function HeroAmbientBackground({ forceDark = false }: { forceDark?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const frameRef = useRef<number>(0);
@@ -60,7 +60,8 @@ export function HeroAmbientBackground() {
       const { width, height } = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, width, height);
 
-      const isDark = document.documentElement.classList.contains("dark");
+      const isDark =
+        forceDark || document.documentElement.classList.contains("dark");
       const dustColor = isDark ? "255, 255, 255" : "106, 104, 222";
 
       for (const p of particlesRef.current) {
@@ -93,10 +94,12 @@ export function HeroAmbientBackground() {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [forceDark]);
+
+  const ambientClass = forceDark ? "hero-ambient hero-ambient--forced-dark" : "hero-ambient";
 
   return (
-    <div className="hero-ambient absolute inset-0 overflow-hidden" aria-hidden>
+    <div className={`${ambientClass} absolute inset-0 overflow-hidden`} aria-hidden>
       <div className="hero-ambient-gradient" />
       <div className="hero-ambient-orb hero-ambient-orb--1" />
       <div className="hero-ambient-orb hero-ambient-orb--2" />

@@ -286,6 +286,43 @@ html.dark .hero-ambient-readability {
   );
 }
 
+.hero-ambient--forced-dark .hero-ambient-gradient {
+  background: linear-gradient(
+    135deg,
+    #191c23 0%,
+    #1a2332 30%,
+    #1e2438 55%,
+    #191c23 80%,
+    #141820 100%
+  );
+  background-size: 300% 300%;
+  animation: hero-gradient-flow 10s ease-in-out infinite;
+}
+
+.hero-ambient--forced-dark .hero-ambient-orb--1 {
+  background: rgba(106, 104, 222, 0.42);
+}
+
+.hero-ambient--forced-dark .hero-ambient-orb--2 {
+  background: rgba(130, 219, 223, 0.35);
+}
+
+.hero-ambient--forced-dark .hero-ambient-orb--3 {
+  background: rgba(106, 104, 222, 0.3);
+}
+
+.hero-ambient--forced-dark .hero-ambient-orb--4 {
+  background: rgba(130, 219, 223, 0.22);
+}
+
+.hero-ambient--forced-dark .hero-ambient-orb--5 {
+  background: rgba(122, 158, 232, 0.28);
+}
+
+.hero-ambient--forced-dark .hero-ambient-vignette {
+  background: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 35%, rgba(0, 0, 0, 0.35) 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-ambient-gradient,
   .hero-ambient-orb {
