@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const error = searchParams.get("error");
   const code = searchParams.get("code");
   const state = searchParams.get("state");
-  const settingsUrl = `${getSiteUrl()}/driver/settings`;
+  const settingsUrl = `${getSiteUrl()}/driver/settings/integrations`;
 
   function redirectWithSquareError(reason: string, detail?: string) {
     const params = new URLSearchParams({ square: "error", reason });

@@ -21,7 +21,7 @@ type CustomerRow = {
   } | null;
 };
 
-export function DriverCustomersList() {
+export function DriverCustomersList({ fullHeight = false }: { fullHeight?: boolean }) {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
@@ -49,7 +49,11 @@ export function DriverCustomersList() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-500">
+      <div
+        className={`flex items-center justify-center text-gray-500 ${
+          fullHeight ? "h-full" : "py-20"
+        }`}
+      >
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
         Loading customers…
       </div>
@@ -66,18 +70,24 @@ export function DriverCustomersList() {
 
   if (customers.length === 0) {
     return (
-      <div className="py-16 text-center text-gray-500">
-        <Users className="mx-auto mb-4 h-12 w-12 opacity-30" />
-        <p>No customers yet</p>
-        <p className="mt-1 text-sm">Customers appear here after they book with you.</p>
+      <div
+        className={`flex items-center justify-center text-center text-gray-500 ${
+          fullHeight ? "h-full" : "py-16"
+        }`}
+      >
+        <div>
+          <Users className="mx-auto mb-4 h-12 w-12 opacity-30" />
+          <p>No customers yet</p>
+          <p className="mt-1 text-sm">Customers appear here after they book with you.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={tableWrap}>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse">
+    <div className={`${tableWrap} ${fullHeight ? "flex h-full min-h-0 flex-col" : ""}`}>
+      <div className={`overflow-x-auto ${fullHeight ? "min-h-0 flex-1 overflow-y-auto" : ""}`}>
+        <table className="w-full min-w-[760px] border-collapse">
           <thead>
             <tr className={isLight ? "border-b border-gray-200" : "border-b border-white/10"}>
               <th className={thClass}>Name</th>
@@ -124,6 +134,13 @@ export function DriverCustomersList() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div
+        className={`shrink-0 px-4 py-2 text-xs ${
+          isLight ? "border-t border-gray-100 text-gray-500" : "border-t border-white/10 text-gray-400"
+        }`}
+      >
+        {customers.length} customer{customers.length === 1 ? "" : "s"}
       </div>
     </div>
   );

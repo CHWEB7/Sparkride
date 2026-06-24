@@ -154,7 +154,7 @@ export function DriverEnrollForm() {
       subtitle={subtitles[step]}
     >
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 text-red-600 text-sm mb-4">{error}</div>
+        <div className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
       )}
 
       {step === "bootstrap" ? (
@@ -188,7 +188,7 @@ export function DriverEnrollForm() {
               onChange={(e) => setPassword(e.target.value)}
               className={driverAuthInputClass}
             />
-            <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-xs leading-relaxed text-gray-400">
               Provided by Sparkride when your driver account was created. You will choose a new
               password after MFA setup.
             </p>

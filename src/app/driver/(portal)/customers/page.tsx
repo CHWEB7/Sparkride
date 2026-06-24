@@ -2,8 +2,8 @@ import { DriverCustomersList } from "@/components/driver/DriverCustomersList";
 
 export default function DriverCustomersPage() {
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="mb-8">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="mb-4 shrink-0">
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
           Customers
         </h1>
@@ -11,7 +11,10 @@ export default function DriverCustomersPage() {
           Customers who have booked with you. Read-only — contact details for your records.
         </p>
       </div>
-      <DriverCustomersList />
+
+      <div className="min-h-0 flex-1">
+        <DriverCustomersList fullHeight />
+      </div>
     </div>
   );
 }

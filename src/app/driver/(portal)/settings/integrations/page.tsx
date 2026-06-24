@@ -1,7 +1,15 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { DriverSquareConnect } from "@/components/driver/DriverSquareConnect";
+import { getDriverSession } from "@/lib/driver-auth";
+import { getDriverSquareStatus } from "@/lib/square/driver-status";
 
-export default function DriverIntegrationsPage() {
+export default async function DriverIntegrationsPage() {
+  const session = await getDriverSession();
+  if (!session) redirect("/driver/login");
+
+  const initialStatus = await getDriverSquareStatus(session.driverId);
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
@@ -14,7 +22,7 @@ export default function DriverIntegrationsPage() {
       </div>
 
       <Suspense fallback={null}>
-        <DriverSquareConnect />
+        <DriverSquareConnect initialStatus={initialStatus} />
       </Suspense>
     </div>
   );

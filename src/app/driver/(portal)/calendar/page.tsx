@@ -11,15 +11,17 @@ export default async function DriverCalendarPage() {
     : "Your paid bookings";
 
   return (
-    <div className="mx-auto max-w-7xl">
-      <div className="mb-8">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="mb-4 shrink-0">
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
           Bookings Calendar
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{scopeLabel}</p>
       </div>
 
-      <DriverBookingsCalendar />
+      <div className="min-h-0 flex-1">
+        <DriverBookingsCalendar fullHeight />
+      </div>
     </div>
   );
 }

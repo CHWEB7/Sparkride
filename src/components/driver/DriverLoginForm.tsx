@@ -8,6 +8,7 @@ import { getAuthCallbackUrl } from "@/lib/site-url";
 import {
   DriverAuthShell,
   driverAuthButtonClass,
+  driverAuthChipClass,
   driverAuthInputClass,
 } from "@/components/driver/DriverAuthShell";
 
@@ -218,19 +219,15 @@ export function DriverLoginForm() {
     <DriverAuthShell mode="login" title={titles[step]} subtitle={subtitles[step]}>
       <div className="space-y-4">
         {notDriver && (
-          <div className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <div className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-200">
             That account is for customers, not drivers.
           </div>
         )}
         {error && (
-          <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
-            {error}
-          </div>
+          <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
         )}
         {message && (
-          <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
-            {message}
-          </div>
+          <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-400">{message}</div>
         )}
 
         {bootstrappingMfa ? (
@@ -262,9 +259,9 @@ export function DriverLoginForm() {
           </form>
         ) : step === "password" ? (
           <form onSubmit={handlePassword} className="space-y-4">
-            <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm dark:border-white/10 dark:bg-white/5">
-              <span className="text-gray-500 dark:text-gray-400">Signing in as </span>
-              <span className="font-medium text-gray-900 dark:text-white">{email}</span>
+            <div className={driverAuthChipClass}>
+              <span className="text-gray-400">Signing in as </span>
+              <span className="font-medium text-white">{email}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -297,7 +294,7 @@ export function DriverLoginForm() {
               type="button"
               onClick={handleForgotPassword}
               disabled={loading}
-              className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+              className="text-sm font-medium text-gray-400 transition-colors hover:text-white"
             >
               Forgot password?
             </button>
@@ -314,9 +311,9 @@ export function DriverLoginForm() {
           </form>
         ) : (
           <form onSubmit={handleMfa} className="space-y-4">
-            <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm dark:border-white/10 dark:bg-white/5">
-              <span className="text-gray-500 dark:text-gray-400">Account </span>
-              <span className="font-medium text-gray-900 dark:text-white">{email}</span>
+            <div className={driverAuthChipClass}>
+              <span className="text-gray-400">Account </span>
+              <span className="font-medium text-white">{email}</span>
             </div>
             <div>
               <label htmlFor="driver-mfa" className="sr-only">
@@ -358,14 +355,14 @@ export function DriverLoginForm() {
                 setMfaCode("");
                 setError("");
               }}
-              className="w-full text-sm font-medium text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+              className="w-full text-sm font-medium text-gray-400 transition-colors hover:text-white"
             >
               Back to password
             </button>
           </form>
         )}
 
-        <p className="text-center text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+        <p className="text-center text-xs leading-relaxed text-gray-500">
           MFA is required for every driver sign-in. Sparkride never sees your authenticator secret.
         </p>
       </div>

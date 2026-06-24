@@ -70,7 +70,7 @@ type CalendarEntry = {
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export function DriverBookingsCalendar() {
+export function DriverBookingsCalendar({ fullHeight = false }: { fullHeight?: boolean }) {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const statusColors = isLight ? BOOKING_STATUS_COLORS_LIGHT : BOOKING_STATUS_COLORS_DARK;
@@ -160,8 +160,10 @@ export function DriverBookingsCalendar() {
   }
 
   function dayCellClass(day: Date, inMonth: boolean, isSelected: boolean, isHoliday: boolean) {
-    const base =
-      "relative flex min-h-[88px] flex-col rounded-lg border p-2 text-left transition-colors sm:min-h-[100px]";
+    const heightClass = fullHeight
+      ? "min-h-0 flex-1"
+      : "min-h-[88px] sm:min-h-[100px]";
+    const base = `relative flex ${heightClass} flex-col rounded-lg border p-2 text-left transition-colors`;
 
     if (!inMonth) {
       return `${base} border-transparent opacity-40`;
@@ -185,9 +187,13 @@ export function DriverBookingsCalendar() {
     : "rounded-2xl border border-white/10 bg-dark-elevated";
 
   return (
-    <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
-      <div className={`flex-1 ${panelCard} p-4 sm:p-6`}>
-        <div className="mb-6 flex items-center justify-between gap-4">
+    <div
+      className={`flex gap-4 xl:gap-5 ${
+        fullHeight ? "h-full min-h-0 flex-col xl:flex-row" : "flex-col gap-6 xl:flex-row xl:items-start"
+      }`}
+    >
+      <div className={`flex min-h-0 flex-col ${fullHeight ? "flex-1" : "flex-1"} ${panelCard} p-4 sm:p-5`}>
+        <div className="mb-4 flex shrink-0 items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {formatMonthLabel(month)}
@@ -240,7 +246,7 @@ export function DriverBookingsCalendar() {
         )}
 
         <>
-            <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
+            <div className="mb-2 grid shrink-0 grid-cols-7 gap-1 sm:gap-2">
               {WEEKDAYS.map((label) => (
                 <div
                   key={label}
@@ -251,7 +257,11 @@ export function DriverBookingsCalendar() {
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            <div
+              className={`grid min-h-0 flex-1 grid-cols-7 gap-1 sm:gap-2 ${
+                fullHeight ? "grid-rows-6" : ""
+              }`}
+            >
               {days.map((day) => {
                 const key = toUkDateKey(day);
                 const inMonth = isSameMonth(day, month);
@@ -319,7 +329,10 @@ export function DriverBookingsCalendar() {
         </>
       </div>
 
-      <aside className={`w-full shrink-0 xl:w-[380px] ${panelCard} p-4 sm:p-6`}>
+      <aside
+        className={`w-full shrink-0 xl:w-[360px] ${fullHeight ? "min-h-0 xl:h-full" : ""} ${panelCard} flex flex-col p-4 sm:p-5`}
+      >
+        <div className={fullHeight ? "min-h-0 flex-1 overflow-y-auto" : ""}>
         {!selectedDateKey ? (
           <div className="py-12 text-center">
             <Calendar className="mx-auto mb-4 h-10 w-10 text-gray-300 dark:text-gray-600" />
@@ -383,6 +396,7 @@ export function DriverBookingsCalendar() {
             ) : null}
           </>
         )}
+        </div>
       </aside>
     </div>
   );
