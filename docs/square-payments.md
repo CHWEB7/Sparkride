@@ -79,9 +79,13 @@ SQUARE_TOKEN_ENCRYPTION_KEY="long-random-string"
 ## 5. Driver setup
 
 1. Driver signs in at `/driver/login` and completes MFA.
-2. On the dashboard, click **Connect Square** and approve OAuth in Square.
+2. On **Settings**, click **Connect Square** and approve OAuth in Square.
 3. When the driver confirms a booking, Sparkride creates a **hosted payment link** for the full fare.
 4. The customer receives the link by email and on `/booking/[reference]`.
+
+**Required OAuth scopes** (requested automatically): `MERCHANT_PROFILE_READ`, `PAYMENTS_READ`, `PAYMENTS_WRITE`, `ORDERS_READ`, `ORDERS_WRITE`.
+
+If payment links fail with `ORDERS_READ` or `INSUFFICIENT_SCOPES`, the driver must **connect Square again** in Settings — existing tokens do not pick up new scopes until re-authorization.
 
 ## 6. Going live
 

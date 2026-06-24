@@ -78,6 +78,12 @@ export function BookingPaymentSection({
         </p>
       )}
 
+      {paymentStatus === "AWAITING_PAYMENT" && !paymentLinkUrl && paymentSetupNote && (
+        <p className="mt-4 text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
+          {paymentSetupNote}
+        </p>
+      )}
+
       <p className="mt-4 text-xs text-muted">
         Questions about payment?{" "}
         <Link href="/payments" className="text-brand hover:underline">

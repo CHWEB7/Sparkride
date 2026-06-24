@@ -168,6 +168,10 @@ export function DriverSquareConnect({ theme: themeProp }: { theme?: "dark" | "li
               When you confirm a booking, customers receive a secure Square payment link for the full fare.
               Payments go directly to your Square account.
             </p>
+            <p className={`${mutedClass} mt-2`}>
+              If customers cannot pay and you see a permissions error, click Connect Square below again to
+              approve updated permissions (including Orders read access).
+            </p>
             {status.connectedAt && (
               <p className={mutedClass}>
                 Connected {new Date(status.connectedAt).toLocaleDateString("en-GB")}

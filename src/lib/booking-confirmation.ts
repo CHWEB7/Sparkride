@@ -242,6 +242,13 @@ export async function markBookingPaidByReference(
 export function paymentLinkSkipMessage(result: EnsurePaymentLinkResult): string | null {
   if (result.created || result.paymentLinkUrl) return null;
 
+  if (
+    result.error?.includes("ORDERS_READ") ||
+    result.error?.includes("INSUFFICIENT_SCOPES")
+  ) {
+    return "Your driver needs to reconnect Square in Driver Settings to approve payment permissions, then confirm the booking again or refresh this page.";
+  }
+
   switch (result.skipReason) {
     case "driver_not_connected":
       return "Your driver has not finished connecting Square for online payments.";
