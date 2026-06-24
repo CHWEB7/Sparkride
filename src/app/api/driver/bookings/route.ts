@@ -7,18 +7,28 @@ import {
   driverBookingsFilter,
 } from "@/lib/driver-access";
 import {
-  canSetEnRoute,
+  canSetPaid,
   handleBookingConfirmed,
 } from "@/lib/booking-confirmation";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await requireDriverSessionWithMfa();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const calendar = req.nextUrl.searchParams.get("calendar") === "1";
+
   const bookings = await prisma.booking.findMany({
-    where: driverBookingsFilter(session),
+    where: {
+      ...driverBookingsFilter(session),
+      ...(calendar
+        ? {
+            status: "PAID",
+            paymentStatus: { in: ["PAID", "NOT_REQUIRED"] },
+          }
+        : {}),
+    },
     orderBy: { pickupDate: "asc" },
     include: { driver: { select: { name: true, vehicleLabel: true } } },
   });
@@ -58,11 +68,11 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (
-      parsed.data.status === "EN_ROUTE" &&
-      !canSetEnRoute(existing.paymentStatus)
+      parsed.data.status === "PAID" &&
+      !canSetPaid(existing.paymentStatus)
     ) {
       return NextResponse.json(
-        { error: "Customer must pay online before the trip can be marked en route" },
+        { error: "Customer must pay online before the trip can be marked paid" },
         { status: 409 }
       );
     }

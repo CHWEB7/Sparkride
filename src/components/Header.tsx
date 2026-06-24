@@ -18,7 +18,8 @@ const FADE_END = 180;
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const { theme } = useTheme();
+  const { theme, canToggle, zone } = useTheme();
+  const showThemeToggle = canToggle && zone === "customer";
   const overlayLightText = overlay && theme === "dark" && !menuOpen && scrollY < FADE_START;
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               </>
             ) : (
               <>
-                <ThemeToggle light={overlayLightText} />
+                {showThemeToggle && <ThemeToggle light={overlayLightText} />}
                 <AnimatedGradientButton href="/book" className="hidden sm:inline-flex text-sm">
                   Reserve a ride
                 </AnimatedGradientButton>

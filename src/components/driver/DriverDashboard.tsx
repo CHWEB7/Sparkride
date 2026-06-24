@@ -11,6 +11,15 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import {
+  BOOKING_STATUSES,
+  BOOKING_STATUS_COLORS_DARK,
+  BOOKING_STATUS_COLORS_LIGHT,
+  formatBookingStatus,
+  type BookingStatusValue,
+} from "@/lib/booking-status";
+import { PAYMENT_STATUS_LABELS } from "@/lib/payment-status";
 
 type Booking = {
   id: string;
@@ -40,33 +49,19 @@ type Booking = {
   paidAt?: string | null;
 };
 
-const STATUSES = ["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"];
-
-const statusColorsDark: Record<string, string> = {
-  PENDING: "bg-yellow-500/20 text-yellow-400",
-  CONFIRMED: "bg-blue-500/20 text-blue-400",
-  EN_ROUTE: "bg-purple-500/20 text-purple-400",
-  COMPLETED: "bg-green-500/20 text-green-400",
-  CANCELLED: "bg-red-500/20 text-red-400",
-};
-
-const statusColorsLight: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  CONFIRMED: "bg-blue-100 text-blue-800",
-  EN_ROUTE: "bg-purple-100 text-purple-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
-};
+const STATUSES = [...BOOKING_STATUSES];
 
 export function DriverDashboard({
   bookings: initial,
-  theme = "dark",
+  theme: themeProp,
 }: {
   bookings: Booking[];
   theme?: "dark" | "light";
 }) {
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp ?? contextTheme;
   const isLight = theme === "light";
-  const statusColors = isLight ? statusColorsLight : statusColorsDark;
+  const statusColors = isLight ? BOOKING_STATUS_COLORS_LIGHT : BOOKING_STATUS_COLORS_DARK;
   const [bookings, setBookings] = useState(initial);
   const [updating, setUpdating] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
@@ -131,7 +126,7 @@ export function DriverDashboard({
                   : "bg-white/5 text-gray-400 hover:text-white"
             }`}
           >
-            {s.replace("_", " ")} ({counts[s] || 0})
+            {formatBookingStatus(s)} ({counts[s] || 0})
           </button>
         ))}
       </div>
@@ -168,8 +163,8 @@ export function DriverDashboard({
                         PRE-BOOKED
                       </span>
                     )}
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusColors[booking.status]}`}>
-                      {booking.status.replace("_", " ")}
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusColors[booking.status as BookingStatusValue] ?? ""}`}>
+                      {formatBookingStatus(booking.status)}
                     </span>
                   </div>
                   <div className={`flex items-center gap-2 mt-1 text-sm ${isLight ? "text-gray-500" : "text-gray-400"}`}>
@@ -196,7 +191,7 @@ export function DriverDashboard({
                   >
                     {STATUSES.map((s) => (
                       <option key={s} value={s} className={isLight ? "bg-white" : "bg-dark"}>
-                        {s.replace("_", " ")}
+                        {formatBookingStatus(s)}
                       </option>
                     ))}
                   </select>
@@ -247,7 +242,7 @@ export function DriverDashboard({
                   )}
                   {booking.paymentStatus && booking.paymentStatus !== "NOT_REQUIRED" && (
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                      Payment: {booking.paymentStatus.replace("_", " ")}
+                      Payment: {PAYMENT_STATUS_LABELS[booking.paymentStatus as keyof typeof PAYMENT_STATUS_LABELS] ?? booking.paymentStatus.replace("_", " ")}
                     </div>
                   )}
                   {booking.notes && (

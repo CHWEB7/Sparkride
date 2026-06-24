@@ -28,7 +28,7 @@ export type EnsurePaymentLinkResult = {
   error?: string;
 };
 
-export function canSetEnRoute(paymentStatus: PaymentStatus): boolean {
+export function canSetPaid(paymentStatus: PaymentStatus): boolean {
   return paymentStatus !== "AWAITING_PAYMENT";
 }
 

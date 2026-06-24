@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { HeroAmbientBackground } from "@/components/HeroAmbientBackground";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
 
 export const authInputClass =
   "w-full px-4 py-3.5 rounded-xl bg-[#f0f1f3] text-dark placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand/35 text-[15px]";
@@ -86,6 +88,8 @@ export function CustomerAuthShell({
   hideTabs = false,
   children,
 }: CustomerAuthShellProps) {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const hero = HERO_COPY[mode];
   const alternateHref =
     mode === "signup"
@@ -111,8 +115,9 @@ export function CustomerAuthShell({
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="px-4 sm:px-8 pt-6">
+        <header className="px-4 sm:px-8 pt-6 flex items-center justify-between">
           <Logo href="/" light size="header" />
+          <ThemeToggle light />
         </header>
 
         <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">
@@ -137,14 +142,26 @@ export function CustomerAuthShell({
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-[0_24px_80px_-12px_rgba(0,0,0,0.45)] p-6 sm:p-8">
+            <div
+              className={`rounded-2xl shadow-[0_24px_80px_-12px_rgba(0,0,0,0.45)] p-6 sm:p-8 ${
+                isLight ? "bg-white" : "bg-dark-elevated border border-white/10"
+              }`}
+            >
               {!hideTabs && <AuthModeTabs mode={mode} redirect={redirect} />}
 
-              <h2 className="text-2xl font-semibold text-dark tracking-[-0.02em]">
+              <h2
+                className={`text-2xl font-semibold tracking-[-0.02em] ${
+                  isLight ? "text-dark" : "text-white"
+                }`}
+              >
                 {title}
               </h2>
               {subtitle && (
-                <p className="mt-1.5 text-sm text-muted leading-relaxed">
+                <p
+                  className={`mt-1.5 text-sm leading-relaxed ${
+                    isLight ? "text-muted" : "text-gray-400"
+                  }`}
+                >
                   {subtitle}
                 </p>
               )}
@@ -152,8 +169,12 @@ export function CustomerAuthShell({
               <div className="mt-6">{children}</div>
 
               {!hideTabs && (
-                <div className="mt-6 pt-5 border-t border-black/8 text-center">
-                  <p className="text-sm text-muted">
+                <div
+                  className={`mt-6 pt-5 border-t text-center ${
+                    isLight ? "border-black/8" : "border-white/10"
+                  }`}
+                >
+                  <p className={`text-sm ${isLight ? "text-muted" : "text-gray-400"}`}>
                     {alternateLabel}{" "}
                     <Link
                       href={alternateHref}

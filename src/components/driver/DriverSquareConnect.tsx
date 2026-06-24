@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreditCard, ExternalLink, Loader2, CheckCircle2 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 type SquareStatus = {
   configured: boolean;
@@ -43,7 +44,9 @@ function squareErrorHelp(reason: string | null): string | null {
   return SQUARE_ERROR_HELP[reason] ?? null;
 }
 
-export function DriverSquareConnect({ theme = "dark" }: { theme?: "dark" | "light" }) {
+export function DriverSquareConnect({ theme: themeProp }: { theme?: "dark" | "light" }) {
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp ?? contextTheme;
   const isLight = theme === "light";
   const searchParams = useSearchParams();
   const squareParam = searchParams.get("square");

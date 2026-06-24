@@ -27,16 +27,16 @@ export default async function DriverBookingsPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Bookings</h1>
-        <p className="mt-1 text-sm text-gray-500">{scopeLabel}</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Bookings Manager</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{scopeLabel}</p>
       </div>
 
       {dbError ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 leading-relaxed">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 leading-relaxed dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
           {dbError}
         </div>
       ) : (
-        <DriverDashboard bookings={JSON.parse(JSON.stringify(bookings))} theme="light" />
+        <DriverDashboard bookings={JSON.parse(JSON.stringify(bookings))} />
       )}
     </div>
   );

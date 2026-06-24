@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { LogoutButton } from "@/components/driver/LogoutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
 
 const SIDEBAR_STORAGE_KEY = "sparkride_driver_sidebar_collapsed";
 
@@ -21,12 +23,15 @@ type DriverPortalShellProps = {
 };
 
 const navItems = [
-  { href: "/driver/dashboard", label: "Bookings", icon: CalendarDays },
+  { href: "/driver/dashboard", label: "Bookings Manager", icon: LayoutGrid },
+  { href: "/driver/calendar", label: "Bookings Calendar", icon: CalendarDays },
   { href: "/driver/settings", label: "Settings", icon: Settings },
 ];
 
 export function DriverPortalShell({ driverName, children }: DriverPortalShellProps) {
   const pathname = usePathname();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -43,19 +48,23 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-gray-900">
+    <div className="min-h-screen bg-[#f8f9fa] text-gray-900 dark:bg-dark dark:text-gray-100">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-gray-200 bg-[#f8f9fa] transition-all duration-200 ${
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-gray-200 bg-[#f8f9fa] transition-all duration-200 dark:border-white/10 dark:bg-dark-elevated ${
           collapsed ? "w-[72px]" : "w-60"
         }`}
       >
-        <div className={`flex h-14 items-center border-b border-gray-200 ${collapsed ? "justify-center px-2" : "px-4"}`}>
+        <div
+          className={`flex h-14 items-center border-b border-gray-200 dark:border-white/10 ${
+            collapsed ? "justify-center px-2" : "px-4"
+          }`}
+        >
           {collapsed ? (
-            <Link href="/driver/dashboard" className="font-bold text-emerald-600">
+            <Link href="/driver/dashboard" className="font-bold text-emerald-600 dark:text-brand-end">
               S
             </Link>
           ) : (
-            <Logo href="/driver/dashboard" size="header" />
+            <Logo href="/driver/dashboard" size="header" light={!isLight} />
           )}
         </div>
 
@@ -69,8 +78,8 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
                 title={collapsed ? label : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                    : "text-gray-600 hover:bg-white/70 hover:text-gray-900"
+                    ? "bg-white text-gray-900 shadow-sm border border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/10"
+                    : "text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
                 } ${collapsed ? "justify-center" : ""}`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -80,11 +89,11 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
           })}
         </nav>
 
-        <div className="border-t border-gray-200 p-3">
+        <div className="border-t border-gray-200 p-3 dark:border-white/10">
           <button
             type="button"
             onClick={toggleCollapsed}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-white hover:text-gray-800 ${
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-white hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white ${
               collapsed ? "justify-center" : ""
             }`}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -96,14 +105,15 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
       </aside>
 
       <div className={`flex min-h-screen flex-col transition-all duration-200 ${collapsed ? "pl-[72px]" : "pl-60"}`}>
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-gray-200 bg-white/90 px-6 backdrop-blur">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-gray-200 bg-white/90 px-6 backdrop-blur dark:border-white/10 dark:bg-dark/90">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <LayoutGrid className="h-4 w-4" />
             <span>Driver portal</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-gray-600 sm:inline">{driverName}</span>
-            <LogoutButton variant="light" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <ThemeToggle />
+            <span className="hidden text-sm text-gray-600 dark:text-gray-300 sm:inline">{driverName}</span>
+            <LogoutButton variant={isLight ? "light" : "dark"} />
           </div>
         </header>
 

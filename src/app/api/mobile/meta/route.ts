@@ -28,7 +28,7 @@ export async function GET() {
         { value: "MPV", label: "MPV", desc: "Up to 6 passengers" },
         { value: "EXECUTIVE", label: "Executive", desc: "Premium comfort" },
       ],
-      statuses: ["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"],
+      statuses: ["PENDING", "CONFIRMED", "PAID", "COMPLETED", "CANCELLED"],
     },
     { headers: corsHeaders }
   );

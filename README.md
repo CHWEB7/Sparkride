@@ -198,7 +198,7 @@ Billing must be enabled on your Google Cloud account (Google provides free month
 - Email + password login with mandatory TOTP MFA (authenticator app)
 - One-time password enrollment at `/driver/enroll` to set up MFA
 - Dashboard listing assigned bookings
-- Filter by status (Pending, Confirmed, En Route, Completed, Cancelled)
+- Filter by status (Pending, Confirmed, Paid, Completed, Cancelled)
 - Update booking status in one click
 
 ### Tech stack

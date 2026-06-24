@@ -18,7 +18,7 @@ import { COLORS, STATUS_COLORS, formatStatus } from "../../lib/theme";
 import { Card, ErrorText, Label, Screen } from "../../components/ui";
 import { Chip } from "../../components/form";
 
-const STATUSES = ["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"];
+const STATUSES = ["PENDING", "CONFIRMED", "PAID", "COMPLETED", "CANCELLED"];
 
 export default function DriverDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

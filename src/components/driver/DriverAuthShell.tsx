@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { HeroAmbientBackground } from "@/components/HeroAmbientBackground";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
 
 export {
   authInputClass,
@@ -32,10 +34,12 @@ const HERO_COPY: Record<DriverAuthMode, { headline: string; subline: string }> =
   },
 };
 
-function DriverAuthTabs({ mode }: { mode: DriverAuthMode }) {
+function DriverAuthTabs({ mode, isLight }: { mode: DriverAuthMode; isLight: boolean }) {
   return (
     <div
-      className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#e8eaee] mb-7"
+      className={`grid grid-cols-2 gap-1 p-1 rounded-xl mb-7 ${
+        isLight ? "bg-[#e8eaee]" : "bg-white/10"
+      }`}
       role="tablist"
       aria-label="Driver access"
     >
@@ -45,8 +49,12 @@ function DriverAuthTabs({ mode }: { mode: DriverAuthMode }) {
         aria-selected={mode === "login"}
         className={`text-center py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
           mode === "login"
-            ? "bg-white text-dark shadow-sm ring-1 ring-black/5"
-            : "text-muted hover:text-dark"
+            ? isLight
+              ? "bg-white text-dark shadow-sm ring-1 ring-black/5"
+              : "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
+            : isLight
+              ? "text-muted hover:text-dark"
+              : "text-gray-400 hover:text-white"
         }`}
       >
         Sign in
@@ -57,8 +65,12 @@ function DriverAuthTabs({ mode }: { mode: DriverAuthMode }) {
         aria-selected={mode === "enroll"}
         className={`text-center py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
           mode === "enroll"
-            ? "bg-white text-dark shadow-sm ring-1 ring-black/5"
-            : "text-muted hover:text-dark"
+            ? isLight
+              ? "bg-white text-dark shadow-sm ring-1 ring-black/5"
+              : "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
+            : isLight
+              ? "text-muted hover:text-dark"
+              : "text-gray-400 hover:text-white"
         }`}
       >
         Set up authenticator
@@ -73,6 +85,8 @@ export function DriverAuthShell({
   subtitle,
   children,
 }: DriverAuthShellProps) {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const hero = HERO_COPY[mode];
   const alternateHref = mode === "login" ? "/driver/enroll" : "/driver/login";
   const alternateLabel =
@@ -96,8 +110,9 @@ export function DriverAuthShell({
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="px-4 sm:px-8 pt-6">
+        <header className="px-4 sm:px-8 pt-6 flex items-center justify-between">
           <Logo href="/" light size="header" />
+          <ThemeToggle light />
         </header>
 
         <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">
@@ -122,18 +137,38 @@ export function DriverAuthShell({
               <p className="mt-2 text-sm text-white/70 leading-relaxed">{hero.subline}</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-[0_24px_80px_-12px_rgba(0,0,0,0.45)] p-6 sm:p-8">
-              <DriverAuthTabs mode={mode} />
+            <div
+              className={`rounded-2xl shadow-[0_24px_80px_-12px_rgba(0,0,0,0.45)] p-6 sm:p-8 ${
+                isLight ? "bg-white" : "bg-dark-elevated border border-white/10"
+              }`}
+            >
+              <DriverAuthTabs mode={mode} isLight={isLight} />
 
-              <h2 className="text-2xl font-semibold text-dark tracking-[-0.02em]">{title}</h2>
+              <h2
+                className={`text-2xl font-semibold tracking-[-0.02em] ${
+                  isLight ? "text-dark" : "text-white"
+                }`}
+              >
+                {title}
+              </h2>
               {subtitle && (
-                <p className="mt-1.5 text-sm text-muted leading-relaxed">{subtitle}</p>
+                <p
+                  className={`mt-1.5 text-sm leading-relaxed ${
+                    isLight ? "text-muted" : "text-gray-400"
+                  }`}
+                >
+                  {subtitle}
+                </p>
               )}
 
               <div className="mt-6">{children}</div>
 
-              <div className="mt-6 pt-5 border-t border-black/8 text-center">
-                <p className="text-sm text-muted">
+              <div
+                className={`mt-6 pt-5 border-t text-center ${
+                  isLight ? "border-black/8" : "border-white/10"
+                }`}
+              >
+                <p className={`text-sm ${isLight ? "text-muted" : "text-gray-400"}`}>
                   {alternateLabel}{" "}
                   <Link
                     href={alternateHref}

@@ -70,5 +70,5 @@ export const loginSchema = z.object({
 });
 
 export const statusSchema = z.object({
-  status: z.enum(["PENDING", "CONFIRMED", "EN_ROUTE", "COMPLETED", "CANCELLED"]),
+  status: z.enum(["PENDING", "CONFIRMED", "PAID", "COMPLETED", "CANCELLED"]),
 });

@@ -15,7 +15,7 @@ export const COLORS = {
 export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: "#fef9c3", text: "#a16207" },
   CONFIRMED: { bg: "#dbeafe", text: "#1d4ed8" },
-  EN_ROUTE: { bg: "#f3e8ff", text: "#7e22ce" },
+  PAID: { bg: "#f3e8ff", text: "#7e22ce" },
   COMPLETED: { bg: "#dcfce7", text: "#15803d" },
   CANCELLED: { bg: "#fee2e2", text: "#b91c1c" },
 };

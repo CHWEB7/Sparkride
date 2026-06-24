@@ -14,6 +14,7 @@ import {
   paymentLinkSkipMessage,
 } from "@/lib/booking-confirmation";
 import { getServiceLabel, isHubTransfer } from "@/lib/hubs";
+import { BOOKING_STATUS_COLORS_LIGHT } from "@/lib/booking-status";
 
 export default async function BookingConfirmationPage({
   params,
@@ -49,9 +50,10 @@ export default async function BookingConfirmationPage({
   const isConfirmed = booking.status !== "PENDING";
 
   const statusColors: Record<string, string> = {
+    ...BOOKING_STATUS_COLORS_LIGHT,
     PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400",
     CONFIRMED: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400",
-    EN_ROUTE: "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-400",
+    PAID: "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-400",
     COMPLETED: "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400",
     CANCELLED: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
   };

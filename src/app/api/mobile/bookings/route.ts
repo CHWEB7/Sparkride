@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { statusSchema } from "@/lib/validation";
 import {
-  canSetEnRoute,
+  canSetPaid,
   handleBookingConfirmed,
 } from "@/lib/booking-confirmation";
 
@@ -53,11 +53,11 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (
-      parsed.data.status === "EN_ROUTE" &&
-      !canSetEnRoute(existing.paymentStatus)
+      parsed.data.status === "PAID" &&
+      !canSetPaid(existing.paymentStatus)
     ) {
       return json(
-        { error: "Customer must pay online before the trip can be marked en route" },
+        { error: "Customer must pay online before the trip can be marked paid" },
         409
       );
     }

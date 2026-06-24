@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { DriverSetPasswordForm } from "@/components/driver/DriverSetPasswordForm";
+import { useTheme } from "@/components/ThemeProvider";
 
-export function DriverChangePassword({ theme = "dark" }: { theme?: "dark" | "light" }) {
-  const [saved, setSaved] = useState(false);
+export function DriverChangePassword({ theme: themeProp }: { theme?: "dark" | "light" }) {
+  const { theme: contextTheme } = useTheme();
+  const theme = themeProp ?? contextTheme;
   const isLight = theme === "light";
+  const [saved, setSaved] = useState(false);
 
   if (saved) {
     return (
