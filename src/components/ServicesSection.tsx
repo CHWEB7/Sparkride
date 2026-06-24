@@ -96,13 +96,13 @@ export function ServicesSection() {
   );
 
   return (
-    <section id="services" className="py-20 sm:py-24 bg-app-bg dark:bg-dark overflow-hidden">
-      <SiteContainer className="mb-10 sm:mb-12">
+    <section id="services" className="py-14 sm:py-24 bg-app-bg dark:bg-dark overflow-hidden">
+      <SiteContainer className="mb-8 sm:mb-12">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-4xl sm:text-5xl dark:text-white">
+          <h2 className="font-display text-3xl sm:text-5xl dark:text-white">
             Our services
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-muted leading-relaxed">
+          <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-muted leading-relaxed">
             Premium private hire from Castleford — airports, ferry ports, theme parks, and business travel.
           </p>
         </div>
@@ -126,7 +126,7 @@ export function ServicesSection() {
                 key={service.id}
                 data-service-card
                 data-service-id={service.id}
-                className="group relative flex w-[min(78vw,304px)] sm:w-[320px] lg:w-[336px] shrink-0 flex-col justify-between overflow-hidden rounded-[28px] min-h-[500px] sm:min-h-[560px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]"
+                className="group relative flex w-[min(72vw,280px)] sm:w-[320px] lg:w-[336px] shrink-0 flex-col justify-between overflow-hidden rounded-[24px] sm:rounded-[28px] min-h-[440px] sm:min-h-[560px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]"
               >
                 <Image
                   src={service.image}
@@ -140,16 +140,16 @@ export function ServicesSection() {
 
                 <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/55" />
 
-                <div className="relative z-10 flex flex-col p-7 sm:p-8">
-                  <h3 className="text-[1.75rem] sm:text-[1.9rem] font-semibold leading-tight tracking-[-0.02em] text-white">
+                <div className="relative z-10 flex flex-col p-5 sm:p-8">
+                  <h3 className="text-2xl sm:text-[1.9rem] font-semibold leading-tight tracking-[-0.02em] text-white">
                     {service.title}
                   </h3>
-                  <p className="mt-3 max-w-[30ch] text-[0.95rem] sm:text-base leading-relaxed text-white/85">
+                  <p className="mt-2 sm:mt-3 max-w-[30ch] text-sm sm:text-base leading-relaxed text-white/85">
                     {service.teaser}
                   </p>
                   <Link
                     href={service.href}
-                    className={`mt-6 inline-flex w-fit items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-opacity ${service.buttonClass}`}
+                    className={`mt-4 sm:mt-6 inline-flex w-fit items-center justify-center rounded-full px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold transition-opacity ${service.buttonClass}`}
                   >
                     {service.cta}
                   </Link>
@@ -168,18 +168,18 @@ export function ServicesSection() {
               onClick={() => scrollByCards("left")}
               disabled={!canScrollLeft}
               aria-label="Previous service"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
+              className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               type="button"
               onClick={() => scrollByCards("right")}
               disabled={!canScrollRight}
               aria-label="Next service"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
+              className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white dark:bg-dark-elevated text-dark dark:text-white transition-opacity disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </SiteContainer>

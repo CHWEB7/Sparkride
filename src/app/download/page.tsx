@@ -40,7 +40,7 @@ export default async function DownloadPage() {
         title="Download the Sparkride app"
         description="Book transfers and manage jobs on Android"
       />
-      <SiteContainer className="py-12 sm:py-16">
+      <SiteContainer className="py-10 sm:py-16">
         <div className="max-w-3xl mx-auto">
           {!status.available && (
             <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex gap-3">
@@ -55,13 +55,13 @@ export default async function DownloadPage() {
             </div>
           )}
 
-          <div className="rounded-2xl bg-booking-bg dark:bg-white/5 p-8 sm:p-10 shadow-md mb-10">
-            <div className="flex items-start gap-4 mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-brand-gradient flex items-center justify-center shrink-0">
-                <Smartphone className="w-7 h-7 text-white" />
+          <div className="rounded-2xl bg-booking-bg dark:bg-white/5 p-6 sm:p-10 shadow-md mb-8 sm:mb-10">
+            <div className="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-brand-gradient flex items-center justify-center shrink-0">
+                <Smartphone className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-medium tracking-[-0.02em] dark:text-white">
+                <h2 className="text-xl sm:text-2xl font-medium tracking-[-0.02em] dark:text-white">
                   Android app
                 </h2>
                 <p className="text-muted mt-2 leading-relaxed">
@@ -75,13 +75,13 @@ export default async function DownloadPage() {
             {status.available && status.downloadHref ? (
               <a
                 href={status.downloadHref}
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-full bg-brand-gradient text-white font-medium hover:opacity-90 transition-opacity"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 rounded-full bg-brand-gradient text-white text-sm sm:text-base font-medium hover:opacity-90 transition-opacity"
               >
                 <Download className="w-5 h-5" />
                 Download for Android (.apk)
               </a>
             ) : (
-              <span className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-full bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium cursor-not-allowed">
+              <span className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 rounded-full bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm sm:text-base font-medium cursor-not-allowed">
                 <Download className="w-5 h-5" />
                 Download unavailable
               </span>

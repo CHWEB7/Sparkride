@@ -38,38 +38,38 @@ export function SustainableTravelSection() {
   return (
     <section
       id="sustainability"
-      className="py-20 sm:py-24 bg-white dark:bg-dark-elevated border-y border-black/5 dark:border-white/5"
+      className="py-14 sm:py-24 bg-white dark:bg-dark-elevated border-y border-black/5 dark:border-white/5"
     >
       <SiteContainer>
         <div className="grid lg:grid-cols-2 items-stretch">
           <div className="flex flex-col justify-center max-w-xl py-4 lg:py-8 lg:pr-12 xl:pr-16">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
-              <Leaf className="h-3.5 w-3.5" strokeWidth={2} />
+            <div className="inline-flex w-fit items-center gap-1.5 sm:gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
+              <Leaf className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} />
               Sustainable travel
             </div>
 
-            <h2 className="font-display mt-6 text-4xl sm:text-5xl dark:text-white leading-[1.05]">
+            <h2 className="font-display mt-4 sm:mt-6 text-3xl sm:text-5xl dark:text-white leading-[1.05]">
               Electric journeys, lower impact
             </h2>
 
-            <p className="mt-5 text-lg font-medium text-dark/90 dark:text-gray-100 leading-relaxed">
+            <p className="mt-4 sm:mt-5 text-base sm:text-lg font-medium text-dark/90 dark:text-gray-100 leading-relaxed">
               Sparkride runs a fully electric fleet — every airport transfer, corporate trip,
               and private hire is powered by clean energy instead of petrol or diesel.
             </p>
 
-            <p className="mt-4 text-base text-muted leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted leading-relaxed">
               Choosing an EV transfer means fewer emissions on the road, quieter journeys for
               passengers, and a measurable difference for the environment. We track the miles
               we cover and the fuel we replace, so you can see the impact of travelling with us.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-3">
-              <AnimatedGradientButton href="/book" className="px-7 py-3.5 text-sm">
+            <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+              <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
                 Book an electric ride
               </AnimatedGradientButton>
               <Link
                 href="/services/private-hire"
-                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 px-7 py-3.5 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
                 Our services
               </Link>

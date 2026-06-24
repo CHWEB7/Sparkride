@@ -78,18 +78,18 @@ export function RollingStat({
   return (
     <div
       ref={ref}
-      className={`flex h-full flex-col justify-start overflow-hidden px-6 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14 transition-opacity duration-700 ease-out ${
+      className={`flex h-full flex-col justify-start overflow-hidden px-5 py-8 sm:px-8 sm:py-12 lg:px-10 lg:py-14 transition-opacity duration-700 ease-out ${
         revealed ? "opacity-100" : "opacity-0"
       } ${className}`}
     >
       <p
-        className="font-display text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-dark dark:text-white leading-none"
+        className="font-display text-3xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-dark dark:text-white leading-none"
         aria-label={finalText}
       >
         <span className="tabular-nums">{formatNumber(display)}</span>
         {unit ? <span className="ml-2">{unit}</span> : null}
       </p>
-      <p className="mt-3 text-sm sm:text-[15px] text-muted leading-relaxed">
+      <p className="mt-2 sm:mt-3 text-xs sm:text-[15px] text-muted leading-relaxed">
         {label}
       </p>
     </div>

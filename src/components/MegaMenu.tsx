@@ -241,10 +241,10 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
           initial={{ y: -12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.08 }}
-          className="max-w-7xl mx-auto px-4 sm:px-6 pt-5"
+          className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-5"
         >
           <div className="grid lg:grid-cols-[1fr_300px] gap-4">
-            <div className="bg-booking-bg dark:bg-dark-elevated rounded-2xl p-5 sm:p-6 shadow-sm">
+            <div className="bg-booking-bg dark:bg-dark-elevated rounded-2xl p-4 sm:p-6 shadow-sm">
               {showAccountPanel ? (
                 <>
                   <button
@@ -258,13 +258,13 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                 </>
               ) : (
                 <>
-                  <div className="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-gray-200/60 dark:border-white/10">
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200/60 dark:border-white/10">
                     {NAV_TABS.map((tab) => (
                       <button
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium tracking-[-0.01em] transition-all ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium tracking-[-0.01em] transition-all ${
                           activeTab === tab.id
                             ? "bg-white dark:bg-dark text-dark dark:text-white shadow-sm"
                             : "text-muted hover:text-dark dark:hover:text-white"
@@ -312,7 +312,7 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
               )}
             </div>
 
-            <div className="bg-[#e8eaee] dark:bg-dark-elevated/80 rounded-2xl p-4 shadow-sm">
+            <div className="bg-[#e8eaee] dark:bg-dark-elevated/80 rounded-2xl p-3 sm:p-4 shadow-sm">
               <ul className="space-y-1">
                 {SIDEBAR_ITEMS.map((item, i) => (
                   <motion.li
@@ -325,7 +325,7 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                       <button
                         type="button"
                         onClick={openAccountPanel}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group text-left ${
+                        className={`w-full flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group text-left ${
                           showAccountPanel ? "bg-white/60 dark:bg-white/5" : ""
                         }`}
                       >
@@ -335,7 +335,7 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                       <Link
                         href={item.href!}
                         onClick={onClose}
-                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group"
+                        className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-white/60 dark:hover:bg-white/5 transition-colors group"
                       >
                         <SidebarItemContent item={item} />
                       </Link>
@@ -386,9 +386,9 @@ function SidebarItemContent({ item }: { item: SidebarItem }) {
   return (
     <>
       <div
-        className={`w-10 h-10 rounded-full ${item.iconBg} flex items-center justify-center shrink-0`}
+        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${item.iconBg} flex items-center justify-center shrink-0`}
       >
-        <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+        <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${item.iconColor}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-dark dark:text-white tracking-[-0.01em]">

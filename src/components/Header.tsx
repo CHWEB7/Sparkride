@@ -61,8 +61,8 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               : "bg-app-bg/90 dark:bg-dark/90 backdrop-blur-md shadow-sm dark:shadow-none"
         }`}
       >
-        <SiteContainer className="h-16 sm:h-[4.25rem] flex items-center justify-between">
-          <div className="flex items-center min-h-[42px]" onClick={menuOpen ? closeMenu : undefined}>
+        <SiteContainer className="h-14 sm:h-[4.25rem] flex items-center justify-between">
+          <div className="flex items-center min-h-[32px] sm:min-h-[42px]" onClick={menuOpen ? closeMenu : undefined}>
             <Logo href="/" size="header" light={overlayLightText} />
           </div>
 
@@ -92,10 +92,10 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                 </Link>
                 <button
                   onClick={closeMenu}
-                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                   aria-label="Close menu"
                 >
-                  <X className="w-5 h-5 dark:text-white" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 dark:text-white" />
                 </button>
               </>
             ) : (
@@ -106,7 +106,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                 </AnimatedGradientButton>
                 <button
                   onClick={() => setMenuOpen(true)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
+                  className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors ${
                     overlayLightText
                       ? "hover:bg-white/10 text-white"
                       : "hover:bg-gray-100 dark:hover:bg-white/10"
@@ -114,7 +114,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                   aria-label="Open menu"
                 >
                   <Menu
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
                       overlayLightText ? "text-white" : "text-dark dark:text-white"
                     }`}
                   />
@@ -139,7 +139,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             transition={{ duration: 0.25 }}
             aria-label="Close menu"
             onClick={closeMenu}
-            className="fixed top-16 sm:top-[4.25rem] left-0 right-0 bottom-0 z-40 bg-dark/15 dark:bg-black/35 backdrop-blur-[2px]"
+            className="fixed top-14 sm:top-[4.25rem] left-0 right-0 bottom-0 z-40 bg-dark/15 dark:bg-black/35 backdrop-blur-[2px]"
           />
         )}
       </AnimatePresence>

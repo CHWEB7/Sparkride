@@ -78,41 +78,41 @@ export function LocationSection() {
           aria-hidden
         />
 
-        <SiteContainer className="relative z-10 py-16 sm:py-20 lg:py-24">
+        <SiteContainer className="relative z-10 py-12 sm:py-20 lg:py-24">
           <div className="max-w-xl lg:max-w-lg xl:max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
-              <MapPin className="h-3.5 w-3.5" strokeWidth={2} />
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-brand/15 bg-brand/8 dark:bg-brand/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] text-brand dark:text-brand-end">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} />
               Service area
             </div>
 
-            <h2 className="font-display mt-6 text-4xl sm:text-5xl lg:text-[3.25rem] dark:text-white leading-[1.05] tracking-[-0.02em]">
+            <h2 className="font-display mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-[3.25rem] dark:text-white leading-[1.05] tracking-[-0.02em]">
               Fixed pricing for Castleford and surrounding areas
             </h2>
 
-            <p className="mt-5 text-lg text-muted dark:text-gray-200 leading-relaxed">
+            <p className="mt-4 sm:mt-5 text-base sm:text-lg text-muted dark:text-gray-200 leading-relaxed">
               We use fixed pricing for many of our services — including airport, ferry port,
               and cruise terminal transfers when you are collected from certain West Yorkshire
               areas. You will know what the cost is before you travel, with no surprises.
             </p>
 
-            <p className="mt-4 text-base text-muted leading-relaxed max-w-md">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted leading-relaxed max-w-md">
               Drop-off fees that some airports charge us are covered by Sparkride, not passed on
               to you.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
-              <AnimatedGradientButton href="/book" className="px-7 py-3.5 text-sm">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3">
+              <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
                 Book from your location
               </AnimatedGradientButton>
               <Link
                 href="/fares"
-                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 backdrop-blur-sm px-7 py-3.5 text-sm font-semibold hover:bg-white dark:hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 backdrop-blur-sm px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm font-semibold hover:bg-white dark:hover:bg-white/10 transition-colors"
               >
                 View fixed fares
               </Link>
               <Link
                 href="/services/private-hire"
-                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 backdrop-blur-sm px-7 py-3.5 text-sm font-semibold hover:bg-white dark:hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 backdrop-blur-sm px-5 py-2.5 sm:px-7 sm:py-3.5 text-sm font-semibold hover:bg-white dark:hover:bg-white/10 transition-colors"
               >
                 Local private hire
               </Link>
@@ -121,15 +121,15 @@ export function LocationSection() {
         </SiteContainer>
       </div>
 
-      <div className="bg-app-bg dark:bg-dark py-16 sm:py-20 lg:py-24">
+      <div className="bg-app-bg dark:bg-dark py-12 sm:py-20 lg:py-24">
         <SiteContainer>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
             {PICKUP_AREAS.map((area) => (
               <article
                 key={area.name}
-                className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-5 sm:p-6 transition-colors hover:border-brand/25 dark:hover:border-brand-end/25"
+                className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-4 sm:p-6 transition-colors hover:border-brand/25 dark:hover:border-brand-end/25"
               >
-                <h3 className="text-lg font-semibold tracking-[-0.02em] text-dark dark:text-white">
+                <h3 className="text-base sm:text-lg font-semibold tracking-[-0.02em] text-dark dark:text-white">
                   {area.name}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{area.detail}</p>

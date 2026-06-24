@@ -319,6 +319,12 @@ html.dark .hero-ambient-readability {
   line-height: 1.12;
 }
 
+@media (max-width: 639px) {
+  .rotating-word-slot {
+    min-width: 11ch;
+  }
+}
+
 .rotating-word-item {
   display: block;
   white-space: nowrap;

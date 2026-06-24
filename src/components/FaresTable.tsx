@@ -20,10 +20,10 @@ export function FaresTable({ section, defaultOpen = false }: FaresTableProps) {
         type="button"
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-4 px-4 sm:px-6 py-5 sm:py-6 text-left group"
+        className="flex w-full items-center justify-between gap-3 sm:gap-4 px-3 sm:px-6 py-4 sm:py-6 text-left group"
       >
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-dark dark:text-white group-hover:text-brand dark:group-hover:text-brand-end transition-colors">
+          <h2 className="text-lg sm:text-2xl font-semibold tracking-[-0.02em] text-dark dark:text-white group-hover:text-brand dark:group-hover:text-brand-end transition-colors">
             {section.title}
           </h2>
           <p className="mt-1 text-sm text-muted">
@@ -31,7 +31,7 @@ export function FaresTable({ section, defaultOpen = false }: FaresTableProps) {
           </p>
         </div>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-muted transition-transform duration-300 ${
+          className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-muted transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""
           }`}
           strokeWidth={2}
@@ -58,13 +58,13 @@ export function FaresTable({ section, defaultOpen = false }: FaresTableProps) {
                 <div
                   key={row.code}
                   className={[
-                    "flex flex-wrap sm:grid sm:grid-cols-[1fr_7rem_7rem] gap-x-4 gap-y-1 items-baseline px-4 sm:px-6 py-4 sm:py-5 border-b border-black/8 dark:border-white/10",
+                    "flex flex-wrap sm:grid sm:grid-cols-[1fr_7rem_7rem] gap-x-4 gap-y-1 items-baseline px-3 sm:px-6 py-3.5 sm:py-5 border-b border-black/8 dark:border-white/10",
                     index === section.rows.length - 1 ? "border-b-0" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                 >
-                  <span className="w-full sm:w-auto text-base font-semibold tracking-[-0.02em] text-dark dark:text-white">
+                  <span className="w-full sm:w-auto text-sm sm:text-base font-semibold tracking-[-0.02em] text-dark dark:text-white">
                     {row.name}
                   </span>
                   <span className="text-sm text-muted sm:hidden">Single</span>

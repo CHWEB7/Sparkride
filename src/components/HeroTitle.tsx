@@ -4,7 +4,7 @@ import { RotatingWord } from "./RotatingWord";
 
 export function HeroTitle() {
   return (
-    <h1 className="font-display text-5xl sm:text-6xl lg:text-[4.5rem] text-dark dark:text-white leading-[1.05]">
+    <h1 className="font-display text-[2.35rem] leading-[1.08] sm:text-6xl lg:text-[4.5rem] sm:leading-[1.05] text-dark dark:text-white">
       <span className="inline-flex items-baseline gap-x-[0.2em]">
         <span>Travel</span>
         <RotatingWord />

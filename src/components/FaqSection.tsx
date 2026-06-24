@@ -69,13 +69,13 @@ function FaqItem({
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-6 py-5 sm:py-6 px-4 sm:px-6 text-left group"
+        className="flex w-full items-center justify-between gap-4 sm:gap-6 py-4 sm:py-6 px-3 sm:px-6 text-left group"
       >
-        <span className="text-base sm:text-lg font-semibold tracking-[-0.02em] text-dark dark:text-white group-hover:text-brand dark:group-hover:text-brand-end transition-colors">
+        <span className="text-sm sm:text-lg font-semibold tracking-[-0.02em] text-dark dark:text-white group-hover:text-brand dark:group-hover:text-brand-end transition-colors">
           {question}
         </span>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-muted transition-transform duration-300 ${
+          className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-muted transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""
           }`}
           strokeWidth={2}
@@ -91,7 +91,7 @@ function FaqItem({
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <p className="px-4 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-[15px] leading-relaxed text-muted max-w-3xl">
+            <p className="px-3 sm:px-6 pb-4 sm:pb-6 text-sm sm:text-[15px] leading-relaxed text-muted max-w-3xl">
               {answer}
             </p>
           </motion.div>
@@ -105,16 +105,16 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="how-it-works" className="py-20 sm:py-24 bg-app-bg dark:bg-dark">
+    <section id="how-it-works" className="py-14 sm:py-24 bg-app-bg dark:bg-dark">
       <SiteContainer>
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+          <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-brand">
             FAQ
           </p>
-          <h2 className="font-display mt-3 text-4xl sm:text-5xl dark:text-white leading-[1.05]">
+          <h2 className="font-display mt-2 sm:mt-3 text-3xl sm:text-5xl dark:text-white leading-[1.05]">
             Questions answered
           </h2>
-          <p className="mt-5 text-lg text-muted leading-relaxed">
+          <p className="mt-4 sm:mt-5 text-base sm:text-lg text-muted leading-relaxed">
             Everything you need to know about booking, pricing, and travelling
             with Sparkride&apos;s electric fleet.
           </p>

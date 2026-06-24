@@ -17,25 +17,25 @@ export default function PaymentsPage() {
     <>
       <Header />
       <main className="bg-app-bg dark:bg-dark">
-        <SiteContainer className="py-16 sm:py-20 lg:py-24 max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
+        <SiteContainer className="py-12 sm:py-20 lg:py-24 max-w-3xl">
+          <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-brand">
             Payments
           </p>
-          <h1 className="font-display mt-3 text-4xl sm:text-5xl dark:text-white leading-[1.05] tracking-[-0.02em]">
+          <h1 className="font-display mt-2 sm:mt-3 text-3xl sm:text-5xl dark:text-white leading-[1.05] tracking-[-0.02em]">
             Pay securely after confirmation
           </h1>
-          <p className="mt-5 text-lg text-muted leading-relaxed">
+          <p className="mt-4 sm:mt-5 text-base sm:text-lg text-muted leading-relaxed">
             When your driver confirms your booking, you may receive a link to pay the full fare online.
             Payments are processed by Square on a secure hosted checkout page — Sparkride never sees or
             stores your card details.
           </p>
 
-          <div className="mt-12 space-y-6">
-            <section className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-6 sm:p-8">
-              <div className="flex items-start gap-4">
-                <CreditCard className="w-6 h-6 text-brand shrink-0 mt-1" />
+          <div className="mt-8 sm:mt-12 space-y-4 sm:space-y-6">
+            <section className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-4 sm:p-8">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-brand shrink-0 mt-1" />
                 <div>
-                  <h2 className="text-xl font-semibold dark:text-white">How it works</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold dark:text-white">How it works</h2>
                   <ol className="mt-4 space-y-3 text-muted leading-relaxed list-decimal list-inside">
                     <li>You book online and receive a reference number.</li>
                     <li>Your driver confirms the booking.</li>
@@ -46,11 +46,11 @@ export default function PaymentsPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-6 sm:p-8">
-              <div className="flex items-start gap-4">
-                <ShieldCheck className="w-6 h-6 text-brand shrink-0 mt-1" />
+            <section className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-4 sm:p-8">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-brand shrink-0 mt-1" />
                 <div>
-                  <h2 className="text-xl font-semibold dark:text-white">Security & liability</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold dark:text-white">Security & liability</h2>
                   <ul className="mt-4 space-y-3 text-muted leading-relaxed">
                     <li>Sparkride is not a payment processor and does not handle card data.</li>
                     <li>Card payments are processed by Square, a PCI-certified provider.</li>
@@ -61,11 +61,11 @@ export default function PaymentsPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-6 sm:p-8">
-              <div className="flex items-start gap-4">
-                <Mail className="w-6 h-6 text-brand shrink-0 mt-1" />
+            <section className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-4 sm:p-8">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-brand shrink-0 mt-1" />
                 <div>
-                  <h2 className="text-xl font-semibold dark:text-white">Where to pay</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold dark:text-white">Where to pay</h2>
                   <p className="mt-4 text-muted leading-relaxed">
                     After confirmation, use the <strong className="text-dark dark:text-white">Pay securely with Square</strong>{" "}
                     button in your confirmation email or on your booking page at{" "}
@@ -80,11 +80,13 @@ export default function PaymentsPage() {
             </section>
           </div>
 
-          <div className="mt-12 flex flex-wrap gap-3">
-            <AnimatedGradientButton href="/book">Book a transfer</AnimatedGradientButton>
+          <div className="mt-8 sm:mt-12 flex flex-wrap gap-2.5 sm:gap-3">
+            <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-5 sm:py-2.5">
+              Book a transfer
+            </AnimatedGradientButton>
             <Link
               href="/my-bookings"
-              className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 px-6 py-3 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              className="inline-flex items-center justify-center rounded-full border border-black/10 dark:border-white/15 px-5 py-2.5 sm:px-6 sm:py-3 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
               My bookings
             </Link>
