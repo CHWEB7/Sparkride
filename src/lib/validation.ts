@@ -70,5 +70,10 @@ export const loginSchema = z.object({
 });
 
 export const statusSchema = z.object({
-  status: z.enum(["PENDING", "CONFIRMED", "PAID", "COMPLETED", "CANCELLED"]),
+  status: z.enum(["PENDING", "ACCEPTED", "CONFIRMED", "COMPLETED", "CANCELLED"]),
+});
+
+export const driverBookingActionSchema = z.object({
+  action: z.enum(["accept", "send_payment_link", "complete", "cancel"]),
+  ids: z.array(z.string().min(1)).min(1),
 });

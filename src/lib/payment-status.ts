@@ -24,12 +24,16 @@ type PayableBooking = {
 
 export function canPayOnline(booking: PayableBooking): boolean {
   return (
-    booking.status === "CONFIRMED" &&
+    booking.status === "ACCEPTED" &&
     booking.paymentStatus === "AWAITING_PAYMENT" &&
     Boolean(booking.squarePaymentLinkUrl)
   );
 }
 
 export function showPaymentStatus(booking: PayableBooking): boolean {
-  return booking.status === "CONFIRMED" || booking.paymentStatus === "PAID";
+  return (
+    booking.status === "ACCEPTED" ||
+    booking.status === "CONFIRMED" ||
+    booking.paymentStatus === "PAID"
+  );
 }

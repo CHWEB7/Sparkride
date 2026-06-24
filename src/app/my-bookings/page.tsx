@@ -23,7 +23,7 @@ export default async function MyBookingsPage() {
 
   for (const booking of initialBookings) {
     if (
-      booking.status === "CONFIRMED" &&
+      booking.status === "ACCEPTED" &&
       booking.paymentStatus !== "PAID" &&
       !booking.squarePaymentLinkUrl
     ) {

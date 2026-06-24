@@ -136,8 +136,8 @@ enum JourneyType {
 
 enum BookingStatus {
   PENDING
+  ACCEPTED
   CONFIRMED
-  PAID
   COMPLETED
   CANCELLED
 }

@@ -5,10 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
   Settings,
+  Users,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { LogoutButton } from "@/components/driver/LogoutButton";
@@ -22,10 +24,16 @@ type DriverPortalShellProps = {
   children: React.ReactNode;
 };
 
-const navItems = [
+const topNavItems = [
   { href: "/driver/dashboard", label: "Bookings Manager", icon: LayoutGrid },
   { href: "/driver/calendar", label: "Bookings Calendar", icon: CalendarDays },
-  { href: "/driver/settings", label: "Settings", icon: Settings },
+  { href: "/driver/customers", label: "Customers", icon: Users },
+];
+
+const settingsSubItems = [
+  { href: "/driver/settings/integrations", label: "Integrations" },
+  { href: "/driver/settings/availability", label: "Availability" },
+  { href: "/driver/settings", label: "Account" },
 ];
 
 export function DriverPortalShell({ driverName, children }: DriverPortalShellProps) {
@@ -33,11 +41,18 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
   const { theme } = useTheme();
   const isLight = theme === "light";
   const [collapsed, setCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const settingsActive = pathname.startsWith("/driver/settings");
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
     if (stored === "true") setCollapsed(true);
   }, []);
+
+  useEffect(() => {
+    if (settingsActive) setSettingsOpen(true);
+  }, [settingsActive]);
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
@@ -45,6 +60,14 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
       localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
       return next;
     });
+  }
+
+  function navLinkClass(active: boolean) {
+    return `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+      active
+        ? "bg-white text-gray-900 shadow-sm border border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/10"
+        : "text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
+    } ${collapsed ? "justify-center" : ""}`;
   }
 
   return (
@@ -69,24 +92,68 @@ export function DriverPortalShell({ driverName, children }: DriverPortalShellPro
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {topNavItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
                 key={href}
                 href={href}
                 title={collapsed ? label : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-white text-gray-900 shadow-sm border border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/10"
-                    : "text-gray-600 hover:bg-white/70 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
-                } ${collapsed ? "justify-center" : ""}`}
+                className={navLinkClass(active)}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {!collapsed && <span>{label}</span>}
               </Link>
             );
           })}
+
+          <div>
+            <button
+              type="button"
+              title={collapsed ? "Settings" : undefined}
+              onClick={() => {
+                if (collapsed) {
+                  window.location.href = "/driver/settings";
+                  return;
+                }
+                setSettingsOpen((o) => !o);
+              }}
+              className={`${navLinkClass(settingsActive)} w-full`}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left">Settings</span>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${settingsOpen ? "rotate-180" : ""}`}
+                  />
+                </>
+              )}
+            </button>
+            {!collapsed && settingsOpen && (
+              <div className="ml-4 mt-1 space-y-0.5 border-l border-gray-200 pl-3 dark:border-white/10">
+                {settingsSubItems.map(({ href, label }) => {
+                  const active =
+                    href === "/driver/settings"
+                      ? pathname === "/driver/settings"
+                      : pathname === href || pathname.startsWith(`${href}/`);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                        active
+                          ? "font-medium text-emerald-600 dark:text-brand-end"
+                          : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="border-t border-gray-200 p-3 dark:border-white/10">

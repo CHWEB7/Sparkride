@@ -165,7 +165,7 @@ export function DriverSquareConnect({ theme: themeProp }: { theme?: "dark" | "li
           <div>
             <p className={titleClass}>Square connected</p>
             <p className={bodyClass}>
-              When you confirm a booking, customers receive a secure Square payment link for the full fare.
+              When you accept a booking, customers receive a secure Square payment link for the full fare.
               Payments go directly to your Square account.
             </p>
             <p className={`${mutedClass} mt-2`}>

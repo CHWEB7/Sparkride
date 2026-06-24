@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getDriverSession } from "@/lib/driver-auth";
 import { driverBookingsFilter, isTestDriver } from "@/lib/driver-access";
-import { DriverDashboard } from "@/components/driver/DriverDashboard";
+import { DriverBookingsTable } from "@/components/driver/DriverBookingsTable";
 
 export default async function DriverBookingsPage() {
   const session = await getDriverSession();
@@ -36,7 +36,7 @@ export default async function DriverBookingsPage() {
           {dbError}
         </div>
       ) : (
-        <DriverDashboard bookings={JSON.parse(JSON.stringify(bookings))} />
+        <DriverBookingsTable bookings={JSON.parse(JSON.stringify(bookings))} />
       )}
     </div>
   );

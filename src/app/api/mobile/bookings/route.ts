@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { statusSchema } from "@/lib/validation";
-import {
-  canSetPaid,
-  handleBookingConfirmed,
-} from "@/lib/booking-confirmation";
+import { handleBookingAccepted } from "@/lib/booking-confirmation";
 
 /**
  * Temporary mobile API — no authentication yet.
@@ -52,26 +49,16 @@ export async function PATCH(req: NextRequest) {
       return json({ error: "Booking not found" }, 404);
     }
 
-    if (
-      parsed.data.status === "PAID" &&
-      !canSetPaid(existing.paymentStatus)
-    ) {
-      return json(
-        { error: "Customer must pay online before the trip can be marked paid" },
-        409
-      );
-    }
-
     const booking = await prisma.booking.update({
       where: { id },
       data: { status: parsed.data.status },
     });
 
-    const justConfirmed =
-      parsed.data.status === "CONFIRMED" && existing.status !== "CONFIRMED";
+    const justAccepted =
+      parsed.data.status === "ACCEPTED" && existing.status !== "ACCEPTED";
 
-    if (justConfirmed) {
-      await handleBookingConfirmed(booking.id);
+    if (justAccepted) {
+      await handleBookingAccepted(booking.id);
     }
 
     const refreshed = await prisma.booking.findUnique({ where: { id: booking.id } });

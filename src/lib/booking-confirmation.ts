@@ -1,6 +1,6 @@
 import type { Booking, Driver, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { sendBookingConfirmedEmail } from "@/lib/send-booking-email";
+import { sendBookingAcceptedEmail } from "@/lib/send-booking-email";
 import { isSquareConfigured } from "@/lib/square/config";
 import {
   driverHasSquareConnected,
@@ -11,14 +11,15 @@ import { createSquarePaymentLink } from "@/lib/square/payment-links";
 type BookingWithDriver = Booking & { driver: Driver | null };
 
 export type PaymentLinkSkipReason =
-  | "not_confirmed"
+  | "not_accepted"
   | "already_paid"
   | "already_has_link"
   | "square_not_configured"
   | "driver_not_connected"
   | "no_fare"
   | "token_error"
-  | "square_api_error";
+  | "square_api_error"
+  | "not_required";
 
 export type EnsurePaymentLinkResult = {
   created: boolean;
@@ -28,12 +29,9 @@ export type EnsurePaymentLinkResult = {
   error?: string;
 };
 
-export function canSetPaid(paymentStatus: PaymentStatus): boolean {
-  return paymentStatus !== "AWAITING_PAYMENT";
-}
-
 export async function ensureBookingPaymentLink(
-  bookingId: string
+  bookingId: string,
+  options?: { forceResend?: boolean }
 ): Promise<EnsurePaymentLinkResult> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -45,16 +43,16 @@ export async function ensureBookingPaymentLink(
       created: false,
       paymentLinkUrl: null,
       paymentStatus: "NOT_REQUIRED",
-      skipReason: "not_confirmed",
+      skipReason: "not_accepted",
     };
   }
 
-  if (booking.status !== "CONFIRMED") {
+  if (booking.status !== "ACCEPTED") {
     return {
       created: false,
       paymentLinkUrl: booking.squarePaymentLinkUrl,
       paymentStatus: booking.paymentStatus,
-      skipReason: "not_confirmed",
+      skipReason: "not_accepted",
     };
   }
 
@@ -67,7 +65,16 @@ export async function ensureBookingPaymentLink(
     };
   }
 
-  if (booking.squarePaymentLinkUrl) {
+  if (booking.paymentStatus === "NOT_REQUIRED") {
+    return {
+      created: false,
+      paymentLinkUrl: null,
+      paymentStatus: booking.paymentStatus,
+      skipReason: "not_required",
+    };
+  }
+
+  if (booking.squarePaymentLinkUrl && !options?.forceResend) {
     return {
       created: false,
       paymentLinkUrl: booking.squarePaymentLinkUrl,
@@ -155,12 +162,12 @@ export async function ensureBookingPaymentLink(
   };
 }
 
-/** Create payment links for confirmed bookings when a driver connects Square. */
+/** Create payment links for accepted bookings when a driver connects Square. */
 export async function backfillDriverPaymentLinks(driverId: string): Promise<number> {
   const bookings = await prisma.booking.findMany({
     where: {
       driverId,
-      status: "CONFIRMED",
+      status: "ACCEPTED",
       paymentStatus: { not: "PAID" },
       squarePaymentLinkUrl: null,
     },
@@ -175,7 +182,7 @@ export async function backfillDriverPaymentLinks(driverId: string): Promise<numb
   return created;
 }
 
-export async function handleBookingConfirmed(bookingId: string): Promise<void> {
+export async function handleBookingAccepted(bookingId: string): Promise<void> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: { driver: true },
@@ -202,7 +209,7 @@ export async function handleBookingConfirmed(bookingId: string): Promise<void> {
     );
   }
 
-  const emailResult = await sendBookingConfirmedEmail(booking.customerEmail, {
+  const emailResult = await sendBookingAcceptedEmail(booking.customerEmail, {
     reference: booking.reference,
     customerName: booking.customerName,
     pickupAddress: booking.pickupAddress,
@@ -216,9 +223,71 @@ export async function handleBookingConfirmed(bookingId: string): Promise<void> {
   });
 
   if (!emailResult.ok) {
-    console.error("Booking confirmation email failed:", emailResult.error);
+    console.error("Booking accepted email failed:", emailResult.error);
   }
 }
+
+/** Resend payment link email (creates link if missing). */
+export async function sendBookingPaymentLinkEmail(bookingId: string): Promise<{
+  ok: boolean;
+  error?: string;
+  paymentLinkUrl?: string | null;
+}> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { driver: true },
+  });
+
+  if (!booking?.customerEmail) {
+    return { ok: false, error: "Booking not found" };
+  }
+
+  if (booking.status !== "ACCEPTED") {
+    return { ok: false, error: "Booking must be accepted before sending a payment link" };
+  }
+
+  const paymentResult = await ensureBookingPaymentLink(bookingId);
+
+  const fresh = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { driver: true },
+  });
+
+  const paymentLinkUrl = fresh?.squarePaymentLinkUrl ?? paymentResult.paymentLinkUrl;
+
+  if (!paymentLinkUrl && paymentResult.skipReason === "not_required") {
+    return { ok: false, error: "This booking does not require online payment" };
+  }
+
+  if (!paymentLinkUrl) {
+    return {
+      ok: false,
+      error: paymentLinkSkipMessage(paymentResult) ?? "Could not create payment link",
+    };
+  }
+
+  const emailResult = await sendBookingAcceptedEmail(booking.customerEmail, {
+    reference: booking.reference,
+    customerName: booking.customerName,
+    pickupAddress: booking.pickupAddress,
+    dropoffAddress: booking.dropoffAddress,
+    pickupDate: booking.pickupDate,
+    driverName: booking.driver?.name ?? fresh?.driver?.name ?? "Your driver",
+    vehicleLabel: booking.driver?.vehicleLabel ?? fresh?.driver?.vehicleLabel,
+    estimatedPrice: fresh?.amountDue ?? fresh?.estimatedPrice ?? booking.estimatedPrice,
+    paymentLinkUrl,
+    paymentStatus: fresh?.paymentStatus ?? paymentResult.paymentStatus,
+  });
+
+  if (!emailResult.ok) {
+    return { ok: false, error: emailResult.error };
+  }
+
+  return { ok: true, paymentLinkUrl };
+}
+
+/** @deprecated Use handleBookingAccepted */
+export const handleBookingConfirmed = handleBookingAccepted;
 
 export async function markBookingPaidByReference(
   reference: string,
@@ -230,6 +299,7 @@ export async function markBookingPaidByReference(
       paymentStatus: "AWAITING_PAYMENT",
     },
     data: {
+      status: "CONFIRMED",
       paymentStatus: "PAID",
       squarePaymentId,
       paidAt: new Date(),
@@ -246,16 +316,20 @@ export function paymentLinkSkipMessage(result: EnsurePaymentLinkResult): string 
     result.error?.includes("ORDERS_READ") ||
     result.error?.includes("INSUFFICIENT_SCOPES")
   ) {
-    return "Your driver needs to reconnect Square in Driver Settings to approve payment permissions, then confirm the booking again or refresh this page.";
+    return "Your driver needs to reconnect Square in Driver Settings to approve payment permissions, then accept the booking again or resend the payment link.";
   }
 
   switch (result.skipReason) {
+    case "not_accepted":
+      return "The driver must accept this booking before a payment link can be sent.";
     case "driver_not_connected":
       return "Your driver has not finished connecting Square for online payments.";
     case "square_not_configured":
       return "Online payments are not configured on Sparkride yet.";
     case "no_fare":
       return "No fare is set for this booking, so a payment link cannot be created.";
+    case "not_required":
+      return "This booking is paid directly to the driver — no online payment link is needed.";
     case "token_error":
       return "We could not access your driver's Square account. They may need to reconnect Square.";
     case "square_api_error":

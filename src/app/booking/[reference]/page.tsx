@@ -32,7 +32,7 @@ export default async function BookingConfirmationPage({
   let paymentSetupNote: string | null = null;
 
   if (
-    booking.status === "CONFIRMED" &&
+    booking.status === "ACCEPTED" &&
     booking.paymentStatus !== "PAID" &&
     !booking.squarePaymentLinkUrl
   ) {
@@ -47,13 +47,14 @@ export default async function BookingConfirmationPage({
 
   const isReturn = booking.journeyType === "RETURN";
   const isHub = isHubTransfer(booking.serviceType);
-  const isConfirmed = booking.status !== "PENDING";
+  const isAccepted = booking.status !== "PENDING";
 
   const statusColors: Record<string, string> = {
     ...BOOKING_STATUS_COLORS_LIGHT,
     PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400",
     CONFIRMED: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400",
     PAID: "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-400",
+    ACCEPTED: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400",
     COMPLETED: "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400",
     CANCELLED: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
   };
@@ -68,7 +69,7 @@ export default async function BookingConfirmationPage({
               <CheckCircle className="w-8 h-8 text-brand" />
             </div>
             <h1 className="mt-6 text-4xl font-bold tracking-tight dark:text-white">
-              {isConfirmed ? "Booking confirmed" : "Booking received"}
+              {isAccepted ? "Booking accepted" : "Booking received"}
             </h1>
             <p className="mt-3 text-lg text-muted">
               Your reference number is{" "}
@@ -76,7 +77,7 @@ export default async function BookingConfirmationPage({
             </p>
           </div>
 
-          {booking.status === "CONFIRMED" && (
+          {(booking.status === "ACCEPTED" || booking.status === "CONFIRMED") && (
             <div className="mb-6">
               <BookingPaymentSection
                 reference={booking.reference}
@@ -102,8 +103,8 @@ export default async function BookingConfirmationPage({
                     RETURN
                   </span>
                 )}
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[booking.status]}`}>
-                  {booking.status.replace("_", " ")}
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[booking.status] ?? ""}`}>
+                  {booking.status.replace(/_/g, " ")}
                 </span>
               </div>
             </div>
@@ -192,10 +193,12 @@ export default async function BookingConfirmationPage({
           <div className="mt-8">
             <p className="text-sm text-muted mb-4">
               {booking.status === "PENDING"
-                ? "Your driver will confirm this booking shortly."
-                : booking.paymentStatus === "AWAITING_PAYMENT"
+                ? "Your driver will accept this booking shortly."
+                : booking.status === "ACCEPTED" && booking.paymentStatus === "AWAITING_PAYMENT"
                   ? "Please complete payment before your travel date."
-                  : "Save your reference number for your records."}
+                  : booking.status === "CONFIRMED"
+                    ? "Your booking is confirmed and paid. See you on travel day."
+                    : "Save your reference number for your records."}
             </p>
             <Link
               href="/"

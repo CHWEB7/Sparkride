@@ -64,7 +64,7 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
       .finally(() => setLoadingTrips(false));
   }, [view]);
 
-  const activeStatuses = new Set(["PENDING", "CONFIRMED", "PAID"]);
+  const activeStatuses = new Set(["PENDING", "ACCEPTED", "CONFIRMED"]);
   const activeTrips = bookings.filter((b) => activeStatuses.has(b.status));
   const pastTrips = bookings.filter((b) => !activeStatuses.has(b.status));
 
