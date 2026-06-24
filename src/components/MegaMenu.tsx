@@ -234,17 +234,17 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
       animate={{ height: "auto", opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
       transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      className="overflow-hidden border-t border-gray-200/80 dark:border-white/10"
+      className="overflow-hidden border-t border-gray-200/80 dark:border-white/10 max-sm:max-h-[calc(100dvh-3.5rem)]"
     >
-      <div className="bg-white dark:bg-dark pb-6">
+      <div className="bg-white dark:bg-dark pb-4 sm:pb-6 max-sm:overflow-y-auto max-sm:max-h-[calc(100dvh-3.5rem)]">
         <motion.div
           initial={{ y: -12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.08 }}
-          className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-5"
+          className="max-w-7xl mx-auto px-4 sm:px-6 pt-3 sm:pt-5"
         >
-          <div className="grid lg:grid-cols-[1fr_300px] gap-4">
-            <div className="bg-booking-bg dark:bg-dark-elevated rounded-2xl p-4 sm:p-6 shadow-sm">
+          <div className="grid lg:grid-cols-[1fr_300px] gap-3 sm:gap-4">
+            <div className="bg-booking-bg dark:bg-dark-elevated rounded-2xl p-3 sm:p-6 shadow-sm">
               {showAccountPanel ? (
                 <>
                   <button
@@ -258,7 +258,7 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                 </>
               ) : (
                 <>
-                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200/60 dark:border-white/10">
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-3 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200/60 dark:border-white/10">
                     {NAV_TABS.map((tab) => (
                       <button
                         key={tab.id}
@@ -282,7 +282,7 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
-                      className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6"
                     >
                       {active.columns.map((col, i) => (
                         <div key={i}>
@@ -291,13 +291,13 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
                               {col.title}
                             </p>
                           )}
-                          <ul className="space-y-2.5">
+                          <ul className="space-y-2 sm:space-y-2.5">
                             {col.links.map((link) => (
                               <li key={link.label}>
                                 <Link
                                   href={link.href}
                                   onClick={onClose}
-                                  className="text-sm font-medium text-dark/80 dark:text-gray-200 hover:text-brand dark:hover:text-brand-end tracking-[-0.01em] transition-colors"
+                                  className="text-xs sm:text-sm font-medium text-dark/80 dark:text-gray-200 hover:text-brand dark:hover:text-brand-end tracking-[-0.01em] transition-colors"
                                 >
                                   {link.label}
                                 </Link>
@@ -312,7 +312,7 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
               )}
             </div>
 
-            <div className="bg-[#e8eaee] dark:bg-dark-elevated/80 rounded-2xl p-3 sm:p-4 shadow-sm">
+            <div className="hidden lg:block bg-[#e8eaee] dark:bg-dark-elevated/80 rounded-2xl p-3 sm:p-4 shadow-sm">
               <ul className="space-y-1">
                 {SIDEBAR_ITEMS.map((item, i) => (
                   <motion.li
@@ -346,11 +346,33 @@ export function MegaMenu({ onClose }: MegaMenuProps) {
             </div>
           </div>
 
+          <div className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
+            {SIDEBAR_ITEMS.filter((item) => item.href).map((item) => (
+              <Link
+                key={item.id}
+                href={item.href!}
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-xl border border-black/8 dark:border-white/10 bg-booking-bg dark:bg-dark-elevated px-3 py-2.5 text-xs font-medium text-dark dark:text-white"
+              >
+                <item.icon className={`h-4 w-4 shrink-0 ${item.iconColor}`} />
+                <span className="truncate">{item.title}</span>
+              </Link>
+            ))}
+            <button
+              type="button"
+              onClick={openAccountPanel}
+              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-black/8 dark:border-white/10 bg-booking-bg dark:bg-dark-elevated px-3 py-2.5 text-xs font-medium text-dark dark:text-white"
+            >
+              <User className="h-4 w-4 shrink-0 text-sky-600" />
+              Account
+            </button>
+          </div>
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.25 }}
-            className="mt-6 pt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-muted"
+            className="mt-4 sm:mt-6 pt-4 sm:pt-5 hidden sm:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-muted"
           >
             <div className="flex items-center gap-4">
               <Link href="/social/facebook" onClick={onClose} className="hover:text-dark dark:hover:text-white transition-colors">
@@ -391,7 +413,7 @@ function SidebarItemContent({ item }: { item: SidebarItem }) {
         <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${item.iconColor}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-dark dark:text-white tracking-[-0.01em]">
+        <div className="text-xs sm:text-sm font-medium text-dark dark:text-white tracking-[-0.01em]">
           {item.title}
         </div>
         <div className="text-xs text-muted tracking-[-0.01em] truncate">

@@ -10,7 +10,7 @@ export function Hero() {
       <HeroAmbientBackground />
 
       <div className="relative z-10 w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 lg:py-36">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 pb-20 sm:pt-32 sm:pb-32 lg:py-36">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-brand/10 dark:bg-white/10 backdrop-blur-sm border border-brand/15 dark:border-white/10 text-brand dark:text-brand-end text-xs sm:text-sm font-medium mb-4 sm:mb-6">
               <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -33,12 +33,6 @@ export function Hero() {
                 className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 border border-dark/15 dark:border-white/25 bg-white/60 dark:bg-white/5 backdrop-blur-sm text-dark dark:text-white hover:bg-white/80 dark:hover:bg-white/15 font-medium tracking-[-0.01em] rounded-full transition-colors text-sm sm:text-base"
               >
                 Get the Android app
-              </Link>
-              <Link
-                href="/#how-it-works"
-                className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 border border-dark/15 dark:border-white/25 bg-white/60 dark:bg-white/5 backdrop-blur-sm text-dark dark:text-white hover:bg-white/80 dark:hover:bg-white/15 font-medium tracking-[-0.01em] rounded-full transition-colors text-sm sm:text-base sm:hidden"
-              >
-                How it works
               </Link>
             </div>
 

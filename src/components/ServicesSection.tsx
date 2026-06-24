@@ -8,8 +8,13 @@ import { SiteContainer } from "@/components/SiteContainer";
 import { SERVICES } from "@/lib/services";
 
 const CARD_GAP = 16;
-const PEEK_INDEX = SERVICES.findIndex((service) => service.id === "theme-parks");
-const PEEK_SERVICE_ID = "theme-parks";
+const DESKTOP_PEEK_INDEX = SERVICES.findIndex((service) => service.id === "theme-parks");
+const DESKTOP_PEEK_SERVICE_ID = "theme-parks";
+const DESKTOP_BREAKPOINT = 640;
+
+function isDesktopCarousel(width: number): boolean {
+  return width >= DESKTOP_BREAKPOINT;
+}
 
 export function ServicesSection() {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -32,14 +37,24 @@ export function ServicesSection() {
     if (!scroller || !track) return;
 
     const firstCard = track.querySelector<HTMLElement>("[data-service-card]");
-    if (!firstCard || PEEK_INDEX < 0) return;
+    if (!firstCard) return;
 
     const cardWidth = firstCard.offsetWidth;
     if (!cardWidth) return;
 
-    const paddingLeft = Number.parseFloat(getComputedStyle(scroller).paddingLeft) || 0;
-    const peekCenter = PEEK_INDEX * (cardWidth + CARD_GAP) + cardWidth * 0.5;
+    if (!isDesktopCarousel(scroller.clientWidth)) {
+      setLeadSpacer(0);
+      requestAnimationFrame(() => {
+        scroller.scrollLeft = 0;
+        updateScrollState();
+      });
+      return;
+    }
 
+    if (DESKTOP_PEEK_INDEX < 0) return;
+
+    const paddingLeft = Number.parseFloat(getComputedStyle(scroller).paddingLeft) || 0;
+    const peekCenter = DESKTOP_PEEK_INDEX * (cardWidth + CARD_GAP) + cardWidth * 0.5;
     const spacer = Math.round(scroller.clientWidth - paddingLeft - peekCenter);
     const nextSpacer = Math.max(0, spacer);
     setLeadSpacer((prev) => (prev === nextSpacer ? prev : nextSpacer));
@@ -47,7 +62,7 @@ export function ServicesSection() {
     requestAnimationFrame(() => {
       if (nextSpacer === 0) {
         const peekCard = track.querySelector<HTMLElement>(
-          `[data-service-id="${PEEK_SERVICE_ID}"]`
+          `[data-service-id="${DESKTOP_PEEK_SERVICE_ID}"]`
         );
         if (peekCard) {
           scroller.scrollLeft = Math.max(
@@ -116,7 +131,7 @@ export function ServicesSection() {
         >
           <div ref={trackRef} className="flex w-max gap-4">
             <div
-              className="shrink-0"
+              className="shrink-0 hidden sm:block"
               style={{ width: leadSpacer }}
               aria-hidden
             />
@@ -133,7 +148,7 @@ export function ServicesSection() {
                   alt=""
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  sizes="(max-width: 640px) 78vw, 336px"
+                  sizes="(max-width: 640px) 72vw, 336px"
                   priority={service.id === "airport-transfers"}
                   onLoad={layoutCarousel}
                 />

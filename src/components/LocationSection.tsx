@@ -4,45 +4,6 @@ import { MapPin } from "lucide-react";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 
-const PICKUP_AREAS = [
-  {
-    name: "Castleford",
-    detail:
-      "Our home base — pickups across town centre, Xscape, Junction 32, and residential estates.",
-    highlights: ["Town centre", "M62 corridor", "Glasshoughton"],
-  },
-  {
-    name: "Leeds",
-    detail:
-      "City centre, train station, Headingley, Holbeck, Morley, and suburbs across West Leeds.",
-    highlights: ["Leeds Station", "Headingley", "City centre"],
-  },
-  {
-    name: "Wakefield",
-    detail:
-      "Wakefield city, Kirkgate, Westgate, and surrounding villages along the A638 and M1.",
-    highlights: ["Wakefield city", "Kirkgate", "Outwood"],
-  },
-  {
-    name: "Pontefract",
-    detail:
-      "Pontefract town, Ferrybridge, Knottingley, and routes toward the A1(M) and M62.",
-    highlights: ["Pontefract town", "Knottingley", "Ferrybridge"],
-  },
-  {
-    name: "Featherstone & Normanton",
-    detail:
-      "Local pickups across Featherstone, Normanton, Altofts, and the Five Towns area.",
-    highlights: ["Featherstone", "Normanton", "Altofts"],
-  },
-  {
-    name: "Garforth & East Leeds",
-    detail:
-      "Garforth, Kippax, Swillington, and connections to the M1 for airport and corporate travel.",
-    highlights: ["Garforth", "Kippax", "M1 access"],
-  },
-] as const;
-
 export function LocationSection() {
   return (
     <section id="locations" className="border-y border-black/5 dark:border-white/5">
@@ -117,34 +78,6 @@ export function LocationSection() {
                 Local private hire
               </Link>
             </div>
-          </div>
-        </SiteContainer>
-      </div>
-
-      <div className="bg-app-bg dark:bg-dark py-12 sm:py-20 lg:py-24">
-        <SiteContainer>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-            {PICKUP_AREAS.map((area) => (
-              <article
-                key={area.name}
-                className="rounded-2xl border border-black/8 dark:border-white/10 bg-white dark:bg-dark-elevated p-4 sm:p-6 transition-colors hover:border-brand/25 dark:hover:border-brand-end/25"
-              >
-                <h3 className="text-base sm:text-lg font-semibold tracking-[-0.02em] text-dark dark:text-white">
-                  {area.name}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{area.detail}</p>
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {area.highlights.map((tag) => (
-                    <li
-                      key={tag}
-                      className="rounded-full bg-brand/8 dark:bg-brand/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand dark:text-brand-end"
-                    >
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
           </div>
         </SiteContainer>
       </div>

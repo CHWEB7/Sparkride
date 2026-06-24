@@ -7,17 +7,10 @@ import { Plane } from "lucide-react";
 
 const SIZES = {
   sm: { height: 32, width: 146, icon: "w-4 h-4", box: "w-9 h-9", text: "text-lg" },
-  md: {
-    height: 40,
-    width: 182,
-    icon: "w-4 h-4",
-    box: "w-10 h-10",
-    text: "text-xl",
-    mobileHeight: 32,
-  },
+  md: { height: 40, width: 182, icon: "w-4 h-4", box: "w-10 h-10", text: "text-xl" },
   lg: { height: 48, width: 219, icon: "w-5 h-5", box: "w-12 h-12", text: "text-2xl" },
   xl: { height: 56, width: 255, icon: "w-6 h-6", box: "w-14 h-14", text: "text-3xl" },
-  header: { height: 42, width: 191, icon: "w-5 h-5", box: "w-11 h-11", text: "text-2xl", mobileHeight: 32, mobileWidth: 146 },
+  header: { height: 42, width: 191, icon: "w-5 h-5", box: "w-11 h-11", text: "text-2xl" },
 } as const;
 
 type LogoProps = {
@@ -28,6 +21,23 @@ type LogoProps = {
   light?: boolean;
 };
 
+function logoImageClass(size: keyof typeof SIZES): string {
+  switch (size) {
+    case "header":
+      return "h-8 w-auto sm:h-[42px]";
+    case "md":
+      return "h-8 w-auto sm:h-10";
+    case "sm":
+      return "h-8 w-auto";
+    case "lg":
+      return "h-12 w-auto";
+    case "xl":
+      return "h-14 w-auto";
+    default:
+      return "w-auto";
+  }
+}
+
 function LogoImage({
   size,
   light,
@@ -36,8 +46,6 @@ function LogoImage({
   light?: boolean;
 }) {
   const s = SIZES[size];
-  const isHeader = size === "header";
-  const mobileHeight = "mobileHeight" in s ? s.mobileHeight : s.height;
   const [src, setSrc] = useState(light ? "/logo-light.png" : "/logo.png");
   const [useIcon, setUseIcon] = useState(false);
 
@@ -57,17 +65,7 @@ function LogoImage({
       alt="Sparkride"
       width={s.width}
       height={s.height}
-      className={`w-auto max-w-none object-contain object-left shrink-0 ${
-        isHeader || "mobileHeight" in s
-          ? "h-[var(--logo-mobile-h)] sm:h-[var(--logo-h)]"
-          : "h-[var(--logo-h)]"
-      }`}
-      style={
-        {
-          "--logo-h": `${s.height}px`,
-          "--logo-mobile-h": `${mobileHeight}px`,
-        } as React.CSSProperties
-      }
+      className={`${logoImageClass(size)} max-w-none object-contain object-left shrink-0`}
       priority
       onError={() => {
         if (light && src === "/logo-light.png") {
@@ -112,16 +110,10 @@ export function Logo({
     <Link
       href={href}
       className={`inline-flex items-center ${
-        size === "header"
-          ? "min-h-[32px] sm:min-h-[42px]"
-          : size === "md"
-            ? "min-h-8 sm:min-h-10"
-            : ""
+        size === "header" ? "min-h-8 sm:min-h-[42px]" : size === "md" ? "min-h-8 sm:min-h-10" : ""
       } ${className}`}
       style={
-        size === "header" || size === "md"
-          ? undefined
-          : { minHeight: `${s.height}px` }
+        size === "header" || size === "md" ? undefined : { minHeight: `${s.height}px` }
       }
     >
       {mark}
