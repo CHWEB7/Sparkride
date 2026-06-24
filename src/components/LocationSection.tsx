@@ -4,38 +4,70 @@ import { MapPin } from "lucide-react";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 
+const SERVICE_AREA_IMAGE = "/images/location/west-yorkshire-map.png";
+
+function LocationMapVisual({
+  className = "",
+  imageClassName = "",
+  sizes,
+  priority = false,
+  blendTop = false,
+}: {
+  className?: string;
+  imageClassName?: string;
+  sizes: string;
+  priority?: boolean;
+  blendTop?: boolean;
+}) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src={SERVICE_AREA_IMAGE}
+        alt="Sparkride service area across West Yorkshire"
+        fill
+        className={`object-cover ${imageClassName}`}
+        sizes={sizes}
+        priority={priority}
+      />
+      <div className="absolute inset-0 bg-black/50 dark:bg-black/60" aria-hidden />
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-[#6a68de]/25 via-[#5a58c8]/10 to-[#82dbdf]/15 mix-blend-soft-light dark:from-[#6a68de]/30 dark:via-[#4a48b8]/15 dark:to-[#82dbdf]/10"
+        aria-hidden
+      />
+      {blendTop && (
+        <div
+          className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-app-bg dark:from-dark to-transparent"
+          aria-hidden
+        />
+      )}
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-app-bg/90 via-transparent to-transparent dark:from-dark/90 sm:hidden"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
 export function LocationSection() {
   return (
     <section id="locations" className="border-y border-black/5 dark:border-white/5">
       <div className="relative overflow-hidden bg-app-bg dark:bg-dark">
+        {/* Desktop: map on the right */}
         <div
-          className="absolute inset-y-0 left-[38%] sm:left-[42%] lg:left-[46%] xl:left-[48%] right-0 overflow-hidden"
+          className="absolute inset-y-0 left-[38%] sm:left-[42%] lg:left-[46%] xl:left-[48%] right-0 hidden sm:block"
           aria-hidden
         >
-          <div className="absolute inset-0">
-            <Image
-              src="/images/location/west-yorkshire-map.png"
-              alt=""
-              fill
-              className="object-cover scale-[1.14] min-w-full saturate-[0.72] contrast-[0.9] brightness-[1.06] hue-rotate-[8deg] dark:saturate-[0.58] dark:brightness-[0.82] dark:contrast-[0.95] dark:hue-rotate-[12deg]"
-              style={{ objectPosition: "72% center" }}
-              sizes="(max-width: 1024px) 60vw, 52vw"
-              priority={false}
-            />
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6a68de]/30 via-[#7a9ee8]/12 to-[#82dbdf]/22 mix-blend-soft-light dark:from-[#6a68de]/35 dark:via-[#5a58c8]/18 dark:to-[#82dbdf]/15 dark:mix-blend-color" />
-          <div className="absolute inset-0 bg-app-bg/25 dark:bg-dark/35" />
-          <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-app-bg via-app-bg/75 to-transparent dark:from-dark dark:via-dark/75" />
+          <LocationMapVisual
+            className="absolute inset-0"
+            imageClassName="scale-[1.08] min-w-full saturate-[0.65] contrast-[0.95] brightness-[0.72] object-[72%_center]"
+            sizes="(max-width: 1024px) 60vw, 52vw"
+          />
+          <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-app-bg via-app-bg/80 to-transparent dark:from-dark dark:via-dark/80" />
           <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-app-bg to-transparent dark:from-dark opacity-95" />
         </div>
 
         <div
-          className="absolute inset-0 bg-gradient-to-r from-app-bg from-[0%] via-app-bg/95 via-[34%] to-transparent to-[62%] dark:from-dark dark:via-dark/95 sm:via-[36%] sm:to-[58%] lg:via-[38%] lg:to-[54%]"
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-t from-app-bg/85 via-transparent to-app-bg/40 dark:from-dark/85 dark:to-dark/40 sm:hidden"
+          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-app-bg from-[0%] via-app-bg/95 via-[34%] to-transparent to-[62%] dark:from-dark dark:via-dark/95 sm:block sm:via-[36%] sm:to-[58%] lg:via-[38%] lg:to-[54%]"
           aria-hidden
         />
 
@@ -80,6 +112,16 @@ export function LocationSection() {
             </div>
           </div>
         </SiteContainer>
+
+        {/* Mobile: full-width map below content */}
+        <div className="relative z-0 sm:hidden">
+          <LocationMapVisual
+            className="aspect-[16/10] min-h-[200px] max-h-[280px] w-full"
+            imageClassName="object-[center_42%] saturate-[0.7] contrast-[0.95] brightness-[0.68]"
+            sizes="100vw"
+            blendTop
+          />
+        </div>
       </div>
     </section>
   );
