@@ -7,6 +7,7 @@ import { getHub, formatHubLabel, isHubTransfer, normalizeServiceType } from "@/l
 import { estimatePrice } from "@/lib/airports";
 import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,23 +125,27 @@ export async function POST(req: NextRequest) {
       const label =
         data.savedDetailsLabel?.trim() ||
         `${data.pickupAddress.slice(0, 24)}…`;
-      await prisma.savedBookingDetails.create({
-        data: {
-          customerId: customer.id,
-          label,
-          serviceType: storedServiceType,
-          journeyType: data.journeyType,
-          tripType: data.tripType,
-          airportCode: hub?.code ?? null,
-          pickupAddress: data.pickupAddress,
-          dropoffAddress: data.dropoffAddress,
-          passengers: data.passengers,
-          luggage: data.luggage,
-          vehicleType: driver.vehicleType,
-          driverId: driver.id,
-          notes: data.notes || null,
-        },
-      });
+      try {
+        await prisma.savedBookingDetails.create({
+          data: {
+            customerId: customer.id,
+            label,
+            serviceType: storedServiceType,
+            journeyType: data.journeyType,
+            tripType: data.tripType,
+            airportCode: hub?.code ?? null,
+            pickupAddress: data.pickupAddress,
+            dropoffAddress: data.dropoffAddress,
+            passengers: data.passengers,
+            luggage: data.luggage,
+            vehicleType: driver.vehicleType,
+            driverId: driver.id,
+            notes: data.notes || null,
+          },
+        });
+      } catch (saveError) {
+        console.error("Saved booking details error:", saveError);
+      }
     }
 
     return json({
@@ -150,7 +155,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Booking error:", error);
-    return json({ error: "Failed to create booking" }, 500);
+    const { message, status, code } = getApiErrorMessage(error, "Failed to create booking");
+    return json(code ? { error: message, code } : { error: message }, status);
   }
 }
 

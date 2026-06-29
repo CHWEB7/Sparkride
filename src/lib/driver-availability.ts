@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isPrismaMissingResourceError } from "@/lib/api-errors";
 
 /** Calendar date in Europe/London as YYYY-MM-DD */
 export function toLondonDateString(date: Date): string {
@@ -13,16 +14,23 @@ export async function isDriverBlockedOnLondonDate(
   driverId: string,
   londonDate: string
 ): Promise<boolean> {
-  const probe = parseLondonDateInput(londonDate);
-  const block = await prisma.driverBlockOut.findFirst({
-    where: {
-      driverId,
-      startDate: { lte: probe },
-      endDate: { gte: probe },
-    },
-    select: { id: true },
-  });
-  return Boolean(block);
+  try {
+    const probe = parseLondonDateInput(londonDate);
+    const block = await prisma.driverBlockOut.findFirst({
+      where: {
+        driverId,
+        startDate: { lte: probe },
+        endDate: { gte: probe },
+      },
+      select: { id: true },
+    });
+    return Boolean(block);
+  } catch (error) {
+    if (isPrismaMissingResourceError(error)) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 export async function isDriverAvailableForBooking(
