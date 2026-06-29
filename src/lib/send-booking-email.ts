@@ -1,4 +1,5 @@
 import { getSiteUrl } from "@/lib/site-url";
+import { buildCustomerCalendarEmailLinks } from "@/lib/calendar/calendar-email-links";
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
@@ -249,10 +250,54 @@ export type BookingPaidDetails = {
   pickupAddress: string;
   dropoffAddress: string;
   pickupDate: Date;
+  returnPickupDate?: Date | null;
+  journeyType: string;
+  serviceType?: string;
   driverName: string;
   vehicleLabel?: string | null;
   amountPaid?: number | null;
 };
+
+function buildCalendarEmailBlock(links: Awaited<ReturnType<typeof buildCustomerCalendarEmailLinks>>) {
+  const buttons: string[] = [];
+
+  if (links.googleOutbound) {
+    buttons.push(`
+      <a href="${links.googleOutbound}"
+         style="display: inline-block; margin: 4px 6px 4px 0; border: 2px solid #6a68de; color: #6a68de; text-decoration: none; font-weight: 600; padding: 10px 18px; border-radius: 999px; font-size: 14px;">
+        Google Calendar
+      </a>
+    `);
+  }
+
+  if (links.googleReturn) {
+    buttons.push(`
+      <a href="${links.googleReturn}"
+         style="display: inline-block; margin: 4px 6px 4px 0; border: 2px solid #6a68de; color: #6a68de; text-decoration: none; font-weight: 600; padding: 10px 18px; border-radius: 999px; font-size: 14px;">
+        Google Calendar (return)
+      </a>
+    `);
+  }
+
+  buttons.push(`
+    <a href="${links.icsAll}"
+       style="display: inline-block; margin: 4px 6px 4px 0; background: #191c23; color: #ffffff; text-decoration: none; font-weight: 600; padding: 10px 18px; border-radius: 999px; font-size: 14px;">
+      Download .ics
+    </a>
+  `);
+
+  return `
+    <div style="margin: 28px 0; padding: 20px; border-radius: 16px; background: #f5f3ff;">
+      <h3 style="color: #191c23; font-size: 16px; margin: 0 0 8px;">Add to your calendar</h3>
+      <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 0 0 16px;">
+        Save this trip to Google Calendar, Apple Calendar, or Outlook.
+      </p>
+      <div style="text-align: center;">
+        ${buttons.join("")}
+      </div>
+    </div>
+  `;
+}
 
 export async function sendBookingPaidEmail(
   to: string,
@@ -271,6 +316,19 @@ export async function sendBookingPaidEmail(
     timeZone: "Europe/London",
   });
 
+  const calendarLinks = await buildCustomerCalendarEmailLinks({
+    reference: booking.reference,
+    pickupAddress: booking.pickupAddress,
+    dropoffAddress: booking.dropoffAddress,
+    pickupDate: booking.pickupDate,
+    returnPickupDate: booking.returnPickupDate,
+    journeyType: booking.journeyType,
+    serviceType: booking.serviceType,
+    customerName: booking.customerName,
+    driverName: booking.driverName,
+    vehicleLabel: booking.vehicleLabel,
+  });
+
   const html = `
     <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
       <h2 style="color: #191c23; margin-bottom: 8px;">Payment received — your trip is confirmed</h2>
@@ -284,6 +342,8 @@ export async function sendBookingPaidEmail(
         <tr><td style="padding: 8px 0; color: #6b7280;">Driver</td><td style="padding: 8px 0;">${booking.driverName}${booking.vehicleLabel ? ` · ${booking.vehicleLabel}` : ""}</td></tr>
         ${booking.amountPaid ? `<tr><td style="padding: 8px 0; color: #6b7280;">Amount paid</td><td style="padding: 8px 0;">£${booking.amountPaid}</td></tr>` : ""}
       </table>
+
+      ${buildCalendarEmailBlock(calendarLinks)}
 
       <div style="margin: 28px 0; text-align: center;">
         <a href="${bookingPageUrl}"

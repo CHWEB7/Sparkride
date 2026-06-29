@@ -23,6 +23,7 @@ import {
   PAYMENT_STATUS_COLORS,
   PAYMENT_STATUS_LABELS,
 } from "@/lib/payment-status";
+import { BookingCalendarActions } from "@/components/booking/BookingCalendarActions";
 import type { PaymentStatus } from "@prisma/client";
 import {
   addMonths,
@@ -503,6 +504,19 @@ function BookingDetailPanel({
           Note: {booking.notes}
         </div>
       )}
+
+      <div className="pt-2">
+        <div className={`mb-2 text-xs font-semibold uppercase tracking-wide ${isLight ? "text-gray-500" : "text-gray-400"}`}>
+          Add to calendar
+        </div>
+        <BookingCalendarActions
+          reference={booking.reference}
+          hasReturn={booking.journeyType === "RETURN"}
+          apiBase="/api/driver/bookings"
+          leg={leg}
+          compact
+        />
+      </div>
     </div>
   );
 }

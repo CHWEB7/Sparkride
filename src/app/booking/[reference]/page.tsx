@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { BookingPaymentSection } from "@/components/booking/BookingPaymentSection";
 import { BookingNextStepsSection } from "@/components/booking/BookingNextStepsSection";
+import { AddToCalendarSection } from "@/components/booking/AddToCalendarSection";
 import { CheckCircle, Calendar, MapPin, Car, User, ArrowLeftRight } from "lucide-react";
 import { format } from "date-fns";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
@@ -140,6 +141,10 @@ export default async function BookingConfirmationPage({
               status={booking.status}
               paymentStatus={booking.paymentStatus}
             />
+          )}
+
+          {isPaid && (
+            <AddToCalendarSection reference={booking.reference} hasReturn={isReturn} />
           )}
 
           {(booking.status === "ACCEPTED" || booking.status === "CONFIRMED") && (
