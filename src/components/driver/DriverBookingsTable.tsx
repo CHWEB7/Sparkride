@@ -25,6 +25,7 @@ import {
   driverActionLabel,
   type DriverBookingAction,
 } from "@/lib/driver-booking-actions";
+import { DriverCancelBookingDialog } from "@/components/driver/DriverCancelBookingDialog";
 import {
   PAYMENT_STATUS_COLORS,
   PAYMENT_STATUS_LABELS,
@@ -102,6 +103,7 @@ export function DriverBookingsTable({
   const [acting, setActing] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const [rowMenuId, setRowMenuId] = useState<string | null>(null);
+  const [cancelTargets, setCancelTargets] = useState<Booking[]>([]);
   const actionMenuRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
@@ -164,7 +166,11 @@ export function DriverBookingsTable({
     );
   }
 
-  async function runAction(action: DriverBookingAction, ids: string[]) {
+  async function runAction(
+    action: DriverBookingAction,
+    ids: string[],
+    cancellationReason?: string
+  ) {
     setActing(true);
     setActionMenuOpen(false);
     setRowMenuId(null);
@@ -172,7 +178,11 @@ export function DriverBookingsTable({
       const res = await fetch("/api/driver/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, ids }),
+        body: JSON.stringify({
+          action,
+          ids,
+          ...(action === "cancel" ? { cancellationReason } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok && res.status !== 207) {
@@ -185,10 +195,13 @@ export function DriverBookingsTable({
         booking?: Booking;
       }>;
       const failures = results.filter((r) => !r.ok);
+      const warnings = results.filter((r) => r.ok && r.error);
       if (failures.length > 0) {
         alert(
           failures.map((f) => `${f.id.slice(0, 8)}…: ${f.error}`).join("\n")
         );
+      } else if (warnings.length > 0) {
+        alert(warnings.map((w) => w.error).filter(Boolean).join("\n"));
       }
       setBookings((prev) => {
         const map = new Map(prev.map((b) => [b.id, b]));
@@ -198,11 +211,21 @@ export function DriverBookingsTable({
         return Array.from(map.values());
       });
       setSelected(new Set());
+      setCancelTargets([]);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Action failed");
     } finally {
       setActing(false);
     }
+  }
+
+  function requestAction(action: DriverBookingAction, ids: string[]) {
+    if (action === "cancel") {
+      const targets = bookings.filter((b) => ids.includes(b.id));
+      setCancelTargets(targets);
+      return;
+    }
+    void runAction(action, ids);
   }
 
   const bulkActions = availableActionsForSelection();
@@ -278,7 +301,7 @@ export function DriverBookingsTable({
                   <button
                     key={action}
                     type="button"
-                    onClick={() => runAction(action, Array.from(selected))}
+                    onClick={() => requestAction(action, Array.from(selected))}
                     className={`block w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/5 ${
                       action === "cancel" ? "text-red-600 dark:text-red-400" : ""
                     }`}
@@ -529,7 +552,7 @@ export function DriverBookingsTable({
                                 <button
                                   key={action}
                                   type="button"
-                                  onClick={() => runAction(action, [booking.id])}
+                                  onClick={() => requestAction(action, [booking.id])}
                                   className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/5 ${
                                     action === "cancel" ? "text-red-600 dark:text-red-400" : ""
                                   }`}
@@ -556,6 +579,24 @@ export function DriverBookingsTable({
           </div>
         </div>
       )}
+      <DriverCancelBookingDialog
+        open={cancelTargets.length > 0}
+        targets={cancelTargets.map((booking) => ({
+          id: booking.id,
+          reference: booking.reference,
+          customerName: booking.customerName,
+          pickupDate: booking.pickupDate,
+        }))}
+        acting={acting}
+        onClose={() => setCancelTargets([])}
+        onConfirm={(cancellationReason) =>
+          void runAction(
+            "cancel",
+            cancelTargets.map((b) => b.id),
+            cancellationReason
+          )
+        }
+      />
     </div>
   );
 }

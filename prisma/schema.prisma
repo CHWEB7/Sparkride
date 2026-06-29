@@ -114,6 +114,8 @@ model Booking {
   squarePaymentLinkUrl String?
   squarePaymentId      String?
   paidAt               DateTime?
+  cancellationReason   String?       @db.Text
+  cancelledAt          DateTime?
   driverId             String?
   driver               Driver?       @relation(fields: [driverId], references: [id])
   customerId           String?

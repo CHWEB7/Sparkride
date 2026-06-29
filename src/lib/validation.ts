@@ -73,7 +73,27 @@ export const statusSchema = z.object({
   status: z.enum(["PENDING", "ACCEPTED", "CONFIRMED", "COMPLETED", "CANCELLED"]),
 });
 
-export const driverBookingActionSchema = z.object({
-  action: z.enum(["accept", "send_payment_link", "complete", "cancel"]),
-  ids: z.array(z.string().min(1)).min(1),
-});
+export const driverBookingActionSchema = z
+  .object({
+    action: z.enum(["accept", "send_payment_link", "complete", "cancel"]),
+    ids: z.array(z.string().min(1)).min(1),
+    cancellationReason: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.action !== "cancel") return;
+
+    const reason = data.cancellationReason?.trim() ?? "";
+    if (reason.length < 10) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Cancellation details are required (at least 10 characters)",
+        path: ["cancellationReason"],
+      });
+    } else if (reason.length > 1000) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Cancellation details must be under 1000 characters",
+        path: ["cancellationReason"],
+      });
+    }
+  });

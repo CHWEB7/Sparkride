@@ -12,6 +12,7 @@ import {
 } from "@/lib/driver-access";
 import {
   handleBookingAccepted,
+  handleBookingCancelled,
   sendBookingPaymentLinkEmail,
 } from "@/lib/booking-confirmation";
 import { isCalendarEligibleBooking } from "@/lib/booking-status";
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { action, ids } = parsed.data;
+    const { action, ids, cancellationReason } = parsed.data;
     const results: Array<{
       id: string;
       ok: boolean;
@@ -114,13 +115,44 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
+      const cancelReason = cancellationReason?.trim();
+
       await prisma.booking.update({
         where: { id },
-        data: { status: nextStatus },
+        data: {
+          status: nextStatus,
+          ...(action === "cancel"
+            ? {
+                cancellationReason: cancelReason,
+                cancelledAt: new Date(),
+              }
+            : {}),
+        },
       });
 
       if (action === "accept") {
         await handleBookingAccepted(id);
+      }
+
+      if (action === "cancel") {
+        const emailResult = await handleBookingCancelled(id, cancelReason ?? "");
+        const refreshed = await prisma.booking.findUnique({
+          where: { id },
+          include: { driver: { select: { name: true, vehicleLabel: true } } },
+        });
+        results.push({
+          id,
+          ok: true,
+          booking: refreshed,
+          ...(emailResult.ok
+            ? {}
+            : {
+                error:
+                  emailResult.error ??
+                  "Booking cancelled but the customer could not be emailed",
+              }),
+        });
+        continue;
       }
 
       const refreshed = await prisma.booking.findUnique({

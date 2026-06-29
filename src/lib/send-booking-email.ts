@@ -3,6 +3,14 @@ import { buildCustomerCalendarEmailLinks } from "@/lib/calendar/calendar-email-l
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function emailFromAddress(): string {
   return (
     process.env.BOOKINGS_EMAIL_FROM ||
@@ -361,6 +369,83 @@ export async function sendBookingPaidEmail(
   return sendResendEmail(
     to,
     `Payment received — booking ${booking.reference} confirmed`,
+    html
+  );
+}
+
+export type BookingCancelledDetails = {
+  reference: string;
+  customerName: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupDate: Date;
+  driverName: string;
+  vehicleLabel?: string | null;
+  cancellationReason: string;
+  paymentStatus?: string | null;
+  amountPaid?: number | null;
+};
+
+export async function sendBookingCancelledEmail(
+  to: string,
+  booking: BookingCancelledDetails
+): Promise<SendResult> {
+  const siteUrl = getSiteUrl();
+  const bookingsUrl = `${siteUrl}/my-bookings`;
+
+  const dateStr = booking.pickupDate.toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/London",
+  });
+
+  const wasPaid = booking.paymentStatus === "PAID";
+  const refundNote = wasPaid
+    ? `<p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-top: 16px;">
+        You paid £${booking.amountPaid ?? ""} for this booking. If a refund is due, your driver or Sparkride support will contact you separately about next steps.
+      </p>`
+    : "";
+
+  const html = `
+    <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+      <h2 style="color: #191c23; margin-bottom: 8px;">Your booking has been cancelled</h2>
+      <p style="color: #6b7280; font-size: 15px; line-height: 1.5;">
+        Hi ${booking.customerName}, your Sparkride booking <strong>${booking.reference}</strong> has been cancelled by your driver.
+      </p>
+      <table style="width: 100%; margin: 24px 0; font-size: 14px; color: #191c23;">
+        <tr><td style="padding: 8px 0; color: #6b7280;">Pickup</td><td style="padding: 8px 0;">${booking.pickupAddress}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">Drop-off</td><td style="padding: 8px 0;">${booking.dropoffAddress}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">Date & time</td><td style="padding: 8px 0;">${dateStr}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">Driver</td><td style="padding: 8px 0;">${booking.driverName}${booking.vehicleLabel ? ` · ${booking.vehicleLabel}` : ""}</td></tr>
+      </table>
+
+      <div style="margin: 24px 0; padding: 16px; border-radius: 12px; background: #fef2f2; border: 1px solid #fecaca;">
+        <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #991b1b;">Reason for cancellation</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #7f1d1d; white-space: pre-wrap;">${escapeHtml(booking.cancellationReason)}</p>
+      </div>
+
+      ${refundNote}
+
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${bookingsUrl}"
+           style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
+          View my bookings
+        </a>
+      </div>
+
+      <p style="color: #9ca3af; font-size: 13px;">
+        Need a new transfer? Sign in to Sparkride to book again.
+      </p>
+    </div>
+  `.trim();
+
+  return sendResendEmail(
+    to,
+    `Booking ${booking.reference} cancelled`,
     html
   );
 }
