@@ -74,3 +74,17 @@ export async function saveDriverSquareTokens(
     },
   });
 }
+
+export async function clearDriverSquareTokens(driverId: string): Promise<void> {
+  await prisma.driver.update({
+    where: { id: driverId },
+    data: {
+      squareMerchantId: null,
+      squareLocationId: null,
+      squareAccessTokenEnc: null,
+      squareRefreshTokenEnc: null,
+      squareTokenExpiresAt: null,
+      squareConnectedAt: null,
+    },
+  });
+}

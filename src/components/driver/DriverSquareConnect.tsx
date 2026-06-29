@@ -18,6 +18,8 @@ const SQUARE_ERROR_HELP: Record<string, string> = {
   save_failed:
     "Sparkride could not save your Square tokens. The database may need the payment-columns migration.",
   access_denied: "You declined Square permissions. Click Connect Square and approve the requested access.",
+  permissions_missing:
+    "Square connected but payment permissions were not granted. Tap Reconnect Square and approve all permissions, including Orders access.",
 };
 
 function squareErrorHelp(reason: string | null): string | null {
@@ -52,10 +54,6 @@ export function DriverSquareConnect({
   const connectBtnClass = isLight
     ? "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 shrink-0"
     : "inline-flex items-center justify-center gap-2 rounded-lg bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 shrink-0";
-
-  const connectBtnDisabledClass = isLight
-    ? "inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-400 shrink-0 cursor-not-allowed"
-    : "inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-semibold text-gray-500 shrink-0 cursor-not-allowed";
 
   if (!status?.configured) {
     return (
@@ -107,6 +105,30 @@ export function DriverSquareConnect({
       >
         Square connected successfully. Customers can now pay online when you accept bookings.
       </div>
+    ) : squareParam === "permissions_missing" ? (
+      <div
+        className={
+          isLight
+            ? "mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 space-y-2"
+            : "mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100 space-y-2"
+        }
+      >
+        <p>Square is linked but payment permissions are incomplete.</p>
+        {squareDetail && <p className="text-xs opacity-90">{squareDetail}</p>}
+        <p className="text-xs opacity-90">
+          Tap <strong>Reconnect Square</strong> below and approve all requested permissions.
+        </p>
+      </div>
+    ) : squareParam === "disconnected" ? (
+      <div
+        className={
+          isLight
+            ? "mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700"
+            : "mb-4 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-gray-300"
+        }
+      >
+        Square disconnected. Connect again to collect online payments.
+      </div>
     ) : null;
 
   return (
@@ -148,6 +170,18 @@ export function DriverSquareConnect({
                 Connected {new Date(status.connectedAt).toLocaleDateString("en-GB")}
               </p>
             )}
+            {status.connected && status.checkoutPermissionsOk === false && (
+              <p
+                className={
+                  isLight
+                    ? "mt-3 max-w-xl text-sm leading-relaxed text-amber-800"
+                    : "mt-3 max-w-xl text-sm leading-relaxed text-amber-200"
+                }
+              >
+                {status.checkoutPermissionsError ??
+                  "Payment permissions are missing. Reconnect Square to enable online checkout."}
+              </p>
+            )}
             {!status.connected && status.environment === "sandbox" && (
               <p className={`${mutedClass} mt-3 max-w-xl leading-relaxed`}>
                 Sandbox mode: open your Sandbox Seller Dashboard from developer.squareup.com before
@@ -167,10 +201,18 @@ export function DriverSquareConnect({
         </div>
 
         {status.connected ? (
-          <button type="button" disabled className={connectBtnDisabledClass}>
-            Connected
-            <CheckCircle2 className="h-4 w-4" />
-          </button>
+          <div className="flex flex-col gap-2 shrink-0">
+            <a href="/api/square/oauth/authorize?reconnect=1" className={connectBtnClass}>
+              Reconnect Square
+              <ExternalLink className="h-4 w-4" />
+            </a>
+            {status.checkoutPermissionsOk !== false && (
+              <span className={`inline-flex items-center justify-center gap-1 text-xs font-medium ${mutedClass}`}>
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                Payment permissions OK
+              </span>
+            )}
+          </div>
         ) : (
           <a href="/api/square/oauth/authorize" className={connectBtnClass}>
             Connect Square

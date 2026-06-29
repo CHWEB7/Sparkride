@@ -8,11 +8,18 @@ import {
   squareOAuthAuthorizeUrl,
   squareSetupHints,
 } from "@/lib/square/config";
-import { driverHasSquareConnected } from "@/lib/square/driver-tokens";
+import { driverHasSquareConnected, getDriverAccessToken } from "@/lib/square/driver-tokens";
+import {
+  isSquareScopeError,
+  squareScopeErrorMessage,
+  verifySquareCheckoutPermissions,
+} from "@/lib/square/permissions";
 
 export type DriverSquareStatus = {
   configured: boolean;
   connected: boolean;
+  checkoutPermissionsOk?: boolean;
+  checkoutPermissionsError?: string | null;
   merchantId?: string | null;
   locationId?: string | null;
   connectedAt?: string | null;
@@ -45,9 +52,31 @@ export async function getDriverSquareStatus(
 
   if (!driver) return null;
 
+  const connected = driverHasSquareConnected(driver);
+  let checkoutPermissionsOk: boolean | undefined;
+  let checkoutPermissionsError: string | null = null;
+
+  if (connected) {
+    const tokenResult = await getDriverAccessToken(driverId);
+    if (!tokenResult.ok) {
+      checkoutPermissionsOk = false;
+      checkoutPermissionsError = tokenResult.error;
+    } else {
+      const permissions = await verifySquareCheckoutPermissions(tokenResult.accessToken);
+      checkoutPermissionsOk = permissions.ok;
+      if (!permissions.ok) {
+        checkoutPermissionsError = isSquareScopeError(permissions.error)
+          ? squareScopeErrorMessage()
+          : permissions.error;
+      }
+    }
+  }
+
   return {
     configured: isSquareConfigured(),
-    connected: driverHasSquareConnected(driver),
+    connected,
+    checkoutPermissionsOk,
+    checkoutPermissionsError,
     merchantId: driver.squareMerchantId,
     locationId: driver.squareLocationId,
     connectedAt: driver.squareConnectedAt?.toISOString() ?? null,

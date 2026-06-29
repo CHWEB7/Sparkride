@@ -7,6 +7,11 @@ import {
 } from "@/lib/square/oauth";
 import { saveDriverSquareTokens } from "@/lib/square/driver-tokens";
 import { backfillDriverPaymentLinks } from "@/lib/booking-confirmation";
+import {
+  isSquareScopeError,
+  squareScopeErrorMessage,
+  verifySquareCheckoutPermissions,
+} from "@/lib/square/permissions";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -64,6 +69,17 @@ export async function GET(req: NextRequest) {
       refreshToken: tokenResult.refreshToken,
       expiresAt: tokenResult.expiresAt,
     });
+
+    const permissions = await verifySquareCheckoutPermissions(tokenResult.accessToken);
+    if (!permissions.ok) {
+      console.error("Square OAuth: checkout permissions missing:", permissions.error);
+      const detail = isSquareScopeError(permissions.error)
+        ? squareScopeErrorMessage()
+        : permissions.error;
+      return NextResponse.redirect(
+        `${settingsUrl}?square=permissions_missing&detail=${encodeURIComponent(detail)}`
+      );
+    }
 
     await backfillDriverPaymentLinks(statePayload.driverId).catch((err) => {
       console.error("Square payment link backfill failed:", err);

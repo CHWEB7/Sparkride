@@ -353,7 +353,7 @@ export function paymentLinkSkipMessage(result: EnsurePaymentLinkResult): string 
     result.error?.includes("ORDERS_READ") ||
     result.error?.includes("INSUFFICIENT_SCOPES")
   ) {
-    return "Your driver needs to reconnect Square in Driver Settings to approve payment permissions, then accept the booking again or resend the payment link.";
+    return "Your driver needs to reconnect Square in Driver Settings → Integrations (tap Reconnect Square and approve all permissions), then resend the payment link from the driver dashboard.";
   }
 
   switch (result.skipReason) {

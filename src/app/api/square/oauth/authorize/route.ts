@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireDriverSessionWithMfa } from "@/lib/driver-auth";
-import { prisma } from "@/lib/prisma";
 import { isSquareConfigured, squareApplicationSecretMismatchMessage, squareCredentialMismatchMessage, squareCredentialsMatchEnvironment, squareOAuthRedirectUri } from "@/lib/square/config";
 import { buildSquareAuthorizeUrl, createOAuthState } from "@/lib/square/oauth";
+import { clearDriverSquareTokens } from "@/lib/square/driver-tokens";
 import { getSiteUrl } from "@/lib/site-url";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await requireDriverSessionWithMfa();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,6 +32,11 @@ export async function GET() {
     return NextResponse.redirect(
       `${getSiteUrl()}/driver/settings/integrations?square=error&reason=${encodeURIComponent("wrong_application_secret")}&detail=${encodeURIComponent(secretMismatch)}`
     );
+  }
+
+  const reconnect = req.nextUrl.searchParams.get("reconnect") === "1";
+  if (reconnect) {
+    await clearDriverSquareTokens(session.driverId);
   }
 
   const redirectUri = squareOAuthRedirectUri();
