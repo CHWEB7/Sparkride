@@ -1,6 +1,4 @@
 import { redirect } from "next/navigation";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { BookPageContent } from "@/components/BookPageContent";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
@@ -11,13 +9,5 @@ export default async function BookPage() {
 
   const profile = await ensureCustomer(user);
 
-  return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-white pb-16 pt-24 dark:bg-dark">
-        <BookPageContent profile={profile} />
-      </main>
-      <Footer />
-    </>
-  );
+  return <BookPageContent profile={profile} />;
 }

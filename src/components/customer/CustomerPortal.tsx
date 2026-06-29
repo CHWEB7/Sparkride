@@ -1,25 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   ArrowRight,
-  Bookmark,
-  CalendarClock,
-  History,
   Loader2,
+  MapPin,
+  MoreHorizontal,
+  Paperclip,
+  Plus,
+  Search,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import type { CustomerProfile } from "@/lib/customer";
 import { BookingForm } from "@/components/BookingForm";
 import { BookingModal } from "@/components/booking/BookingModal";
+import {
+  CustomerBookingShell,
+  type CustomerPortalView,
+} from "@/components/customer/CustomerBookingShell";
 import { SavedDetailsManager } from "@/components/customer/SavedDetailsManager";
+import { AccountForm } from "@/components/customer/AccountForm";
 import { BookingTripPaymentActions } from "@/components/booking/BookingTripPaymentActions";
+import { formatBookingStatus } from "@/lib/booking-status";
 import type { PaymentStatus } from "@prisma/client";
 
-type PortalView = "home" | "wizard" | "active" | "history" | "saved";
+type PortalView = CustomerPortalView | "wizard";
 
 type BookingRow = {
   id: string;
@@ -50,131 +58,191 @@ type SavedTemplate = {
   notes: string | null;
 };
 
+type TripTab = "all" | "active" | "past";
+
+const ACTIVE_STATUSES = new Set(["PENDING", "ACCEPTED", "CONFIRMED"]);
+
+const VIEW_TITLES: Record<CustomerPortalView, string> = {
+  home: "Overview",
+  active: "Upcoming trips",
+  history: "Past trips",
+  saved: "Saved routes",
+  account: "Account settings",
+};
+
 export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
+  const router = useRouter();
   const [view, setView] = useState<PortalView>("home");
-  const [backgroundView, setBackgroundView] = useState<PortalView>("home");
+  const [tripTab, setTripTab] = useState<TripTab>("all");
+  const [search, setSearch] = useState("");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
-  const [loadingTrips, setLoadingTrips] = useState(false);
+  const [loadingTrips, setLoadingTrips] = useState(true);
   const [wizardTemplate, setWizardTemplate] = useState<SavedTemplate | null>(null);
 
-  const tripsView = view === "wizard" ? backgroundView : view;
+  const shellView: CustomerPortalView = view === "wizard" ? "home" : view;
 
   useEffect(() => {
-    if (tripsView !== "active" && tripsView !== "history") return;
     setLoadingTrips(true);
     fetch("/api/customer/bookings")
       .then((r) => r.json())
       .then((data) => setBookings(Array.isArray(data) ? data : []))
       .finally(() => setLoadingTrips(false));
-  }, [tripsView]);
+  }, []);
 
-  const activeStatuses = new Set(["PENDING", "ACCEPTED", "CONFIRMED"]);
-  const activeTrips = bookings.filter((b) => activeStatuses.has(b.status));
-  const pastTrips = bookings.filter((b) => !activeStatuses.has(b.status));
+  const activeTrips = bookings
+    .filter((b) => ACTIVE_STATUSES.has(b.status))
+    .sort((a, b) => new Date(a.pickupDate).getTime() - new Date(b.pickupDate).getTime());
+  const pastTrips = bookings.filter((b) => !ACTIVE_STATUSES.has(b.status));
+
+  const displayedTrips = useMemo(() => {
+    let list = bookings;
+    if (view === "active" || tripTab === "active") list = activeTrips;
+    else if (view === "history" || tripTab === "past") list = pastTrips;
+
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter(
+      (b) =>
+        b.reference.toLowerCase().includes(q) ||
+        b.pickupAddress.toLowerCase().includes(q) ||
+        b.dropoffAddress.toLowerCase().includes(q)
+    );
+  }, [bookings, activeTrips, pastTrips, view, tripTab, search]);
 
   function startBooking(template?: SavedTemplate) {
-    if (view !== "wizard") {
-      setBackgroundView(view);
-    }
     setWizardTemplate(template ?? null);
     setView("wizard");
   }
 
   function closeWizard() {
     setWizardTemplate(null);
-    setView(backgroundView);
+    setView("home");
+    setLoadingTrips(true);
+    fetch("/api/customer/bookings")
+      .then((r) => r.json())
+      .then((data) => setBookings(Array.isArray(data) ? data : []))
+      .finally(() => setLoadingTrips(false));
   }
 
-  function renderPortalView(portalView: Exclude<PortalView, "wizard">) {
-    if (portalView === "saved") {
-      return (
-        <div>
-          <PortalNav title="Saved trip details" onBack={() => setView("home")} />
+  function navigate(viewId: CustomerPortalView) {
+    setView(viewId);
+    if (viewId === "home") setTripTab("all");
+    else if (viewId === "active") setTripTab("active");
+    else if (viewId === "history") setTripTab("past");
+  }
+
+  async function signOut() {
+    await fetch("/api/auth/sign-out", { method: "POST" });
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
+  return (
+    <>
+      <CustomerBookingShell
+        profile={profile}
+        activeView={shellView}
+        onNavigate={navigate}
+        onNewBooking={() => startBooking()}
+        onSignOut={signOut}
+      >
+        {view === "saved" ? (
           <SavedDetailsManager
             onUseTemplate={(t) => startBooking(t)}
             onBack={() => setView("home")}
           />
-        </div>
-      );
-    }
+        ) : view === "account" ? (
+          <div className="mx-auto max-w-lg">
+            <PageHeader title={VIEW_TITLES.account} subtitle="Update your contact details for bookings" />
+            <div className="mt-6 rounded-2xl border border-gray-200/80 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-dark-elevated">
+              <AccountForm customer={profile} />
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-5xl">
+            <PageHeader
+              title={VIEW_TITLES[shellView]}
+              subtitle={
+                shellView === "home"
+                  ? "Manage airport transfers, review trips, and start a new booking."
+                  : shellView === "active"
+                    ? "Trips that are pending, confirmed, or awaiting payment."
+                    : "Completed and cancelled journeys."
+              }
+              action={
+                <button
+                  type="button"
+                  onClick={() => startBooking()}
+                  className="hidden items-center gap-2 rounded-xl border-2 border-brand px-4 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white sm:inline-flex"
+                >
+                  <Plus className="h-4 w-4" />
+                  New booking
+                </button>
+              }
+            />
 
-    if (portalView === "active" || portalView === "history") {
-      const trips = portalView === "active" ? activeTrips : pastTrips;
-      return (
-        <div>
-          <PortalNav
-            title={portalView === "active" ? "Manage existing trips" : "Previous trips"}
-            onBack={() => setView("home")}
-          />
-          <TripList
-            trips={trips}
-            loading={loadingTrips}
-            emptyMessage={
-              portalView === "active"
-                ? "No upcoming trips. Book a new ride to get started."
-                : "No previous trips yet."
-            }
-          />
-        </div>
-      );
-    }
+            {shellView === "home" && (
+              <div className="mb-6 grid gap-4 sm:grid-cols-3">
+                <StatCard label="Upcoming" value={activeTrips.length} accent="brand" />
+                <StatCard label="Past trips" value={pastTrips.length} accent="muted" />
+                <StatCard
+                  label="Next pickup"
+                  value={
+                    activeTrips[0]
+                      ? format(new Date(activeTrips[0].pickupDate), "d MMM")
+                      : "—"
+                  }
+                  accent="sky"
+                  isText
+                />
+              </div>
+            )}
 
-    return (
-      <div>
-        <div className="mb-10">
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand mb-2">
-            Customer portal
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] dark:text-white">
-            Welcome back{profile.name ? `, ${profile.name.split(" ")[0]}` : ""}
-          </h1>
-          <p className="mt-2 text-muted max-w-xl">
-            Book new airport transfers, manage upcoming trips, and reuse saved journey details.
-          </p>
-        </div>
+            {(shellView === "home" || shellView === "active" || shellView === "history") && (
+              <>
+                {shellView === "home" && (
+                  <TripTabs active={tripTab} onChange={setTripTab} counts={{
+                    all: bookings.length,
+                    active: activeTrips.length,
+                    past: pastTrips.length,
+                  }} />
+                )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-3 gap-4 lg:gap-4 lg:min-h-[420px]">
-          <BookHeroTile onClick={() => startBooking()} />
-          <PortalCompactCard
-            icon={CalendarClock}
-            title="Manage existing trips"
-            desc="Track upcoming bookings"
-            onClick={() => setView("active")}
-            accent="sky"
-          />
-          <PortalCompactCard
-            icon={History}
-            title="Previous trips"
-            desc="Completed & cancelled"
-            onClick={() => setView("history")}
-            accent="violet"
-          />
-          <PortalCompactCard
-            icon={Bookmark}
-            title="Saved trip details"
-            desc="Reuse saved routes"
-            onClick={() => setView("saved")}
-            accent="emerald"
-          />
-        </div>
-      </div>
-    );
-  }
+                <div className="mb-5 mt-6">
+                  <label className="relative block">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search by reference or address"
+                      className="w-full rounded-2xl border border-gray-200/80 bg-white py-3 pl-11 pr-4 text-sm outline-none transition-shadow focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-white/10 dark:bg-dark-elevated dark:text-white"
+                    />
+                  </label>
+                </div>
 
-  const backgroundContent = tripsView as Exclude<PortalView, "wizard">;
-
-  return (
-    <>
-      <div
-        className={
-          view === "wizard"
-            ? "pointer-events-none select-none blur-[3px] opacity-50 scale-[0.985] transition-all duration-300"
-            : "transition-all duration-300"
-        }
-        aria-hidden={view === "wizard"}
-      >
-        {renderPortalView(backgroundContent)}
-      </div>
+                <BookingCardList
+                  trips={displayedTrips}
+                  loading={loadingTrips}
+                  emptyMessage={
+                    search
+                      ? "No bookings match your search."
+                      : tripTab === "active" || shellView === "active"
+                        ? "No upcoming trips. Start a new booking to get going."
+                        : tripTab === "past" || shellView === "history"
+                          ? "No past trips yet."
+                          : "You have no bookings yet."
+                  }
+                  onNewBooking={() => startBooking()}
+                />
+              </>
+            )}
+          </div>
+        )}
+      </CustomerBookingShell>
 
       {view === "wizard" && (
         <BookingModal onClose={closeWizard}>
@@ -185,118 +253,128 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   );
 }
 
-function PortalNav({ title, onBack }: { title: string; onBack: () => void }) {
+function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="mb-8">
-      <button
-        type="button"
-        onClick={onBack}
-        className="text-sm font-medium text-brand hover:underline"
-      >
-        ← Portal hub
-      </button>
-      <h2 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-[-0.02em] dark:text-white">
-        {title}
-      </h2>
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] dark:text-white sm:text-3xl">
+          {title}
+        </h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted">{subtitle}</p>
+      </div>
+      {action}
     </div>
   );
 }
 
-function BookHeroTile({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="relative min-h-[300px] sm:min-h-[340px] lg:min-h-0 lg:row-span-3 rounded-3xl overflow-hidden text-left group shadow-md hover:shadow-xl transition-shadow"
-    >
-      <Image
-        src="/images/portal-book-ride.jpg"
-        alt=""
-        fill
-        className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-        sizes="(max-width: 1024px) 100vw, 55vw"
-        priority
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/15" />
-      <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-2">
-          New booking
-        </p>
-        <h3 className="text-2xl sm:text-3xl font-semibold text-white tracking-[-0.02em]">
-          Book a new ride
-        </h3>
-        <p className="mt-2 text-sm text-white/80 max-w-sm leading-relaxed">
-          Start a fresh airport transfer with live pricing and driver choice.
-        </p>
-        <span className="mt-5 inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-full bg-white text-dark text-sm font-semibold group-hover:gap-3 transition-all">
-          Get started
-          <ArrowRight className="w-4 h-4" />
-        </span>
-      </div>
-    </button>
-  );
-}
-
-function PortalCompactCard({
-  icon: Icon,
-  title,
-  desc,
-  onClick,
+function StatCard({
+  label,
+  value,
   accent,
+  isText = false,
 }: {
-  icon: LucideIcon;
-  title: string;
-  desc: string;
-  onClick: () => void;
-  accent: "sky" | "violet" | "emerald";
+  label: string;
+  value: number | string;
+  accent: "brand" | "muted" | "sky";
+  isText?: boolean;
 }) {
   const accents = {
-    sky: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-    violet: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-    emerald: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    brand: "text-brand",
+    muted: "text-dark dark:text-white",
+    sky: "text-sky-600 dark:text-sky-400",
   };
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-4 p-5 sm:p-6 rounded-2xl bg-booking-bg dark:bg-dark-elevated hover:shadow-md transition-all group text-left lg:min-h-0"
-    >
-      <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accents[accent]}`}
-      >
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-base font-semibold dark:text-white">{title}</h3>
-        <p className="text-sm text-muted mt-0.5 truncate">{desc}</p>
-      </div>
-      <ArrowRight className="w-4 h-4 text-muted group-hover:text-brand shrink-0 transition-colors" />
-    </button>
+    <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-dark-elevated">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <p className={`mt-2 ${isText ? "text-xl" : "text-3xl"} font-semibold ${accents[accent]}`}>
+        {value}
+      </p>
+    </div>
   );
 }
 
-function TripList({
+function TripTabs({
+  active,
+  onChange,
+  counts,
+}: {
+  active: TripTab;
+  onChange: (tab: TripTab) => void;
+  counts: { all: number; active: number; past: number };
+}) {
+  const tabs: { id: TripTab; label: string; count: number }[] = [
+    { id: "all", label: "All bookings", count: counts.all },
+    { id: "active", label: "Upcoming", count: counts.active },
+    { id: "past", label: "Past", count: counts.past },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-1 border-b border-gray-200/80 dark:border-white/10">
+      {tabs.map((tab) => {
+        const selected = active === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+              selected
+                ? "text-brand"
+                : "text-muted hover:text-dark dark:hover:text-white"
+            }`}
+          >
+            {tab.label}
+            <span className="ml-1.5 text-xs text-muted">({tab.count})</span>
+            {selected && (
+              <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function BookingCardList({
   trips,
   loading,
   emptyMessage,
+  onNewBooking,
 }: {
   trips: BookingRow[];
   loading: boolean;
   emptyMessage: string;
+  onNewBooking: () => void;
 }) {
   if (loading) {
     return (
-      <div className="flex justify-center py-16 text-muted">
-        <Loader2 className="w-6 h-6 animate-spin" />
+      <div className="flex justify-center py-20 text-muted">
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
 
   if (trips.length === 0) {
     return (
-      <div className="rounded-2xl bg-booking-bg dark:bg-dark-elevated p-8 text-center text-muted">
-        {emptyMessage}
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center dark:border-white/10 dark:bg-dark-elevated">
+        <p className="text-muted">{emptyMessage}</p>
+        <button
+          type="button"
+          onClick={onNewBooking}
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white"
+        >
+          <Plus className="h-4 w-4" />
+          New booking
+        </button>
       </div>
     );
   }
@@ -305,35 +383,74 @@ function TripList({
     <ul className="space-y-4">
       {trips.map((booking) => (
         <li key={booking.id}>
-          <Link
-            href={`/booking/${booking.reference}`}
-            className="block rounded-2xl bg-booking-bg dark:bg-dark-elevated p-5 hover:shadow-md transition-shadow"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <p className="font-semibold dark:text-white">{booking.reference}</p>
-                <p className="text-sm text-muted mt-1">
-                  {format(new Date(booking.pickupDate), "EEE d MMM yyyy · HH:mm")}
-                </p>
-                <p className="text-sm text-muted mt-1">
-                  {booking.pickupAddress} → {booking.dropoffAddress}
-                </p>
-                <BookingTripPaymentActions
-                  reference={booking.reference}
-                  status={booking.status}
-                  paymentStatus={booking.paymentStatus}
-                  squarePaymentLinkUrl={booking.squarePaymentLinkUrl}
-                  amountDue={booking.amountDue}
-                  estimatedPrice={booking.estimatedPrice}
-                />
-              </div>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-light dark:bg-brand/10 text-brand">
-                {booking.status.replace(/_/g, " ")}
-              </span>
-            </div>
-          </Link>
+          <BookingCard booking={booking} />
         </li>
       ))}
     </ul>
+  );
+}
+
+function BookingCard({ booking }: { booking: BookingRow }) {
+  const statusLabel = formatBookingStatus(booking.status);
+  const route = `${booking.pickupAddress} → ${booking.dropoffAddress}`;
+
+  return (
+    <Link
+      href={`/booking/${booking.reference}`}
+      className="group block rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm transition-all hover:border-brand/30 hover:shadow-md dark:border-white/10 dark:bg-dark-elevated"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs text-muted">
+          <MapPin className="h-3.5 w-3.5 text-brand" />
+          <span className="font-medium text-dark dark:text-white">{booking.reference}</span>
+          <span>·</span>
+          <span>{format(new Date(booking.pickupDate), "h:mm a")}</span>
+        </div>
+        <button
+          type="button"
+          className="rounded-lg p-1 text-muted opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-white/10"
+          aria-label="More options"
+          onClick={(e) => e.preventDefault()}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </div>
+
+      <h3 className="mt-3 text-lg font-semibold leading-snug text-dark dark:text-white">
+        {format(new Date(booking.pickupDate), "EEE d MMMM yyyy")}
+      </h3>
+
+      <p className="mt-2 line-clamp-2 text-sm text-muted leading-relaxed">{route}</p>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-white/10">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand dark:bg-brand/15">
+            {statusLabel}
+          </span>
+          {booking.estimatedPrice != null && (
+            <span className="text-xs text-muted">£{booking.estimatedPrice}</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-muted">
+          <span className="inline-flex items-center gap-1">
+            <Paperclip className="h-3.5 w-3.5" />
+            Trip
+          </span>
+          <ArrowRight className="h-4 w-4 text-brand transition-transform group-hover:translate-x-0.5" />
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <BookingTripPaymentActions
+          reference={booking.reference}
+          status={booking.status}
+          paymentStatus={booking.paymentStatus}
+          squarePaymentLinkUrl={booking.squarePaymentLinkUrl}
+          amountDue={booking.amountDue}
+          estimatedPrice={booking.estimatedPrice}
+        />
+      </div>
+    </Link>
   );
 }
