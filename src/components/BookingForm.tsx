@@ -18,6 +18,10 @@ import {
   PORT_TRANSFER,
 } from "@/lib/hubs";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
+import { AddressFinder } from "@/components/AddressFinder";
+import { BookingCalendarPicker } from "@/components/booking/BookingCalendarPicker";
+import { BookingTimePicker } from "@/components/booking/BookingTimePicker";
+import { PartySizePicker } from "@/components/booking/PartySizePicker";
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,16 +35,28 @@ import {
   Check,
   Clock,
   Car,
+  Users,
 } from "lucide-react";
 
-type StepId = "journey" | "service" | "direction" | "route" | "schedule" | "driver" | "contact";
+type StepId =
+  | "journey"
+  | "service"
+  | "direction"
+  | "route"
+  | "date"
+  | "time"
+  | "party"
+  | "driver"
+  | "contact";
 
 const STEP_META: Record<StepId, { label: string; icon: typeof Plane }> = {
   journey: { label: "Journey", icon: ArrowLeftRight },
   service: { label: "Service", icon: Clock },
   direction: { label: "Direction", icon: Plane },
   route: { label: "Route", icon: MapPin },
-  schedule: { label: "Schedule", icon: Calendar },
+  date: { label: "Date", icon: Calendar },
+  time: { label: "Time", icon: Clock },
+  party: { label: "Party", icon: Users },
   driver: { label: "Driver", icon: Car },
   contact: { label: "Details", icon: User },
 };
@@ -51,7 +67,7 @@ function getSteps(journeyType: string, serviceType: string): StepId[] {
   steps.push("service");
   if (!serviceType) return steps;
   if (journeyType === "SINGLE" && isHubTransfer(serviceType)) steps.push("direction");
-  steps.push("route", "schedule", "driver", "contact");
+  steps.push("route", "date", "time", "party", "driver", "contact");
   return steps;
 }
 
@@ -100,14 +116,16 @@ type BookableDriver = {
 type BookingFormProps = {
   profile?: CustomerProfile | null;
   savedTemplate?: SavedTemplate | null;
+  variant?: "page" | "modal";
 };
 
-export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
+export function BookingForm({ profile, savedTemplate, variant = "modal" }: BookingFormProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showNotes, setShowNotes] = useState(Boolean(savedTemplate?.notes));
   const [drivers, setDrivers] = useState<BookableDriver[]>([]);
   const [form, setForm] = useState({
     journeyType: savedTemplate?.journeyType ?? "",
@@ -279,12 +297,18 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
         if (!form.pickupAddress.trim()) return "Pickup address is required";
         if (!isReturn && !form.dropoffAddress.trim()) return "Drop-off address is required";
         return null;
-      case "schedule":
-        if (!form.pickupDate || !form.pickupTime) return "Outbound date and time are required";
-        if (isReturn && (!form.returnDate || !form.returnTime))
-          return "Return date and time are required";
+      case "date":
+        if (!form.pickupDate) return "Please select your pickup date";
+        if (isReturn && !form.returnDate) return "Please select your return date";
         if (isReturn && form.returnDate < form.pickupDate)
           return "Return date must be on or after outbound date";
+        return null;
+      case "time":
+        if (!form.pickupTime) return "Please select your pickup time";
+        if (isReturn && !form.returnTime) return "Please select your return time";
+        return null;
+      case "party":
+        if (form.passengers < 1) return "At least one passenger is required";
         return null;
       case "driver":
         if (!form.driverId) return "Please select a driver";
@@ -364,6 +388,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
   const inputClass =
     "w-full px-4 py-3.5 rounded-xl border border-gray-200/60 dark:border-white/10 bg-white dark:bg-dark text-dark dark:text-gray-100 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all shadow-sm";
   const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
+  const isModal = variant === "modal";
 
   const bigCard = (active: boolean) =>
     `relative p-8 lg:p-10 rounded-2xl text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
@@ -373,8 +398,8 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
     }`;
 
   return (
-    <div className="grid lg:grid-cols-[1fr_300px] gap-6 lg:gap-8 items-start">
-      <div className="bg-booking-bg dark:bg-dark-elevated rounded-3xl border-0 dark:border dark:border-white/10 shadow-md overflow-hidden">
+    <div className={`grid ${isModal ? "lg:grid-cols-[1fr_260px]" : "lg:grid-cols-[1fr_300px]"} gap-4 lg:gap-6 items-start p-4 sm:p-5 lg:p-6`}>
+      <div className={`bg-booking-bg dark:bg-dark-elevated ${isModal ? "rounded-2xl" : "rounded-3xl"} border-0 dark:border dark:border-white/10 shadow-md overflow-hidden`}>
         {/* Progress bar */}
         {form.journeyType && (
           <div className="px-6 sm:px-8 pt-6 pb-2 dark:border-b dark:border-white/10">
@@ -414,7 +439,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
           </div>
         )}
 
-        <div className="relative min-h-[480px] sm:min-h-[520px]">
+        <div className={`relative ${isModal ? "min-h-[420px] sm:min-h-[460px]" : "min-h-[480px] sm:min-h-[520px]"}`}>
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentStep}
@@ -568,41 +593,33 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                     )}
                     {isReturn && isHubTransferType ? (
                       <div className="lg:col-span-2">
-                        <label className={labelClass}>Home / pickup address</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. 12 High Street, Castleford"
+                        <AddressFinder
+                          label="Home / pickup address"
                           value={form.pickupAddress}
-                          onChange={(e) => handleHomeAddress(e.target.value)}
-                          className={inputClass}
+                          onChange={handleHomeAddress}
+                          hint={`Outbound: home → ${selectedHub?.name}. Return: ${selectedHub?.name} → home.`}
+                          inputClass={inputClass}
+                          labelClass={labelClass}
                         />
-                        <p className="text-xs text-muted mt-2">
-                          Outbound: home → {selectedHub?.name}. Return: {selectedHub?.name} → home.
-                        </p>
                       </div>
                     ) : (
                       <>
                         <div>
-                          <label className={labelClass}>Pickup address</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. 12 High Street, Castleford"
+                          <AddressFinder
+                            label="Pickup address"
                             value={form.pickupAddress}
-                            onChange={(e) => update("pickupAddress", e.target.value)}
-                            className={inputClass}
+                            onChange={(value) => update("pickupAddress", value)}
+                            inputClass={inputClass}
+                            labelClass={labelClass}
                           />
                         </div>
                         <div>
-                          <label className={labelClass}>Drop-off address</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. Leeds Bradford Airport"
+                          <AddressFinder
+                            label="Drop-off address"
                             value={form.dropoffAddress}
-                            onChange={(e) => update("dropoffAddress", e.target.value)}
-                            className={inputClass}
+                            onChange={(value) => update("dropoffAddress", value)}
+                            inputClass={inputClass}
+                            labelClass={labelClass}
                           />
                         </div>
                       </>
@@ -611,87 +628,74 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                 </div>
               )}
 
-              {/* Step: Schedule */}
-              {currentStep === "schedule" && (
+              {/* Step: Date */}
+              {currentStep === "date" && (
                 <div>
                   <StepHeading
-                    title="When do you need us?"
+                    title={isReturn ? "When are you travelling?" : "Pick your date"}
                     subtitle={
                       isReturn
-                        ? isAirportTransfer
-                          ? "Enter your outbound and return flight times"
-                          : "Enter your outbound and return pickup times"
-                        : "Pick your date and time"
+                        ? "Choose outbound and return dates on the calendar"
+                        : "Select your pickup date"
                     }
                   />
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    <div className="lg:col-span-2">
-                      <h3 className="text-sm font-semibold text-brand mb-4 uppercase tracking-wide">
-                        {isReturn ? "Outbound" : "Pickup"}
-                      </h3>
-                    </div>
-                    <div>
-                      <label className={labelClass}>{isReturn ? "Departure date" : "Date"}</label>
-                      <input
-                        type="date"
-                        min={new Date().toISOString().split("T")[0]}
-                        value={form.pickupDate}
-                        onChange={(e) => update("pickupDate", e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>{isReturn ? "Pickup time" : "Time"}</label>
-                      <input
-                        type="time"
-                        value={form.pickupTime}
-                        onChange={(e) => update("pickupTime", e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    {isAirportTransfer && (
-                      <div className="lg:col-span-2">
-                        <label className={labelClass}>Flight number (optional)</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. FR1234"
-                          value={form.flightNumber}
-                          onChange={(e) => update("flightNumber", e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    )}
+                  <div className="space-y-5">
+                    <BookingCalendarPicker
+                      label={isReturn ? "Outbound" : "Pickup date"}
+                      value={form.pickupDate}
+                      onChange={(dateKey) => update("pickupDate", dateKey)}
+                    />
                     {isReturn && (
-                      <>
-                        <div className="lg:col-span-2 mt-2">
-                          <h3 className="text-sm font-semibold text-brand-end mb-4 uppercase tracking-wide">
-                            Return
-                          </h3>
-                        </div>
+                      <BookingCalendarPicker
+                        label="Return"
+                        value={form.returnDate}
+                        minDate={form.pickupDate || undefined}
+                        onChange={(dateKey) => update("returnDate", dateKey)}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Time */}
+              {currentStep === "time" && (
+                <div>
+                  <StepHeading
+                    title="What time suits you?"
+                    subtitle={
+                      isAirportTransfer
+                        ? "Pick your pickup times — add flight numbers if you like"
+                        : "Choose your pickup times"
+                    }
+                  />
+                  <div className="space-y-5">
+                    <BookingTimePicker
+                      label={isReturn ? "Outbound pickup" : "Pickup time"}
+                      value={form.pickupTime}
+                      onChange={(time) => update("pickupTime", time)}
+                    />
+                    {isReturn && (
+                      <BookingTimePicker
+                        label={isAirportTransfer ? "Return pickup" : "Return time"}
+                        value={form.returnTime}
+                        onChange={(time) => update("returnTime", time)}
+                      />
+                    )}
+                    {isAirportTransfer && (
+                      <div className="grid sm:grid-cols-2 gap-4">
                         <div>
-                          <label className={labelClass}>Return date</label>
+                          <label className={labelClass}>Flight number (optional)</label>
                           <input
-                            type="date"
-                            min={form.pickupDate || new Date().toISOString().split("T")[0]}
-                            value={form.returnDate}
-                            onChange={(e) => update("returnDate", e.target.value)}
+                            type="text"
+                            placeholder="e.g. FR1234"
+                            value={form.flightNumber}
+                            onChange={(e) => update("flightNumber", e.target.value)}
                             className={inputClass}
                           />
                         </div>
-                        <div>
-                          <label className={labelClass}>
-                            {isAirportTransfer ? "Landing / pickup time" : "Return pickup time"}
-                          </label>
-                          <input
-                            type="time"
-                            value={form.returnTime}
-                            onChange={(e) => update("returnTime", e.target.value)}
-                            className={inputClass}
-                          />
-                        </div>
-                        {isAirportTransfer && (
-                          <div className="lg:col-span-2">
-                            <label className={labelClass}>Return flight number (optional)</label>
+                        {isReturn && (
+                          <div>
+                            <label className={labelClass}>Return flight (optional)</label>
                             <input
                               type="text"
                               placeholder="e.g. FR5678"
@@ -701,36 +705,25 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                             />
                           </div>
                         )}
-                      </>
+                      </div>
                     )}
-                    <div className="lg:col-span-2 mt-2">
-                      <h3 className="text-sm font-semibold text-muted mb-4 uppercase tracking-wide">
-                        Party size
-                      </h3>
-                    </div>
-                    <div>
-                      <label className={labelClass}>Passengers</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={8}
-                        value={form.passengers}
-                        onChange={(e) => update("passengers", parseInt(e.target.value))}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Luggage pieces</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={10}
-                        value={form.luggage}
-                        onChange={(e) => update("luggage", parseInt(e.target.value))}
-                        className={inputClass}
-                      />
-                    </div>
                   </div>
+                </div>
+              )}
+
+              {/* Step: Party */}
+              {currentStep === "party" && (
+                <div>
+                  <StepHeading
+                    title="Who's travelling?"
+                    subtitle="Passengers and luggage for this journey"
+                  />
+                  <PartySizePicker
+                    passengers={form.passengers}
+                    luggage={form.luggage}
+                    onPassengersChange={(value) => update("passengers", value)}
+                    onLuggageChange={(value) => update("luggage", value)}
+                  />
                 </div>
               )}
 
@@ -762,7 +755,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                     <p className="text-sm text-muted">
                       {form.pickupDate && form.pickupTime
                         ? "No drivers are available on your selected dates. Try different dates or contact us."
-                        : "Complete the schedule step first to see available drivers."}
+                        : "Complete the date and time steps first to see available drivers."}
                     </p>
                   )}
                 </div>
@@ -772,77 +765,84 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
               {currentStep === "contact" && (
                 <div>
                   <StepHeading
-                    title="Your details"
-                    subtitle="Confirm your contact info — from your account"
+                    title="Almost done"
+                    subtitle="Confirm your contact details"
                   />
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    <div>
-                      <label className={labelClass}>Full name</label>
-                      <input
-                        type="text"
-                        required
-                        value={form.customerName}
-                        onChange={(e) => update("customerName", e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Phone number</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="07xxx xxxxxx"
-                        value={form.customerPhone}
-                        onChange={(e) => update("customerPhone", e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="lg:col-span-2">
-                      <label className={labelClass}>Email address</label>
-                      <input
-                        type="email"
-                        readOnly
-                        value={form.customerEmail}
-                        className={`${inputClass} opacity-70`}
-                      />
-                    </div>
-                    <div className="lg:col-span-2">
-                      <label className={labelClass}>Special requests (optional)</label>
-                      <textarea
-                        rows={3}
-                        placeholder="Child seat, wheelchair access, etc."
-                        value={form.notes}
-                        onChange={(e) => update("notes", e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="lg:col-span-2 pt-2 border-t border-gray-200/60 dark:border-white/10">
-                      <label className="flex items-start gap-3 cursor-pointer">
+                  <div className="space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelClass}>Full name</label>
                         <input
-                          type="checkbox"
-                          checked={form.saveDetails}
-                          onChange={(e) =>
-                            setForm((prev) => ({ ...prev, saveDetails: e.target.checked }))
-                          }
-                          className="mt-1 h-4 w-4 rounded border-black/20 text-brand"
+                          type="text"
+                          required
+                          value={form.customerName}
+                          onChange={(e) => update("customerName", e.target.value)}
+                          className={inputClass}
                         />
-                        <span className="text-sm text-muted leading-relaxed">
-                          Save these trip details for next time
-                        </span>
-                      </label>
-                      {form.saveDetails && (
-                        <div className="mt-4">
-                          <label className={labelClass}>Saved label (optional)</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Home to Leeds Bradford"
-                            value={form.savedDetailsLabel}
-                            onChange={(e) => update("savedDetailsLabel", e.target.value)}
-                            className={inputClass}
-                          />
-                        </div>
-                      )}
+                      </div>
+                      <div>
+                        <label className={labelClass}>Phone number</label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="07xxx xxxxxx"
+                          value={form.customerPhone}
+                          onChange={(e) => update("customerPhone", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
                     </div>
+
+                    <p className="text-sm text-muted">
+                      Confirmation and updates will be sent to{" "}
+                      <span className="font-medium text-dark dark:text-white">{form.customerEmail}</span>
+                    </p>
+
+                    {!showNotes ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowNotes(true)}
+                        className="text-sm font-medium text-brand hover:underline"
+                      >
+                        + Add special requests (optional)
+                      </button>
+                    ) : (
+                      <div>
+                        <label className={labelClass}>Special requests</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Child seat, wheelchair access, etc."
+                          value={form.notes}
+                          onChange={(e) => update("notes", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                    )}
+
+                    <label className="flex items-center gap-3 cursor-pointer rounded-xl border border-gray-200/60 dark:border-white/10 bg-white dark:bg-dark px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={form.saveDetails}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, saveDetails: e.target.checked }))
+                        }
+                        className="h-4 w-4 rounded border-black/20 text-brand"
+                      />
+                      <span className="text-sm text-muted">Save this route for next time</span>
+                    </label>
+
+                    {form.saveDetails && (
+                      <div>
+                        <label className={labelClass}>Saved label (optional)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Home to Leeds Bradford"
+                          value={form.savedDetailsLabel}
+                          onChange={(e) => update("savedDetailsLabel", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -929,7 +929,7 @@ export function BookingForm({ profile, savedTemplate }: BookingFormProps) {
                 <span className="font-medium dark:text-white">{selectedHub.code}</span>
               </div>
             )}
-            {selectedDriver && !["journey", "service", "direction", "route", "schedule"].includes(currentStep) && (
+            {selectedDriver && !["journey", "service", "direction", "route", "date", "time", "party"].includes(currentStep) && (
               <div className="flex justify-between">
                 <span className="text-muted">Driver</span>
                 <span className="font-medium dark:text-white text-right">

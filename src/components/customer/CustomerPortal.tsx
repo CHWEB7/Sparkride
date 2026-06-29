@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import type { CustomerProfile } from "@/lib/customer";
 import { BookingForm } from "@/components/BookingForm";
+import { BookingModal } from "@/components/booking/BookingModal";
 import { SavedDetailsManager } from "@/components/customer/SavedDetailsManager";
 import { BookingTripPaymentActions } from "@/components/booking/BookingTripPaymentActions";
 import type { PaymentStatus } from "@prisma/client";
@@ -51,114 +52,136 @@ type SavedTemplate = {
 
 export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   const [view, setView] = useState<PortalView>("home");
+  const [backgroundView, setBackgroundView] = useState<PortalView>("home");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loadingTrips, setLoadingTrips] = useState(false);
   const [wizardTemplate, setWizardTemplate] = useState<SavedTemplate | null>(null);
 
+  const tripsView = view === "wizard" ? backgroundView : view;
+
   useEffect(() => {
-    if (view !== "active" && view !== "history") return;
+    if (tripsView !== "active" && tripsView !== "history") return;
     setLoadingTrips(true);
     fetch("/api/customer/bookings")
       .then((r) => r.json())
       .then((data) => setBookings(Array.isArray(data) ? data : []))
       .finally(() => setLoadingTrips(false));
-  }, [view]);
+  }, [tripsView]);
 
   const activeStatuses = new Set(["PENDING", "ACCEPTED", "CONFIRMED"]);
   const activeTrips = bookings.filter((b) => activeStatuses.has(b.status));
   const pastTrips = bookings.filter((b) => !activeStatuses.has(b.status));
 
   function startBooking(template?: SavedTemplate) {
+    if (view !== "wizard") {
+      setBackgroundView(view);
+    }
     setWizardTemplate(template ?? null);
     setView("wizard");
   }
 
-  if (view === "wizard") {
+  function closeWizard() {
+    setWizardTemplate(null);
+    setView(backgroundView);
+  }
+
+  function renderPortalView(portalView: Exclude<PortalView, "wizard">) {
+    if (portalView === "saved") {
+      return (
+        <div>
+          <PortalNav title="Saved trip details" onBack={() => setView("home")} />
+          <SavedDetailsManager
+            onUseTemplate={(t) => startBooking(t)}
+            onBack={() => setView("home")}
+          />
+        </div>
+      );
+    }
+
+    if (portalView === "active" || portalView === "history") {
+      const trips = portalView === "active" ? activeTrips : pastTrips;
+      return (
+        <div>
+          <PortalNav
+            title={portalView === "active" ? "Manage existing trips" : "Previous trips"}
+            onBack={() => setView("home")}
+          />
+          <TripList
+            trips={trips}
+            loading={loadingTrips}
+            emptyMessage={
+              portalView === "active"
+                ? "No upcoming trips. Book a new ride to get started."
+                : "No previous trips yet."
+            }
+          />
+        </div>
+      );
+    }
+
     return (
       <div>
-        <button
-          type="button"
-          onClick={() => {
-            setWizardTemplate(null);
-            setView("home");
-          }}
-          className="mb-6 text-sm font-medium text-brand hover:underline"
-        >
-          ← Back to portal hub
-        </button>
-        <BookingForm profile={profile} savedTemplate={wizardTemplate} />
+        <div className="mb-10">
+          <p className="text-sm font-semibold uppercase tracking-wide text-brand mb-2">
+            Customer portal
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] dark:text-white">
+            Welcome back{profile.name ? `, ${profile.name.split(" ")[0]}` : ""}
+          </h1>
+          <p className="mt-2 text-muted max-w-xl">
+            Book new airport transfers, manage upcoming trips, and reuse saved journey details.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-3 gap-4 lg:gap-4 lg:min-h-[420px]">
+          <BookHeroTile onClick={() => startBooking()} />
+          <PortalCompactCard
+            icon={CalendarClock}
+            title="Manage existing trips"
+            desc="Track upcoming bookings"
+            onClick={() => setView("active")}
+            accent="sky"
+          />
+          <PortalCompactCard
+            icon={History}
+            title="Previous trips"
+            desc="Completed & cancelled"
+            onClick={() => setView("history")}
+            accent="violet"
+          />
+          <PortalCompactCard
+            icon={Bookmark}
+            title="Saved trip details"
+            desc="Reuse saved routes"
+            onClick={() => setView("saved")}
+            accent="emerald"
+          />
+        </div>
       </div>
     );
   }
 
-  if (view === "saved") {
-    return (
-      <div>
-        <PortalNav title="Saved trip details" onBack={() => setView("home")} />
-        <SavedDetailsManager
-          onUseTemplate={(t) => startBooking(t)}
-          onBack={() => setView("home")}
-        />
-      </div>
-    );
-  }
-
-  if (view === "active" || view === "history") {
-    const trips = view === "active" ? activeTrips : pastTrips;
-    return (
-      <div>
-        <PortalNav
-          title={view === "active" ? "Manage existing trips" : "Previous trips"}
-          onBack={() => setView("home")}
-        />
-        <TripList trips={trips} loading={loadingTrips} emptyMessage={
-          view === "active"
-            ? "No upcoming trips. Book a new ride to get started."
-            : "No previous trips yet."
-        } />
-      </div>
-    );
-  }
+  const backgroundContent = tripsView as Exclude<PortalView, "wizard">;
 
   return (
-    <div>
-      <div className="mb-10">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand mb-2">
-          Customer portal
-        </p>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] dark:text-white">
-          Welcome back{profile.name ? `, ${profile.name.split(" ")[0]}` : ""}
-        </h1>
-        <p className="mt-2 text-muted max-w-xl">
-          Book new airport transfers, manage upcoming trips, and reuse saved journey details.
-        </p>
+    <>
+      <div
+        className={
+          view === "wizard"
+            ? "pointer-events-none select-none blur-[3px] opacity-50 scale-[0.985] transition-all duration-300"
+            : "transition-all duration-300"
+        }
+        aria-hidden={view === "wizard"}
+      >
+        {renderPortalView(backgroundContent)}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-3 gap-4 lg:gap-4 lg:min-h-[420px]">
-        <BookHeroTile onClick={() => startBooking()} />
-        <PortalCompactCard
-          icon={CalendarClock}
-          title="Manage existing trips"
-          desc="Track upcoming bookings"
-          onClick={() => setView("active")}
-          accent="sky"
-        />
-        <PortalCompactCard
-          icon={History}
-          title="Previous trips"
-          desc="Completed & cancelled"
-          onClick={() => setView("history")}
-          accent="violet"
-        />
-        <PortalCompactCard
-          icon={Bookmark}
-          title="Saved trip details"
-          desc="Reuse saved routes"
-          onClick={() => setView("saved")}
-          accent="emerald"
-        />
-      </div>
-    </div>
+      {view === "wizard" && (
+        <BookingModal onClose={closeWizard}>
+          <BookingForm profile={profile} savedTemplate={wizardTemplate} variant="modal" />
+        </BookingModal>
+      )}
+    </>
   );
 }
 
