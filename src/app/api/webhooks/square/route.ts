@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { completeBookingPayment } from "@/lib/booking-confirmation";
 import { squareEnvironment, squareWebhookUrl } from "@/lib/square/config";
 import { verifySquareWebhookSignature } from "@/lib/square/oauth";
-import { syncBookingPaymentFromSquare } from "@/lib/square/payment-sync";
+import { completeBookingFromSquareWebhook } from "@/lib/square/payment-sync";
 
 export const runtime = "nodejs";
 
@@ -10,10 +9,12 @@ type SquarePaymentPayload = {
   id?: string;
   status?: string;
   reference_id?: string;
+  order_id?: string;
 };
 
 type SquareWebhookEvent = {
   type?: string;
+  merchant_id?: string;
   data?: {
     type?: string;
     id?: string;
@@ -53,11 +54,21 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "payment.updated" || event.type === "payment.created") {
     const payment = extractPayment(event);
-    if (payment?.status === "COMPLETED" && payment.id) {
-      if (payment.reference_id) {
-        await completeBookingPayment(payment.reference_id, payment.id);
-      } else {
-        console.warn("Square payment completed without reference_id:", payment.id);
+    if (payment?.status === "COMPLETED" && payment.id && event.merchant_id) {
+      const completed = await completeBookingFromSquareWebhook({
+        merchantId: event.merchant_id,
+        paymentId: payment.id,
+        paymentReferenceId: payment.reference_id,
+        orderId: payment.order_id,
+      });
+
+      if (!completed) {
+        console.warn("Square webhook payment could not be matched to a booking:", {
+          paymentId: payment.id,
+          merchantId: event.merchant_id,
+          orderId: payment.order_id,
+          referenceId: payment.reference_id,
+        });
       }
     }
   }

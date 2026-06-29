@@ -7,6 +7,7 @@ type SquarePayment = {
   id?: string;
   status?: string;
   reference_id?: string;
+  order_id?: string;
 };
 
 type PaymentLinkResponse = {
@@ -16,12 +17,21 @@ type PaymentLinkResponse = {
   };
 };
 
+type OrderTender = {
+  id?: string;
+  payment_id?: string;
+  type?: string;
+};
+
+type SquareOrder = {
+  id?: string;
+  state?: string;
+  reference_id?: string;
+  tenders?: OrderTender[];
+};
+
 type OrderResponse = {
-  order?: {
-    id?: string;
-    state?: string;
-    reference_id?: string;
-  };
+  order?: SquareOrder;
 };
 
 type SearchPaymentsResponse = {
@@ -33,6 +43,17 @@ export type PaymentSyncHints = {
   squareOrderId?: string | null;
 };
 
+function tenderPaymentIds(tenders: OrderTender[] | undefined): string[] {
+  if (!tenders?.length) return [];
+
+  const ids = new Set<string>();
+  for (const tender of tenders) {
+    if (tender.payment_id) ids.add(tender.payment_id);
+    if (tender.id) ids.add(tender.id);
+  }
+  return [...ids];
+}
+
 async function retrieveSquarePayment(
   accessToken: string,
   paymentId: string
@@ -41,8 +62,48 @@ async function retrieveSquarePayment(
     accessToken,
     path: `/v2/payments/${encodeURIComponent(paymentId)}`,
   });
-  if (!result.ok) return null;
+  if (!result.ok) {
+    console.warn("Square retrieve payment failed:", paymentId, result.error);
+    return null;
+  }
   return result.data.payment ?? null;
+}
+
+async function retrieveSquareOrder(
+  accessToken: string,
+  orderId: string
+): Promise<SquareOrder | null> {
+  const result = await squareRequest<OrderResponse>({
+    accessToken,
+    path: `/v2/orders/${encodeURIComponent(orderId)}`,
+  });
+  if (!result.ok) {
+    console.warn("Square retrieve order failed:", orderId, result.error);
+    return null;
+  }
+  return result.data.order ?? null;
+}
+
+async function findCompletedPaymentOnOrder(
+  accessToken: string,
+  orderId: string,
+  expectedReference?: string
+): Promise<SquarePayment | null> {
+  const order = await retrieveSquareOrder(accessToken, orderId);
+  if (!order) return null;
+
+  if (expectedReference && order.reference_id && order.reference_id !== expectedReference) {
+    return null;
+  }
+
+  for (const paymentId of tenderPaymentIds(order.tenders)) {
+    const payment = await retrieveSquarePayment(accessToken, paymentId);
+    if (payment?.id && payment.status === "COMPLETED") {
+      return payment;
+    }
+  }
+
+  return null;
 }
 
 async function searchSquarePaymentByReference(
@@ -68,7 +129,10 @@ async function searchSquarePaymentByReference(
     },
   });
 
-  if (!result.ok) return null;
+  if (!result.ok) {
+    console.warn("Square payment search failed:", reference, result.error);
+    return null;
+  }
 
   return (
     result.data.payments?.find(
@@ -87,24 +151,84 @@ async function findPaymentFromPaymentLink(
     path: `/v2/online-checkout/payment-links/${encodeURIComponent(paymentLinkId)}`,
   });
 
-  if (!linkResult.ok) return null;
+  if (!linkResult.ok) {
+    console.warn("Square payment link retrieve failed:", paymentLinkId, linkResult.error);
+    return null;
+  }
 
   const orderId = linkResult.data.payment_link?.order_id;
   if (!orderId) return null;
 
-  const orderResult = await squareRequest<OrderResponse>({
-    accessToken,
-    path: `/v2/orders/${encodeURIComponent(orderId)}`,
-  });
-
-  if (!orderResult.ok) return null;
-
-  if (orderResult.data.order?.reference_id === reference) {
-    const payment = await searchSquarePaymentByReference(accessToken, reference);
-    if (payment) return payment;
-  }
+  const payment = await findCompletedPaymentOnOrder(accessToken, orderId, reference);
+  if (payment) return payment;
 
   return searchSquarePaymentByReference(accessToken, reference);
+}
+
+export async function resolveBookingReferenceFromSquareOrder(
+  merchantId: string,
+  orderId: string
+): Promise<string | null> {
+  const driver = await prisma.driver.findFirst({
+    where: { squareMerchantId: merchantId },
+    select: { id: true },
+  });
+  if (!driver) return null;
+
+  const tokenResult = await getDriverAccessToken(driver.id);
+  if (!tokenResult.ok) return null;
+
+  const order = await retrieveSquareOrder(tokenResult.accessToken, orderId);
+  return order?.reference_id ?? null;
+}
+
+export async function completeBookingFromSquareWebhook(input: {
+  merchantId: string;
+  paymentId: string;
+  paymentReferenceId?: string | null;
+  orderId?: string | null;
+}): Promise<boolean> {
+  if (input.paymentReferenceId) {
+    return completeBookingPayment(input.paymentReferenceId, input.paymentId);
+  }
+
+  if (input.orderId) {
+    const reference = await resolveBookingReferenceFromSquareOrder(
+      input.merchantId,
+      input.orderId
+    );
+    if (reference) {
+      return completeBookingPayment(reference, input.paymentId);
+    }
+  }
+
+  const driver = await prisma.driver.findFirst({
+    where: { squareMerchantId: input.merchantId },
+    select: { id: true },
+  });
+  if (!driver) return false;
+
+  const tokenResult = await getDriverAccessToken(driver.id);
+  if (!tokenResult.ok) return false;
+
+  const payment = await retrieveSquarePayment(tokenResult.accessToken, input.paymentId);
+  if (!payment?.id || payment.status !== "COMPLETED") return false;
+
+  if (payment.reference_id) {
+    return completeBookingPayment(payment.reference_id, payment.id);
+  }
+
+  if (payment.order_id) {
+    const reference = await resolveBookingReferenceFromSquareOrder(
+      input.merchantId,
+      payment.order_id
+    );
+    if (reference) {
+      return completeBookingPayment(reference, payment.id);
+    }
+  }
+
+  return false;
 }
 
 export async function syncBookingPaymentFromSquare(
@@ -133,30 +257,27 @@ export async function syncBookingPaymentFromSquare(
     return { updated: false, alreadyPaid: false, error: tokenResult.error };
   }
 
+  const accessToken = tokenResult.accessToken;
   let payment: SquarePayment | null = null;
 
   if (hints.squarePaymentId) {
-    payment = await retrieveSquarePayment(tokenResult.accessToken, hints.squarePaymentId);
+    payment = await retrieveSquarePayment(accessToken, hints.squarePaymentId);
   }
 
-  if (!payment && hints.squareOrderId && booking.squarePaymentLinkId) {
-    payment = await findPaymentFromPaymentLink(
-      tokenResult.accessToken,
-      booking.squarePaymentLinkId,
-      reference
-    );
+  if (!payment && hints.squareOrderId) {
+    payment = await findCompletedPaymentOnOrder(accessToken, hints.squareOrderId, reference);
   }
 
   if (!payment && booking.squarePaymentLinkId) {
     payment = await findPaymentFromPaymentLink(
-      tokenResult.accessToken,
+      accessToken,
       booking.squarePaymentLinkId,
       reference
     );
   }
 
   if (!payment) {
-    payment = await searchSquarePaymentByReference(tokenResult.accessToken, reference);
+    payment = await searchSquarePaymentByReference(accessToken, reference);
   }
 
   if (!payment?.id || payment.status !== "COMPLETED") {
