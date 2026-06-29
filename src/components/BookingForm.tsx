@@ -125,10 +125,16 @@ type BookableDriver = {
 type BookingFormProps = {
   profile?: CustomerProfile | null;
   savedTemplate?: SavedTemplate | null;
-  variant?: "page" | "modal";
+  variant?: "page" | "modal" | "embedded";
+  onCancel?: () => void;
 };
 
-export function BookingForm({ profile, savedTemplate, variant = "modal" }: BookingFormProps) {
+export function BookingForm({
+  profile,
+  savedTemplate,
+  variant = "modal",
+  onCancel,
+}: BookingFormProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -396,7 +402,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
   const inputClass =
     "w-full px-4 py-3.5 rounded-xl border border-gray-200/60 dark:border-white/10 bg-white dark:bg-dark text-dark dark:text-gray-100 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all shadow-sm";
   const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2";
-  const isModal = variant === "modal";
+  const isCompact = variant === "modal" || variant === "embedded";
+  const isEmbedded = variant === "embedded";
   const needsContinue = MANUAL_CONTINUE_STEPS.has(currentStep);
   const breadcrumbSteps = steps.map((id) => ({
     id,
@@ -405,7 +412,7 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
   const bigCard = (active: boolean) =>
     `relative text-left transition-all duration-200 active:scale-[0.98] ${
-      isModal ? "p-4 rounded-xl" : "p-8 lg:p-10 rounded-2xl hover:scale-[1.02]"
+      isCompact ? "p-4 rounded-xl" : "p-8 lg:p-10 rounded-2xl hover:scale-[1.02]"
     } ${
       active
         ? "bg-brand-light/60 dark:bg-brand/10 shadow-md ring-2 ring-brand/30"
@@ -422,8 +429,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "journey" && (
         <div>
-          <StepHeading title="What type of journey?" compact={isModal} />
-          <div className={`grid gap-3 ${isModal ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
+          <StepHeading title="What type of journey?" compact={isCompact} />
+          <div className={`grid gap-3 ${isCompact ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
             {[
               {
                 value: "SINGLE",
@@ -444,8 +451,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
                 onClick={() => selectJourney(opt.value)}
                 className={bigCard(form.journeyType === opt.value)}
               >
-                <opt.icon className={`${isModal ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3`} />
-                <div className={`${isModal ? "text-base" : "text-xl"} font-bold dark:text-white`}>
+                <opt.icon className={`${isCompact ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3`} />
+                <div className={`${isCompact ? "text-base" : "text-xl"} font-bold dark:text-white`}>
                   {opt.label}
                 </div>
                 <div className="text-sm text-muted mt-1">{opt.desc}</div>
@@ -457,8 +464,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "service" && (
         <div>
-          <StepHeading title="What type of booking?" compact={isModal} />
-          <div className={`grid gap-3 ${isModal ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
+          <StepHeading title="What type of booking?" compact={isCompact} />
+          <div className={`grid gap-3 ${isCompact ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
             {[
               {
                 value: "AIRPORT_TRANSFER",
@@ -485,8 +492,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
                 onClick={() => selectService(opt.value)}
                 className={bigCard(form.serviceType === opt.value)}
               >
-                <opt.icon className={`${isModal ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3`} />
-                <div className={`${isModal ? "text-base" : "text-xl"} font-bold dark:text-white`}>
+                <opt.icon className={`${isCompact ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3`} />
+                <div className={`${isCompact ? "text-base" : "text-xl"} font-bold dark:text-white`}>
                   {opt.label}
                 </div>
                 <div className="text-sm text-muted mt-1">{opt.desc}</div>
@@ -498,8 +505,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "direction" && isHubTransferType && (
         <div>
-          <StepHeading title="Which direction?" compact={isModal} />
-          <div className={`grid gap-3 ${isModal ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
+          <StepHeading title="Which direction?" compact={isCompact} />
+          <div className={`grid gap-3 ${isCompact ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
             {getDirectionOptions(form.serviceType).map((opt) => (
               <button
                 key={opt.value}
@@ -509,14 +516,14 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
               >
                 {isPortTransferCategory(form.serviceType) ? (
                   <Ship
-                    className={`${isModal ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
+                    className={`${isCompact ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
                   />
                 ) : (
                   <Plane
-                    className={`${isModal ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
+                    className={`${isCompact ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3 ${opt.value === "FROM_AIRPORT" ? "rotate-180" : ""}`}
                   />
                 )}
-                <div className={`${isModal ? "text-base" : "text-xl"} font-bold dark:text-white`}>
+                <div className={`${isCompact ? "text-base" : "text-xl"} font-bold dark:text-white`}>
                   {opt.label}
                 </div>
                 <div className="text-sm text-muted mt-1">{opt.desc}</div>
@@ -528,7 +535,7 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "route" && (
         <div>
-          <StepHeading title="Where are you travelling?" compact={isModal} />
+          <StepHeading title="Where are you travelling?" compact={isCompact} />
           <div className="space-y-4">
             {isHubTransferType && (
               <div>
@@ -639,7 +646,7 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "party" && (
         <div>
-          <StepHeading title="Who's travelling?" compact={isModal} />
+          <StepHeading title="Who's travelling?" compact={isCompact} />
           <PartySizePicker
             passengers={form.passengers}
             luggage={form.luggage}
@@ -651,8 +658,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "driver" && (
         <div>
-          <StepHeading title="Choose your driver" compact={isModal} />
-          <div className={`grid gap-3 ${isModal ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
+          <StepHeading title="Choose your driver" compact={isCompact} />
+          <div className={`grid gap-3 ${isCompact ? "grid-cols-1" : "sm:grid-cols-2 gap-4 lg:gap-6"}`}>
             {drivers.map((driver) => (
               <button
                 key={driver.id}
@@ -660,8 +667,8 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
                 onClick={() => selectDriver(driver)}
                 className={bigCard(form.driverId === driver.id)}
               >
-                <Car className={`${isModal ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3`} />
-                <div className={`${isModal ? "text-base" : "text-xl"} font-bold dark:text-white`}>
+                <Car className={`${isCompact ? "w-7 h-7" : "w-10 h-10"} text-brand mb-3`} />
+                <div className={`${isCompact ? "text-base" : "text-xl"} font-bold dark:text-white`}>
                   {driver.name}
                 </div>
                 <div className="text-sm text-muted mt-1">{driver.vehicleLabel}</div>
@@ -683,7 +690,7 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
 
       {currentStep === "contact" && (
         <div>
-          <StepHeading title="Almost done" compact={isModal} />
+          <StepHeading title="Almost done" compact={isCompact} />
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -765,15 +772,16 @@ export function BookingForm({ profile, savedTemplate, variant = "modal" }: Booki
     </>
   );
 
-  if (isModal) {
+  if (isCompact) {
     return (
-      <div className="flex h-full min-h-0 flex-col">
+      <div className={`flex flex-col ${isEmbedded ? "min-h-[640px]" : "h-full min-h-0"}`}>
         <BookingStepBreadcrumb
           steps={breadcrumbSteps}
           currentIndex={stepIndex}
           onBack={back}
           onGoTo={goTo}
           price={price}
+          onCancel={onCancel}
         />
 
         <div className="flex-1 min-h-0 overflow-hidden">

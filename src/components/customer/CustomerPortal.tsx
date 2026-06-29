@@ -16,7 +16,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { CustomerProfile } from "@/lib/customer";
 import { BookingForm } from "@/components/BookingForm";
-import { BookingModal } from "@/components/booking/BookingModal";
 import {
   CustomerBookingShell,
   type CustomerPortalView,
@@ -78,8 +77,10 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [wizardTemplate, setWizardTemplate] = useState<SavedTemplate | null>(null);
+  const [returnView, setReturnView] = useState<CustomerPortalView>("home");
+  const [wizardKey, setWizardKey] = useState(0);
 
-  const shellView: CustomerPortalView = view === "wizard" ? "home" : view;
+  const shellView: CustomerPortalView = view === "wizard" ? returnView : view;
 
   useEffect(() => {
     setLoadingTrips(true);
@@ -111,13 +112,17 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   }, [bookings, activeTrips, pastTrips, view, tripTab, search]);
 
   function startBooking(template?: SavedTemplate) {
+    if (view !== "wizard") {
+      setReturnView(view);
+    }
     setWizardTemplate(template ?? null);
+    setWizardKey((k) => k + 1);
     setView("wizard");
   }
 
   function closeWizard() {
     setWizardTemplate(null);
-    setView("home");
+    setView(returnView);
     setLoadingTrips(true);
     fetch("/api/customer/bookings")
       .then((r) => r.json())
@@ -126,7 +131,12 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   }
 
   function navigate(viewId: CustomerPortalView) {
-    setView(viewId);
+    if (view === "wizard") {
+      setWizardTemplate(null);
+      setView(viewId);
+    } else {
+      setView(viewId);
+    }
     if (viewId === "home") setTripTab("all");
     else if (viewId === "active") setTripTab("active");
     else if (viewId === "history") setTripTab("past");
@@ -141,15 +151,27 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   }
 
   return (
-    <>
-      <CustomerBookingShell
-        profile={profile}
-        activeView={shellView}
-        onNavigate={navigate}
-        onNewBooking={() => startBooking()}
-        onSignOut={signOut}
-      >
-        {view === "saved" ? (
+    <CustomerBookingShell
+      profile={profile}
+      activeView={shellView}
+      bookingActive={view === "wizard"}
+      onNavigate={navigate}
+      onNewBooking={() => startBooking()}
+      onSignOut={signOut}
+    >
+      {view === "wizard" ? (
+        <div className="mx-auto max-w-4xl">
+          <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated">
+            <BookingForm
+              key={wizardTemplate?.id ?? `new-${wizardKey}`}
+              profile={profile}
+              savedTemplate={wizardTemplate}
+              variant="embedded"
+              onCancel={closeWizard}
+            />
+          </div>
+        </div>
+      ) : view === "saved" ? (
           <SavedDetailsManager
             onUseTemplate={(t) => startBooking(t)}
             onBack={() => setView("home")}
@@ -242,14 +264,7 @@ export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
             )}
           </div>
         )}
-      </CustomerBookingShell>
-
-      {view === "wizard" && (
-        <BookingModal onClose={closeWizard}>
-          <BookingForm profile={profile} savedTemplate={wizardTemplate} variant="modal" />
-        </BookingModal>
-      )}
-    </>
+    </CustomerBookingShell>
   );
 }
 

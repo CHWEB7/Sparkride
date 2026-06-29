@@ -35,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
 type CustomerBookingShellProps = {
   profile: CustomerProfile;
   activeView: CustomerPortalView;
+  bookingActive?: boolean;
   onNavigate: (view: CustomerPortalView) => void;
   onNewBooking: () => void;
   onSignOut: () => void;
@@ -44,6 +45,7 @@ type CustomerBookingShellProps = {
 export function CustomerBookingShell({
   profile,
   activeView,
+  bookingActive = false,
   onNavigate,
   onNewBooking,
   onSignOut,
@@ -65,7 +67,11 @@ export function CustomerBookingShell({
           <button
             type="button"
             onClick={onNewBooking}
-            className="mb-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-brand bg-white px-4 py-2.5 text-sm font-semibold text-brand shadow-sm transition-all hover:bg-brand hover:text-white dark:bg-dark dark:hover:bg-brand"
+            className={`mb-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold shadow-sm transition-all ${
+              bookingActive
+                ? "border-brand bg-brand text-white"
+                : "border-brand bg-white text-brand hover:bg-brand hover:text-white dark:bg-dark dark:hover:bg-brand"
+            }`}
           >
             <Plus className="h-4 w-4" />
             New booking
