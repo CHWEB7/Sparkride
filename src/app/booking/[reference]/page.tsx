@@ -14,21 +14,41 @@ import {
   ensureBookingPaymentLink,
   paymentLinkSkipMessage,
 } from "@/lib/booking-confirmation";
+import { syncBookingPaymentFromSquare } from "@/lib/square/payment-sync";
 import { getServiceLabel, isHubTransfer } from "@/lib/hubs";
 import { BOOKING_STATUS_COLORS_LIGHT } from "@/lib/booking-status";
 
 export default async function BookingConfirmationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ reference: string }>;
+  searchParams: Promise<{
+    paid?: string;
+    transactionId?: string;
+    orderId?: string;
+    referenceId?: string;
+  }>;
 }) {
   const { reference } = await params;
+  const query = await searchParams;
   const user = await getCustomerUserFromCookies();
   if (!user) redirect(`/login?redirect=/booking/${reference}`);
 
   const customer = await ensureCustomer(user);
   let booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.customerId !== customer.id) notFound();
+
+  const returningFromSquare =
+    query.paid === "1" || Boolean(query.transactionId) || Boolean(query.orderId);
+
+  if (returningFromSquare && booking.paymentStatus !== "PAID") {
+    await syncBookingPaymentFromSquare(reference, {
+      squarePaymentId: query.transactionId,
+      squareOrderId: query.orderId,
+    });
+    booking = (await prisma.booking.findUnique({ where: { reference } })) ?? booking;
+  }
 
   let paymentSetupNote: string | null = null;
 
@@ -48,6 +68,7 @@ export default async function BookingConfirmationPage({
 
   const isReturn = booking.journeyType === "RETURN";
   const isHub = isHubTransfer(booking.serviceType);
+  const isPaid = booking.paymentStatus === "PAID" || booking.status === "CONFIRMED";
   const isAccepted = booking.status !== "PENDING";
 
   const statusColors: Record<string, string> = {
@@ -70,12 +91,31 @@ export default async function BookingConfirmationPage({
               <CheckCircle className="w-8 h-8 text-brand" />
             </div>
             <h1 className="mt-6 text-4xl font-bold tracking-tight dark:text-white">
-              {isAccepted ? "Booking accepted" : "Booking received"}
+              {isPaid
+                ? "Booking confirmed"
+                : isAccepted
+                  ? "Booking accepted"
+                  : "Booking received"}
             </h1>
             <p className="mt-3 text-lg text-muted">
-              Your reference number is{" "}
-              <span className="font-bold text-dark dark:text-white">{booking.reference}</span>
+              {isPaid ? (
+                <>
+                  Payment received. Your trip is confirmed — reference{" "}
+                  <span className="font-bold text-dark dark:text-white">{booking.reference}</span>
+                </>
+              ) : (
+                <>
+                  Your reference number is{" "}
+                  <span className="font-bold text-dark dark:text-white">{booking.reference}</span>
+                </>
+              )}
             </p>
+            {returningFromSquare && !isPaid && (
+              <p className="mt-3 text-sm text-amber-800 dark:text-amber-200">
+                We are confirming your payment with Square. Refresh this page in a moment if your
+                booking status has not updated yet.
+              </p>
+            )}
           </div>
 
           {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (

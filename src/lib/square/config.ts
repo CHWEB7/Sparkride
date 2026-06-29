@@ -1,5 +1,3 @@
-import { getSiteUrl } from "@/lib/site-url";
-
 const PRODUCTION_URL = "https://sparkride-umber.vercel.app";
 
 export const SQUARE_API_VERSION = "2024-11-20";
@@ -168,6 +166,10 @@ export function squareSetupHints(): string[] {
     `Register this exact redirect URL in Square → OAuth: ${redirectUri}`
   );
 
+  hints.push(
+    `Register this exact webhook URL in Square → Webhooks: ${squareWebhookUrl()}`
+  );
+
   if (squareEnvironment() === "sandbox") {
     hints.push(
       "Sandbox only: open your Sandbox Seller Dashboard from developer.squareup.com (Apps → Sandbox test account → Open) in another tab, then click Connect Square again."
@@ -178,7 +180,17 @@ export function squareSetupHints(): string[] {
 }
 
 export function squareWebhookUrl(): string {
-  return `${getSiteUrl()}/api/webhooks/square`;
+  const override = process.env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim();
+  if (override) return override.replace(/\/$/, "");
+
+  const base = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (base) return `${base}/api/webhooks/square`;
+
+  if (process.env.NODE_ENV === "production") {
+    return `${PRODUCTION_URL}/api/webhooks/square`;
+  }
+
+  return "http://localhost:3000/api/webhooks/square";
 }
 
 export const SQUARE_OAUTH_SCOPES = [

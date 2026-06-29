@@ -1,6 +1,6 @@
 import type { Booking, Driver, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { sendBookingAcceptedEmail } from "@/lib/send-booking-email";
+import { sendBookingAcceptedEmail, sendBookingPaidEmail } from "@/lib/send-booking-email";
 import { isSquareConfigured } from "@/lib/square/config";
 import {
   driverHasSquareConnected,
@@ -326,14 +326,33 @@ export async function sendBookingPaymentLinkEmail(bookingId: string): Promise<{
 /** @deprecated Use handleBookingAccepted */
 export const handleBookingConfirmed = handleBookingAccepted;
 
+/** @deprecated Use completeBookingPayment */
 export async function markBookingPaidByReference(
   reference: string,
   squarePaymentId: string
 ): Promise<boolean> {
+  return completeBookingPayment(reference, squarePaymentId);
+}
+
+export async function completeBookingPayment(
+  reference: string,
+  squarePaymentId: string
+): Promise<boolean> {
+  const existing = await prisma.booking.findUnique({
+    where: { reference },
+    include: { driver: true },
+  });
+
+  if (!existing) return false;
+
+  if (existing.paymentStatus === "PAID") {
+    return true;
+  }
+
   const result = await prisma.booking.updateMany({
     where: {
       reference,
-      paymentStatus: "AWAITING_PAYMENT",
+      paymentStatus: { not: "PAID" },
     },
     data: {
       status: "CONFIRMED",
@@ -343,7 +362,37 @@ export async function markBookingPaidByReference(
     },
   });
 
-  return result.count > 0;
+  if (result.count === 0) {
+    const fresh = await prisma.booking.findUnique({
+      where: { reference },
+      select: { paymentStatus: true },
+    });
+    return fresh?.paymentStatus === "PAID";
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: { reference },
+    include: { driver: true },
+  });
+
+  if (!booking?.customerEmail) return true;
+
+  const emailResult = await sendBookingPaidEmail(booking.customerEmail, {
+    reference: booking.reference,
+    customerName: booking.customerName,
+    pickupAddress: booking.pickupAddress,
+    dropoffAddress: booking.dropoffAddress,
+    pickupDate: booking.pickupDate,
+    driverName: booking.driver?.name ?? "Your driver",
+    vehicleLabel: booking.driver?.vehicleLabel,
+    amountPaid: booking.amountDue ?? booking.estimatedPrice,
+  });
+
+  if (!emailResult.ok) {
+    console.error(`Payment confirmation email failed for ${reference}:`, emailResult.error);
+  }
+
+  return true;
 }
 
 export function paymentLinkSkipMessage(result: EnsurePaymentLinkResult): string | null {

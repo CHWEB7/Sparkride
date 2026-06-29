@@ -242,3 +242,65 @@ export async function sendBookingAcceptedEmail(
 
   return sendResendEmail(to, subject, html);
 }
+
+export type BookingPaidDetails = {
+  reference: string;
+  customerName: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupDate: Date;
+  driverName: string;
+  vehicleLabel?: string | null;
+  amountPaid?: number | null;
+};
+
+export async function sendBookingPaidEmail(
+  to: string,
+  booking: BookingPaidDetails
+): Promise<SendResult> {
+  const siteUrl = getSiteUrl();
+  const bookingPageUrl = `${siteUrl}/booking/${booking.reference}`;
+
+  const dateStr = booking.pickupDate.toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/London",
+  });
+
+  const html = `
+    <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+      <h2 style="color: #191c23; margin-bottom: 8px;">Payment received — your trip is confirmed</h2>
+      <p style="color: #6b7280; font-size: 15px; line-height: 1.5;">
+        Hi ${booking.customerName}, thank you. Your payment for booking <strong>${booking.reference}</strong> has been received and your trip is now confirmed.
+      </p>
+      <table style="width: 100%; margin: 24px 0; font-size: 14px; color: #191c23;">
+        <tr><td style="padding: 8px 0; color: #6b7280;">Pickup</td><td style="padding: 8px 0;">${booking.pickupAddress}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">Drop-off</td><td style="padding: 8px 0;">${booking.dropoffAddress}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">Date & time</td><td style="padding: 8px 0;">${dateStr}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">Driver</td><td style="padding: 8px 0;">${booking.driverName}${booking.vehicleLabel ? ` · ${booking.vehicleLabel}` : ""}</td></tr>
+        ${booking.amountPaid ? `<tr><td style="padding: 8px 0; color: #6b7280;">Amount paid</td><td style="padding: 8px 0;">£${booking.amountPaid}</td></tr>` : ""}
+      </table>
+
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${bookingPageUrl}"
+           style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
+          View your booking
+        </a>
+      </div>
+
+      <p style="color: #9ca3af; font-size: 13px;">
+        Your driver is ${booking.driverName}. Be ready at the pickup location at the agreed time on travel day.
+      </p>
+    </div>
+  `.trim();
+
+  return sendResendEmail(
+    to,
+    `Payment received — booking ${booking.reference} confirmed`,
+    html
+  );
+}

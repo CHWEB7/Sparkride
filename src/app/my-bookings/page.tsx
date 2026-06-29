@@ -8,6 +8,7 @@ import { SiteContainer } from "@/components/SiteContainer";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
 import { ensureBookingPaymentLink } from "@/lib/booking-confirmation";
+import { syncBookingPaymentFromSquare } from "@/lib/square/payment-sync";
 import { prisma } from "@/lib/prisma";
 
 export default async function MyBookingsPage() {
@@ -28,6 +29,10 @@ export default async function MyBookingsPage() {
       !booking.squarePaymentLinkUrl
     ) {
       await ensureBookingPaymentLink(booking.id);
+    }
+
+    if (booking.status === "ACCEPTED" && booking.paymentStatus === "AWAITING_PAYMENT") {
+      await syncBookingPaymentFromSquare(booking.reference);
     }
   }
 
