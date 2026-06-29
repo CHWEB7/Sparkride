@@ -4,6 +4,8 @@ import { useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import {
   ChevronDown,
+  CalendarPlus,
+  Download,
   Loader2,
   MoreHorizontal,
   Plane,
@@ -15,6 +17,7 @@ import {
   BOOKING_STATUS_COLORS_DARK,
   BOOKING_STATUS_COLORS_LIGHT,
   formatBookingStatus,
+  isCalendarEligibleBooking,
   type BookingStatusValue,
 } from "@/lib/booking-status";
 import {
@@ -371,6 +374,10 @@ export function DriverBookingsTable({
                     )
                   );
                   const paymentStatus = (booking.paymentStatus ?? "NOT_REQUIRED") as PaymentStatus;
+                  const calendarEligible = isCalendarEligibleBooking(
+                    booking.status,
+                    paymentStatus
+                  );
 
                   return (
                     <tr
@@ -472,7 +479,7 @@ export function DriverBookingsTable({
                         <div className="relative">
                           <button
                             type="button"
-                            disabled={acting || rowActions.length === 0}
+                            disabled={acting || (rowActions.length === 0 && !calendarEligible)}
                             onClick={() =>
                               setRowMenuId((id) => (id === booking.id ? null : booking.id))
                             }
@@ -481,14 +488,43 @@ export function DriverBookingsTable({
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
-                          {rowMenuId === booking.id && rowActions.length > 0 && (
+                          {rowMenuId === booking.id && (
                             <div
-                              className={`absolute right-0 z-20 mt-1 min-w-[160px] rounded-lg border py-1 shadow-lg ${
+                              className={`absolute right-0 z-20 mt-1 min-w-[200px] rounded-lg border py-1 shadow-lg ${
                                 isLight
                                   ? "border-gray-200 bg-white"
                                   : "border-white/10 bg-dark-elevated"
                               }`}
                             >
+                              {calendarEligible && (
+                                <>
+                                  <a
+                                    href={`/api/driver/bookings/${encodeURIComponent(booking.reference)}/calendar?format=google&leg=outbound`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/5"
+                                    onClick={() => setRowMenuId(null)}
+                                  >
+                                    <CalendarPlus className="h-4 w-4 text-brand" />
+                                    Add to Google Calendar
+                                  </a>
+                                  <a
+                                    href={`/api/driver/bookings/${encodeURIComponent(booking.reference)}/calendar?format=ics&leg=all`}
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/5"
+                                    onClick={() => setRowMenuId(null)}
+                                  >
+                                    <Download className="h-4 w-4 text-brand" />
+                                    Download .ics
+                                  </a>
+                                  {rowActions.length > 0 && (
+                                    <div
+                                      className={`my-1 border-t ${
+                                        isLight ? "border-gray-100" : "border-white/10"
+                                      }`}
+                                    />
+                                  )}
+                                </>
+                              )}
                               {rowActions.map((action) => (
                                 <button
                                   key={action}
