@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  MoreHorizontal,
   Phone,
   User,
   Plane,
@@ -45,6 +46,7 @@ type CalendarBooking = {
   serviceType: string;
   tripType: string;
   airportName: string | null;
+  airportCode: string | null;
   pickupAddress: string;
   dropoffAddress: string;
   pickupDate: string;
@@ -62,6 +64,7 @@ type CalendarBooking = {
   paymentStatus: PaymentStatus;
   amountDue?: number | null;
   paidAt?: string | null;
+  driver?: { name: string; vehicleLabel: string | null } | null;
 };
 
 type CalendarEntry = {
@@ -151,7 +154,36 @@ export function DriverBookingsCalendar({ fullHeight = false }: { fullHeight?: bo
 
   const days = useMemo(() => getMonthGrid(month), [month]);
 
-  const selectedDateEntries = selectedDateKey ? (entriesByDate.get(selectedDateKey) ?? []) : [];
+  const monthEntries = useMemo(() => {
+    const entries: CalendarEntry[] = [];
+    for (const [dateKey, list] of entriesByDate) {
+      const day = new Date(`${dateKey}T12:00:00`);
+      if (!isSameMonth(day, month)) continue;
+      entries.push(...list);
+    }
+    return entries.sort((a, b) => {
+      const aTime = getEntryPickupTime(a);
+      const bTime = getEntryPickupTime(b);
+      return new Date(aTime).getTime() - new Date(bTime).getTime();
+    });
+  }, [entriesByDate, month]);
+
+  const monthEntriesByDate = useMemo(() => {
+    const groups = new Map<string, CalendarEntry[]>();
+    for (const entry of monthEntries) {
+      const key = getEntryDateKey(entry);
+      const list = groups.get(key) ?? [];
+      list.push(entry);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [monthEntries]);
+
+  function selectEntry(entry: CalendarEntry) {
+    const key = getEntryDateKey(entry);
+    setSelectedDateKey(key);
+    setSelectedEntry(entry);
+  }
 
   function selectDate(day: Date) {
     const key = toUkDateKey(day);
@@ -189,8 +221,8 @@ export function DriverBookingsCalendar({ fullHeight = false }: { fullHeight?: bo
 
   return (
     <div
-      className={`flex gap-4 xl:gap-5 ${
-        fullHeight ? "h-full min-h-0 flex-col xl:flex-row" : "flex-col gap-6 xl:flex-row xl:items-start"
+      className={`grid gap-4 xl:gap-5 ${
+        fullHeight ? "h-full min-h-0 lg:grid-cols-2" : "lg:grid-cols-2"
       }`}
     >
       <div className={`flex min-h-0 flex-col ${fullHeight ? "flex-1" : "flex-1"} ${panelCard} p-4 sm:p-5`}>
@@ -331,75 +363,178 @@ export function DriverBookingsCalendar({ fullHeight = false }: { fullHeight?: bo
       </div>
 
       <aside
-        className={`w-full shrink-0 xl:w-[360px] ${fullHeight ? "min-h-0 xl:h-full" : ""} ${panelCard} flex flex-col p-4 sm:p-5`}
+        className={`flex min-h-0 min-w-0 flex-col ${fullHeight ? "h-full" : "min-h-[480px]"} ${panelCard}`}
       >
-        <div className={fullHeight ? "min-h-0 flex-1 overflow-y-auto" : ""}>
-        {!selectedDateKey ? (
-          <div className="py-12 text-center">
-            <Calendar className="mx-auto mb-4 h-10 w-10 text-gray-300 dark:text-gray-600" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Select a date to view paid bookings
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="mb-4 border-b border-gray-200 pb-4 dark:border-white/10">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                {formatUkDate(`${selectedDateKey}T12:00:00`, "EEE d MMM yyyy")}
-              </h3>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {selectedDateEntries.length === 0
-                  ? "No paid bookings on this date"
-                  : `${selectedDateEntries.length} booking${selectedDateEntries.length === 1 ? "" : "s"}`}
-              </p>
-              {bankHolidays.get(selectedDateKey) && (
-                <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-300">
-                  UK bank holiday: {bankHolidays.get(selectedDateKey)}
-                </p>
-              )}
-            </div>
-
-            {selectedDateEntries.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {selectedDateEntries.map((entry) => {
-                  const active =
-                    selectedEntry?.booking.id === entry.booking.id &&
-                    selectedEntry?.leg === entry.leg;
-                  return (
-                    <button
-                      key={`${entry.booking.id}-${entry.leg}`}
-                      type="button"
-                      onClick={() => setSelectedEntry(entry)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                        active
-                          ? "bg-emerald-500 text-white"
-                          : isLight
-                            ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            : "bg-white/10 text-gray-300 hover:bg-white/15"
-                      }`}
-                    >
-                      {entry.booking.reference}
-                      {entry.leg === "return" ? " (return)" : ""}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {selectedEntry ? (
-              <BookingDetailPanel
-                entry={selectedEntry}
-                isLight={isLight}
-                statusColors={statusColors}
-              />
-            ) : selectedDateEntries.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Nothing scheduled.</p>
-            ) : null}
-          </>
-        )}
+        <div className="shrink-0 border-b border-gray-200 px-4 py-4 dark:border-white/10 sm:px-5">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Bookings</h3>
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            {formatMonthLabel(month)} · {monthEntries.length} trip
+            {monthEntries.length === 1 ? "" : "s"}
+          </p>
         </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+          {loadingBookings ? (
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              Loading bookings…
+            </p>
+          ) : monthEntries.length === 0 ? (
+            <div className="py-12 text-center">
+              <Calendar className="mx-auto mb-3 h-9 w-9 text-gray-300 dark:text-gray-600" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No paid bookings in {formatMonthLabel(month)}
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-4">
+              {monthEntriesByDate.map(([dateKey, dayEntries]) => {
+                const day = new Date(`${dateKey}T12:00:00`);
+                const weekday = formatUkDate(day, "EEE").toUpperCase();
+                const dayNum = day.getDate();
+
+                return (
+                  <li key={dateKey}>
+                    <div className="flex gap-3">
+                      <div className="flex w-10 shrink-0 flex-col items-center pt-3 text-center">
+                        <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">
+                          {weekday}
+                        </span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {dayNum}
+                        </span>
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-2">
+                        {dayEntries.map((entry) => (
+                          <MonthBookingListCard
+                            key={`${entry.booking.id}-${entry.leg}`}
+                            entry={entry}
+                            isLight={isLight}
+                            selected={
+                              selectedEntry?.booking.id === entry.booking.id &&
+                              selectedEntry?.leg === entry.leg
+                            }
+                            onSelect={() => selectEntry(entry)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {selectedEntry && (
+          <div className="shrink-0 border-t border-gray-200 bg-gray-50/80 px-4 py-4 dark:border-white/10 dark:bg-white/5 sm:px-5 max-h-[40%] overflow-y-auto">
+            <BookingDetailPanel
+              entry={selectedEntry}
+              isLight={isLight}
+              statusColors={statusColors}
+            />
+          </div>
+        )}
       </aside>
     </div>
+  );
+}
+
+function getEntryDateKey(entry: CalendarEntry): string {
+  return toUkDateKey(getEntryPickupTime(entry));
+}
+
+function getEntryPickupTime(entry: CalendarEntry): string {
+  return entry.leg === "return" ? entry.booking.returnPickupDate! : entry.booking.pickupDate;
+}
+
+function getBookingListTitle(booking: CalendarBooking, leg: CalendarEntry["leg"]): string {
+  if (booking.serviceType === "PRE_BOOKED") {
+    return leg === "return" ? "Pre-booked journey · Return" : "Pre-booked journey";
+  }
+
+  const hub = booking.airportName ?? "Transfer";
+  const code = booking.airportCode ? ` (${booking.airportCode})` : "";
+  const direction = booking.tripType === "FROM_AIRPORT" ? "Arrivals" : "Departures";
+  const base = `${hub}${code} ${direction}`;
+  return leg === "return" ? `${base} · Return` : base;
+}
+
+function truncateAddress(address: string, max = 36): string {
+  if (address.length <= max) return address;
+  return `${address.slice(0, max).trim()}…`;
+}
+
+function MonthBookingListCard({
+  entry,
+  isLight,
+  selected,
+  onSelect,
+}: {
+  entry: CalendarEntry;
+  isLight: boolean;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const { booking, leg } = entry;
+  const pickupTime = getEntryPickupTime(entry);
+  const driverName = booking.driver?.name ?? "Assigned driver";
+  const vehicleInfo =
+    booking.driver?.vehicleLabel ??
+    `${booking.vehicleType} · ${booking.passengers} pax · ${booking.luggage} bags`;
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full rounded-xl border text-left transition-all ${
+        selected
+          ? "border-brand bg-brand-light/30 shadow-sm ring-1 ring-brand/25 dark:border-brand-end dark:bg-brand/10"
+          : isLight
+            ? "border-gray-200 bg-white hover:border-brand/30 hover:shadow-sm"
+            : "border-white/10 bg-dark-elevated hover:border-brand/40"
+      }`}
+    >
+      <div className="flex gap-0 overflow-hidden rounded-xl">
+        <div className="w-1 shrink-0 bg-brand-gradient" aria-hidden />
+        <div className="min-w-0 flex-1 p-3.5">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <span className="text-sm font-semibold text-brand dark:text-brand-end">
+              {formatUkTime(pickupTime)}
+              {leg === "return" && (
+                <span className="ml-1.5 text-[10px] font-bold uppercase text-muted">Return</span>
+              )}
+            </span>
+            <MoreHorizontal className="h-4 w-4 shrink-0 text-gray-400" />
+          </div>
+
+          <h4
+            className={`text-sm font-semibold leading-snug ${
+              isLight ? "text-gray-900" : "text-white"
+            }`}
+          >
+            {getBookingListTitle(booking, leg)}
+          </h4>
+
+          <p className={`mt-1.5 text-sm ${isLight ? "text-gray-800" : "text-gray-200"}`}>
+            {booking.customerName}
+          </p>
+
+          <p className={`mt-1 flex items-center gap-1.5 text-xs ${isLight ? "text-gray-500" : "text-gray-400"}`}>
+            <User className="h-3.5 w-3.5 shrink-0 text-brand" />
+            <span>
+              With: {driverName}
+              <span className="text-muted"> ({vehicleInfo})</span>
+            </span>
+          </p>
+
+          <p className={`mt-1.5 flex items-start gap-1.5 text-xs ${isLight ? "text-gray-500" : "text-gray-400"}`}>
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
+            <span className="line-clamp-2">{truncateAddress(booking.pickupAddress)}</span>
+          </p>
+        </div>
+      </div>
+    </button>
   );
 }
 
