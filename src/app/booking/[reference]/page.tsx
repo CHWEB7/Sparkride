@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { BookingPaymentSection } from "@/components/booking/BookingPaymentSection";
+import { BookingNextStepsSection } from "@/components/booking/BookingNextStepsSection";
 import { CheckCircle, Calendar, MapPin, Car, User, ArrowLeftRight } from "lucide-react";
 import { format } from "date-fns";
 import { getCustomerUserFromCookies } from "@/lib/customer-auth";
@@ -76,6 +77,13 @@ export default async function BookingConfirmationPage({
               <span className="font-bold text-dark dark:text-white">{booking.reference}</span>
             </p>
           </div>
+
+          {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+            <BookingNextStepsSection
+              status={booking.status}
+              paymentStatus={booking.paymentStatus}
+            />
+          )}
 
           {(booking.status === "ACCEPTED" || booking.status === "CONFIRMED") && (
             <div className="mb-6">
@@ -193,9 +201,9 @@ export default async function BookingConfirmationPage({
           <div className="mt-8">
             <p className="text-sm text-muted mb-4">
               {booking.status === "PENDING"
-                ? "Your driver will accept this booking shortly."
+                ? "We will email you as soon as your driver accepts this booking."
                 : booking.status === "ACCEPTED" && booking.paymentStatus === "AWAITING_PAYMENT"
-                  ? "Please complete payment before your travel date."
+                  ? "Please complete payment before your travel date to secure your trip."
                   : booking.status === "CONFIRMED"
                     ? "Your booking is confirmed and paid. See you on travel day."
                     : "Save your reference number for your records."}
