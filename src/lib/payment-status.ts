@@ -1,7 +1,7 @@
 import type { PaymentStatus } from "@prisma/client";
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  NOT_REQUIRED: "Payment with driver",
+  NOT_REQUIRED: "Payment pending",
   AWAITING_PAYMENT: "Pay now",
   PAID: "Paid",
   FAILED: "Payment failed",

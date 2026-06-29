@@ -17,11 +17,7 @@ export function canDriverAction(
     case "accept":
       return booking.status === "PENDING";
     case "send_payment_link":
-      return (
-        booking.status === "ACCEPTED" &&
-        booking.paymentStatus !== "PAID" &&
-        booking.paymentStatus !== "NOT_REQUIRED"
-      );
+      return booking.status === "ACCEPTED" && booking.paymentStatus !== "PAID";
     case "complete":
       if (booking.status === "CONFIRMED") return true;
       return (

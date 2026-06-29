@@ -18,8 +18,51 @@ export type PaymentLinkSkipReason =
   | "driver_not_connected"
   | "no_fare"
   | "token_error"
-  | "square_api_error"
-  | "not_required";
+  | "square_api_error";
+
+async function persistPaymentOutcome(
+  bookingId: string,
+  result: EnsurePaymentLinkResult
+): Promise<void> {
+  if (result.created || result.skipReason === "already_paid" || result.skipReason === "already_has_link") {
+    return;
+  }
+
+  let paymentStatus: PaymentStatus | null = null;
+
+  if (result.skipReason === "no_fare") {
+    paymentStatus = "NOT_REQUIRED";
+  } else if (
+    result.skipReason === "driver_not_connected" ||
+    result.skipReason === "square_not_configured" ||
+    result.skipReason === "token_error" ||
+    result.skipReason === "square_api_error"
+  ) {
+    paymentStatus = "AWAITING_PAYMENT";
+  }
+
+  if (!paymentStatus) return;
+
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { paymentStatus },
+  });
+}
+
+async function failPaymentLink(
+  bookingId: string,
+  result: EnsurePaymentLinkResult
+): Promise<EnsurePaymentLinkResult> {
+  await persistPaymentOutcome(bookingId, result);
+  const fresh = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { paymentStatus: true },
+  });
+  return {
+    ...result,
+    paymentStatus: fresh?.paymentStatus ?? result.paymentStatus,
+  };
+}
 
 export type EnsurePaymentLinkResult = {
   created: boolean;
@@ -65,15 +108,6 @@ export async function ensureBookingPaymentLink(
     };
   }
 
-  if (booking.paymentStatus === "NOT_REQUIRED") {
-    return {
-      created: false,
-      paymentLinkUrl: null,
-      paymentStatus: booking.paymentStatus,
-      skipReason: "not_required",
-    };
-  }
-
   if (booking.squarePaymentLinkUrl && !options?.forceResend) {
     return {
       created: false,
@@ -84,45 +118,45 @@ export async function ensureBookingPaymentLink(
   }
 
   if (!isSquareConfigured()) {
-    return {
+    return failPaymentLink(booking.id, {
       created: false,
       paymentLinkUrl: null,
       paymentStatus: booking.paymentStatus,
       skipReason: "square_not_configured",
       error: "Square is not configured on this site.",
-    };
+    });
   }
 
   if (!booking.driver || !driverHasSquareConnected(booking.driver)) {
-    return {
+    return failPaymentLink(booking.id, {
       created: false,
       paymentLinkUrl: null,
       paymentStatus: booking.paymentStatus,
       skipReason: "driver_not_connected",
       error: "The assigned driver has not connected Square yet.",
-    };
+    });
   }
 
   if (!booking.estimatedPrice || booking.estimatedPrice <= 0) {
-    return {
+    return failPaymentLink(booking.id, {
       created: false,
       paymentLinkUrl: null,
       paymentStatus: booking.paymentStatus,
       skipReason: "no_fare",
       error: "This booking has no fare to collect.",
-    };
+    });
   }
 
   const tokenResult = await getDriverAccessToken(booking.driver.id);
   if (!tokenResult.ok) {
     console.error("Square access token unavailable:", tokenResult.error);
-    return {
+    return failPaymentLink(booking.id, {
       created: false,
       paymentLinkUrl: null,
       paymentStatus: booking.paymentStatus,
       skipReason: "token_error",
       error: tokenResult.error,
-    };
+    });
   }
 
   const amountPence = Math.round(booking.estimatedPrice * 100);
@@ -136,13 +170,13 @@ export async function ensureBookingPaymentLink(
 
   if (!linkResult.ok) {
     console.error("Square payment link creation failed:", linkResult.error);
-    return {
+    return failPaymentLink(booking.id, {
       created: false,
       paymentLinkUrl: null,
       paymentStatus: booking.paymentStatus,
       skipReason: "square_api_error",
       error: linkResult.error,
-    };
+    });
   }
 
   await prisma.booking.update({
@@ -255,11 +289,14 @@ export async function sendBookingPaymentLinkEmail(bookingId: string): Promise<{
 
   const paymentLinkUrl = fresh?.squarePaymentLinkUrl ?? paymentResult.paymentLinkUrl;
 
-  if (!paymentLinkUrl && paymentResult.skipReason === "not_required") {
-    return { ok: false, error: "This booking does not require online payment" };
-  }
-
   if (!paymentLinkUrl) {
+    if (paymentResult.skipReason === "no_fare") {
+      return {
+        ok: false,
+        error: paymentLinkSkipMessage(paymentResult) ?? "This booking does not require online payment",
+      };
+    }
+
     return {
       ok: false,
       error: paymentLinkSkipMessage(paymentResult) ?? "Could not create payment link",
@@ -323,13 +360,11 @@ export function paymentLinkSkipMessage(result: EnsurePaymentLinkResult): string 
     case "not_accepted":
       return "The driver must accept this booking before a payment link can be sent.";
     case "driver_not_connected":
-      return "Your driver has not finished connecting Square for online payments.";
+      return "Your driver has not finished connecting Square for online payments. Ask them to connect Square in Driver Settings, then refresh this page.";
     case "square_not_configured":
       return "Online payments are not configured on Sparkride yet.";
     case "no_fare":
       return "No fare is set for this booking, so a payment link cannot be created.";
-    case "not_required":
-      return "This booking is paid directly to the driver — no online payment link is needed.";
     case "token_error":
       return "We could not access your driver's Square account. They may need to reconnect Square.";
     case "square_api_error":

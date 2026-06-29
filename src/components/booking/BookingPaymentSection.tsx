@@ -43,7 +43,7 @@ export function BookingPaymentSection({
         </p>
       )}
 
-      {paymentStatus === "AWAITING_PAYMENT" && paymentLinkUrl && (
+      {paymentLinkUrl && paymentStatus !== "PAID" && (
         <div className="mt-5 space-y-3">
           <a
             href={paymentLinkUrl}
@@ -71,10 +71,16 @@ export function BookingPaymentSection({
         </div>
       )}
 
-      {paymentStatus === "NOT_REQUIRED" && (
-        <p className="mt-4 text-sm text-muted leading-relaxed">
-          {paymentSetupNote ??
-            "Online payment is not available for this booking yet. If your driver has connected Square, refresh this page in a moment."}
+      {paymentStatus === "NOT_REQUIRED" && !paymentLinkUrl && (
+        <p className="mt-4 text-sm leading-relaxed">
+          {paymentSetupNote ? (
+            <span className="text-amber-800 dark:text-amber-200">{paymentSetupNote}</span>
+          ) : (
+            <span className="text-muted">
+              Online payment is not set up for this booking yet. If your driver has connected Square,
+              refresh this page in a moment.
+            </span>
+          )}
         </p>
       )}
 
