@@ -1,8 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { BookingPaymentSection } from "@/components/booking/BookingPaymentSection";
 import { BookingNextStepsSection } from "@/components/booking/BookingNextStepsSection";
@@ -100,10 +98,7 @@ export default async function BookingConfirmationPage({
   };
 
   return (
-    <>
-      <Header />
-      <main className="pt-24 pb-16 min-h-screen bg-white dark:bg-dark">
-        <SiteContainer className="max-w-3xl">
+    <SiteContainer className="max-w-3xl pt-8">
           <div className="mb-10">
             <div className="w-16 h-16 rounded-full bg-brand-light dark:bg-brand/10 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-brand" />
@@ -261,7 +256,7 @@ export default async function BookingConfirmationPage({
           </div>
 
           <div className="mt-8">
-            <p className="text-sm text-muted mb-4">
+            <p className="mb-4 text-sm text-muted">
               {booking.status === "PENDING"
                 ? "We will email you as soon as your driver accepts this booking."
                 : booking.status === "ACCEPTED" && booking.paymentStatus === "AWAITING_PAYMENT"
@@ -270,16 +265,21 @@ export default async function BookingConfirmationPage({
                     ? "Your booking is confirmed and paid. See you on travel day."
                     : "Save your reference number for your records."}
             </p>
+            <div className="flex flex-wrap gap-3">
             <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 bg-dark text-white font-semibold rounded-full hover:opacity-90 transition-opacity text-sm"
+              href="/my-bookings"
+              className="inline-flex items-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
-              Back to home
+              Back to my bookings
             </Link>
+            <Link
+              href="/book"
+              className="inline-flex items-center rounded-full border border-gray-200 px-6 py-3 text-sm font-semibold text-dark transition-opacity hover:opacity-90 dark:border-white/10 dark:text-white"
+            >
+              Portal hub
+            </Link>
+            </div>
           </div>
         </SiteContainer>
-      </main>
-      <Footer />
-    </>
   );
 }
