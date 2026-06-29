@@ -187,4 +187,4 @@ export const SQUARE_OAUTH_SCOPES = [
   "PAYMENTS_WRITE",
   "ORDERS_READ",
   "ORDERS_WRITE",
-].join(" ");
+].join("+");

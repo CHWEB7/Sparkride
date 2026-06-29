@@ -20,6 +20,10 @@ const SQUARE_ERROR_HELP: Record<string, string> = {
   access_denied: "You declined Square permissions. Click Connect Square and approve the requested access.",
   permissions_missing:
     "Square connected but payment permissions were not granted. Tap Reconnect Square and approve all permissions, including Orders access.",
+  not_configured:
+    "Square credentials are missing in Vercel. Add SQUARE_APPLICATION_ID and SQUARE_APPLICATION_SECRET, then redeploy production.",
+  authorize_failed:
+    "Sparkride could not start the Square authorization flow. Use the Connect Square guide and try again.",
 };
 
 function squareErrorHelp(reason: string | null): string | null {
@@ -202,7 +206,10 @@ export function DriverSquareConnect({
 
         {status.connected ? (
           <div className="flex flex-col gap-2 shrink-0">
-            <a href="/api/square/oauth/authorize?reconnect=1" className={connectBtnClass}>
+            <a
+              href="/driver/settings/integrations/connect?reconnect=1"
+              className={connectBtnClass}
+            >
               Reconnect Square
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -214,7 +221,7 @@ export function DriverSquareConnect({
             )}
           </div>
         ) : (
-          <a href="/api/square/oauth/authorize" className={connectBtnClass}>
+          <a href="/driver/settings/integrations/connect" className={connectBtnClass}>
             Connect Square
             <ExternalLink className="h-4 w-4" />
           </a>

@@ -58,12 +58,12 @@ export function buildSquareAuthorizeUrl(state: string, redirectUri: string): str
 
   const params = new URLSearchParams({
     client_id: clientId,
+    response_type: "code",
     scope: SQUARE_OAUTH_SCOPES,
     state,
     redirect_uri: redirectUri,
   });
 
-  // session=false forces login in production; ignored (and omitted) in sandbox.
   if (squareEnvironment() === "production") {
     params.set("session", "false");
   }
