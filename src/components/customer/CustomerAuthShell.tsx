@@ -89,7 +89,8 @@ export function CustomerAuthShell({
   children,
 }: CustomerAuthShellProps) {
   const { theme } = useTheme();
-  const isLight = theme === "light";
+  const forceDark = mode === "login";
+  const isLight = !forceDark && theme === "light";
   const hero = HERO_COPY[mode];
   const alternateHref =
     mode === "signup"
@@ -117,7 +118,7 @@ export function CustomerAuthShell({
       <div className="relative z-10 min-h-screen flex flex-col">
         <header className="flex items-center justify-between px-4 pt-6 sm:px-8 lg:justify-end">
           <Logo href="/" light size="header" className="lg:hidden" />
-          <ThemeToggle light />
+          {!forceDark && <ThemeToggle light />}
         </header>
 
         <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-center px-4 sm:px-8 pb-10 lg:pb-12 pt-8 lg:pt-4">
