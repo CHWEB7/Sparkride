@@ -46,7 +46,7 @@ export function BookingModal({ onClose, children }: BookingModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label="New booking"
-        className="relative flex h-[min(700px,calc(100vh-2rem))] w-full max-w-[440px] flex-col overflow-hidden rounded-3xl bg-white dark:bg-dark-elevated shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
+        className="relative flex h-[min(760px,calc(100vh-2rem))] w-full max-w-[min(920px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl bg-white dark:bg-dark-elevated shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
         initial={{ y: 24, opacity: 0, scale: 0.98 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
