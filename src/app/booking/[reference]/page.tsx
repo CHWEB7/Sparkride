@@ -28,21 +28,38 @@ export default async function BookingConfirmationPage({
     transactionId?: string;
     orderId?: string;
     referenceId?: string;
+    checkoutId?: string;
   }>;
 }) {
   const { reference } = await params;
   const query = await searchParams;
   const user = await getCustomerUserFromCookies();
-  if (!user) redirect(`/login?redirect=/booking/${reference}`);
+
+  const returnQuery = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value) returnQuery.set(key, value);
+  }
+  const returnPath =
+    returnQuery.size > 0
+      ? `/booking/${reference}?${returnQuery.toString()}`
+      : `/booking/${reference}`;
+
+  if (!user) redirect(`/login?redirect=${encodeURIComponent(returnPath)}`);
 
   const customer = await ensureCustomer(user);
   let booking = await prisma.booking.findUnique({ where: { reference } });
   if (!booking || booking.customerId !== customer.id) notFound();
 
   const returningFromSquare =
-    query.paid === "1" || Boolean(query.transactionId) || Boolean(query.orderId);
+    query.paid === "1" ||
+    Boolean(query.transactionId) ||
+    Boolean(query.orderId) ||
+    Boolean(query.checkoutId);
 
-  if (returningFromSquare && booking.paymentStatus !== "PAID") {
+  const shouldSyncPayment =
+    booking.paymentStatus === "AWAITING_PAYMENT" || returningFromSquare;
+
+  if (shouldSyncPayment && booking.paymentStatus !== "PAID") {
     await syncBookingPaymentFromSquare(reference, {
       squarePaymentId: query.transactionId,
       squareOrderId: query.orderId,
