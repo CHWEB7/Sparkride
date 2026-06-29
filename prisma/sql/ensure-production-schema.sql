@@ -22,6 +22,10 @@ ALTER TABLE "Booking"
   ADD COLUMN IF NOT EXISTS "squarePaymentId" TEXT,
   ADD COLUMN IF NOT EXISTS "paidAt" TIMESTAMP(3);
 
+ALTER TABLE "Booking"
+  ADD COLUMN IF NOT EXISTS "cancellationReason" TEXT,
+  ADD COLUMN IF NOT EXISTS "cancelledAt" TIMESTAMP(3);
+
 ALTER TABLE "Driver"
   ADD COLUMN IF NOT EXISTS "squareMerchantId" TEXT,
   ADD COLUMN IF NOT EXISTS "squareLocationId" TEXT,

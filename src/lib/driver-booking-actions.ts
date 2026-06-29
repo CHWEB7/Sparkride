@@ -60,7 +60,7 @@ export function driverActionLabel(action: DriverBookingAction): string {
     case "complete":
       return "Mark completed";
     case "cancel":
-      return "Cancel";
+      return "Cancel ride";
   }
 }
 

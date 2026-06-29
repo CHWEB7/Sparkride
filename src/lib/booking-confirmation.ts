@@ -1,6 +1,6 @@
 import type { Booking, Driver, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { sendBookingAcceptedEmail, sendBookingPaidEmail } from "@/lib/send-booking-email";
+import { sendBookingAcceptedEmail, sendBookingPaidEmail, sendBookingCancelledEmail } from "@/lib/send-booking-email";
 import { isSquareConfigured } from "@/lib/square/config";
 import {
   driverHasSquareConnected,
@@ -396,6 +396,44 @@ export async function completeBookingPayment(
   }
 
   return true;
+}
+
+export async function handleBookingCancelled(
+  bookingId: string,
+  cancellationReason: string
+): Promise<{ ok: boolean; error?: string }> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { driver: true },
+  });
+
+  if (!booking) {
+    return { ok: false, error: "Booking not found" };
+  }
+
+  if (!booking.customerEmail) {
+    return { ok: false, error: "Customer email not available" };
+  }
+
+  const emailResult = await sendBookingCancelledEmail(booking.customerEmail, {
+    reference: booking.reference,
+    customerName: booking.customerName,
+    pickupAddress: booking.pickupAddress,
+    dropoffAddress: booking.dropoffAddress,
+    pickupDate: booking.pickupDate,
+    driverName: booking.driver?.name ?? "Your driver",
+    vehicleLabel: booking.driver?.vehicleLabel,
+    cancellationReason,
+    paymentStatus: booking.paymentStatus,
+    amountPaid: booking.amountDue ?? booking.estimatedPrice,
+  });
+
+  if (!emailResult.ok) {
+    console.error(`Cancellation email failed for ${booking.reference}:`, emailResult.error);
+    return { ok: false, error: emailResult.error };
+  }
+
+  return { ok: true };
 }
 
 export function paymentLinkSkipMessage(result: EnsurePaymentLinkResult): string | null {
