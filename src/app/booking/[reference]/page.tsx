@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
+import { BackToPortalHub } from "@/components/customer/BackToPortalHub";
 import { BookingPaymentSection } from "@/components/booking/BookingPaymentSection";
 import { BookingNextStepsSection } from "@/components/booking/BookingNextStepsSection";
 import { AddToCalendarSection } from "@/components/booking/AddToCalendarSection";
@@ -98,7 +101,11 @@ export default async function BookingConfirmationPage({
   };
 
   return (
-    <SiteContainer className="max-w-3xl pt-8">
+    <>
+      <Header />
+      <main className="min-h-screen bg-white pb-16 pt-24 dark:bg-dark">
+        <SiteContainer className="max-w-3xl">
+          <BackToPortalHub className="mb-6" />
           <div className="mb-10">
             <div className="w-16 h-16 rounded-full bg-brand-light dark:bg-brand/10 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-brand" />
@@ -266,20 +273,23 @@ export default async function BookingConfirmationPage({
                     : "Save your reference number for your records."}
             </p>
             <div className="flex flex-wrap gap-3">
-            <Link
-              href="/my-bookings"
-              className="inline-flex items-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              Back to my bookings
-            </Link>
-            <Link
-              href="/book"
-              className="inline-flex items-center rounded-full border border-gray-200 px-6 py-3 text-sm font-semibold text-dark transition-opacity hover:opacity-90 dark:border-white/10 dark:text-white"
-            >
-              Portal hub
-            </Link>
+              <Link
+                href="/my-bookings"
+                className="inline-flex items-center rounded-full border border-gray-200 px-6 py-3 text-sm font-semibold text-dark transition-opacity hover:opacity-90 dark:border-white/10 dark:text-white"
+              >
+                My bookings
+              </Link>
+              <Link
+                href="/book"
+                className="inline-flex items-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Portal hub
+              </Link>
             </div>
           </div>
         </SiteContainer>
+      </main>
+      <Footer />
+    </>
   );
 }
