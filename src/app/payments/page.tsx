@@ -40,7 +40,14 @@ export default function PaymentsPage() {
                     <li>You book online and receive a reference number.</li>
                     <li>Your driver confirms the booking.</li>
                     <li>You receive a payment link by email and on your booking page.</li>
-                    <li>You pay on Square&apos;s secure checkout. Funds go to your driver&apos;s Square account.</li>
+                    <li>
+                      You pay on Square&apos;s secure checkout. Funds go to your driver&apos;s Square
+                      account. See our{" "}
+                      <Link href="/cancellation" className="text-brand hover:underline">
+                        Cancellation &amp; Delays Policy
+                      </Link>{" "}
+                      before paying.
+                    </li>
                   </ol>
                 </div>
               </div>
