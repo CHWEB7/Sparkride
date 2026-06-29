@@ -2,6 +2,7 @@ import type { PaymentStatus } from "@prisma/client";
 import Link from "next/link";
 import { CreditCard, CheckCircle2, ExternalLink } from "lucide-react";
 import { PAYMENT_STATUS_COLORS, PAYMENT_STATUS_LABELS } from "@/lib/payment-status";
+import { PaymentCancellationPolicyNote } from "@/components/booking/PaymentCancellationPolicyNote";
 
 type BookingPaymentSectionProps = {
   reference: string;
@@ -58,6 +59,7 @@ export function BookingPaymentSection({
             You will complete payment on Square&apos;s secure checkout. Sparkride does not store your card
             details. Payments are processed by Square to your driver&apos;s merchant account.
           </p>
+          <PaymentCancellationPolicyNote />
         </div>
       )}
 

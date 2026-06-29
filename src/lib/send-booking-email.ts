@@ -1,5 +1,6 @@
 import { getSiteUrl } from "@/lib/site-url";
 import { buildCustomerCalendarEmailLinks } from "@/lib/calendar/calendar-email-links";
+import { cancellationPolicyUrl } from "@/lib/cancellation-policy";
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
@@ -48,6 +49,39 @@ async function sendResendEmail(
     return { ok: false, error: data.message || `Email provider error (${res.status})` };
   }
   return { ok: true };
+}
+
+function paymentEmailPayBlock(
+  paymentLinkUrl: string,
+  estimatedPrice?: number | null
+): string {
+  return `
+      <div style="margin: 28px 0; text-align: center;">
+        <a href="${paymentLinkUrl}"
+           style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
+          Pay now — £${estimatedPrice ?? ""}
+        </a>
+        <p style="color: #6b7280; font-size: 13px; margin-top: 12px; line-height: 1.5;">
+          Secure payment via Square. Sparkride does not store your card details.
+        </p>
+        <p style="color: #6b7280; font-size: 12px; margin-top: 12px; line-height: 1.5;">
+          By paying, you agree to our
+          <a href="${cancellationPolicyUrl()}" style="color: #6a68de; text-decoration: underline;">
+            Cancellation &amp; Delays Policy
+          </a>
+          (including 48-hour cancellation and refund terms).
+        </p>
+      </div>
+    `;
+}
+
+function paymentEmailFooter(siteUrl: string, includePolicyLink: boolean): string {
+  if (includePolicyLink) {
+    return `Questions? Reply to this email, read our
+        <a href="${cancellationPolicyUrl()}" style="color: #6a68de;"> cancellation policy</a>, or visit
+        <a href="${siteUrl}/payments" style="color: #6a68de;"> how payments work</a>.`;
+  }
+  return `Questions? Reply to this email or visit <a href="${siteUrl}/payments" style="color: #6a68de;">how payments work</a>.`;
 }
 
 export type BookingConfirmedDetails = {
@@ -102,17 +136,7 @@ export async function sendBookingConfirmedEmail(
     `;
 
   const payBlock = showPayButton
-    ? `
-      <div style="margin: 28px 0; text-align: center;">
-        <a href="${booking.paymentLinkUrl}"
-           style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
-          Pay now — £${booking.estimatedPrice ?? ""}
-        </a>
-        <p style="color: #6b7280; font-size: 13px; margin-top: 12px; line-height: 1.5;">
-          Secure payment via Square. Sparkride does not store your card details.
-        </p>
-      </div>
-    `
+    ? paymentEmailPayBlock(booking.paymentLinkUrl!, booking.estimatedPrice)
     : "";
 
   const html = `
@@ -145,7 +169,7 @@ export async function sendBookingConfirmedEmail(
       </div>
 
       <p style="color: #9ca3af; font-size: 13px;">
-        Questions? Reply to this email or visit <a href="${siteUrl}/payments" style="color: #6a68de;">how payments work</a>.
+        ${paymentEmailFooter(siteUrl, Boolean(showPayButton))}
       </p>
     </div>
   `.trim();
@@ -197,17 +221,7 @@ export async function sendBookingAcceptedEmail(
     `;
 
   const payBlock = showPayButton
-    ? `
-      <div style="margin: 28px 0; text-align: center;">
-        <a href="${booking.paymentLinkUrl}"
-           style="display: inline-block; background: linear-gradient(135deg, #6a68de, #82dbdf); color: #ffffff; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 999px;">
-          Pay now — £${booking.estimatedPrice ?? ""}
-        </a>
-        <p style="color: #6b7280; font-size: 13px; margin-top: 12px; line-height: 1.5;">
-          Secure payment via Square. Sparkride does not store your card details.
-        </p>
-      </div>
-    `
+    ? paymentEmailPayBlock(booking.paymentLinkUrl!, booking.estimatedPrice)
     : "";
 
   const html = `
@@ -240,7 +254,7 @@ export async function sendBookingAcceptedEmail(
       </div>
 
       <p style="color: #9ca3af; font-size: 13px;">
-        Questions? Reply to this email or visit <a href="${siteUrl}/payments" style="color: #6a68de;">how payments work</a>.
+        ${paymentEmailFooter(siteUrl, Boolean(showPayButton))}
       </p>
     </div>
   `.trim();
