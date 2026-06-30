@@ -94,20 +94,24 @@ export function buildBookingReviewSections(
   ];
 
   if (options.isAirportTransfer) {
+    const flightLines = [
+      ...(form.flightNumber.trim() ? [`Outbound flight: ${form.flightNumber}`] : []),
+      `Departure: ${formatBookingTimeLabel(form.flightDepartureTime)}`,
+      `Terminal: ${getAirportTerminalLabel(form.airportCode, form.flightTerminal)}`,
+      ...(isReturn
+        ? [
+            ...(form.returnFlightNumber.trim()
+              ? [`Return flight: ${form.returnFlightNumber}`]
+              : []),
+            `Return departure: ${formatBookingTimeLabel(form.returnFlightDepartureTime)}`,
+            `Return terminal: ${getAirportTerminalLabel(form.airportCode, form.returnFlightTerminal)}`,
+          ]
+        : []),
+    ];
+
     sections.push({
       title: "Flight information",
-      lines: [
-        `Outbound flight: ${form.flightNumber}`,
-        `Departure: ${formatBookingTimeLabel(form.flightDepartureTime)}`,
-        `Terminal: ${getAirportTerminalLabel(form.airportCode, form.flightTerminal)}`,
-        ...(isReturn
-          ? [
-              `Return flight: ${form.returnFlightNumber}`,
-              `Return departure: ${formatBookingTimeLabel(form.returnFlightDepartureTime)}`,
-              `Return terminal: ${getAirportTerminalLabel(form.airportCode, form.returnFlightTerminal)}`,
-            ]
-          : []),
-      ],
+      lines: flightLines,
     });
   }
 

@@ -59,7 +59,7 @@ const ALL_SECTIONS = [
   {
     id: "flight",
     title: "Flight information",
-    subtitle: "Flight number, departure time, and terminal",
+    subtitle: "Departure time and terminal",
   },
   { id: "driver", title: "Driver", subtitle: "Choose your driver" },
   { id: "account", title: "Account", subtitle: "Sign in or create an account" },
@@ -169,24 +169,63 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [confirmedSections, setConfirmedSections] = useState<Set<SectionId>>(() =>
-    profile ? new Set(["account"]) : new Set()
-  );
-  const [accountLocked, setAccountLocked] = useState(() => Boolean(profile));
+  const [confirmedSections, setConfirmedSections] = useState<Set<SectionId>>(() => new Set());
+  const [accountLocked, setAccountLocked] = useState(false);
+  const [needsEmailVerify, setNeedsEmailVerify] = useState(false);
   const [sectionError, setSectionError] = useState("");
 
   useEffect(() => {
     setAuthProfile(profile);
-    if (profile) {
-      setAccountLocked(true);
-      setConfirmedSections((prev) => new Set([...prev, "account"]));
-      setForm((prev) => ({
-        ...prev,
-        customerName: prev.customerName || profile.name || "",
-        customerEmail: profile.email,
-        customerPhone: prev.customerPhone || profile.phone || "",
-      }));
+    if (!profile) {
+      setAccountLocked(false);
+      setNeedsEmailVerify(false);
+      return;
     }
+
+    setForm((prev) => ({
+      ...prev,
+      customerName: prev.customerName || profile.name || "",
+      customerEmail: profile.email,
+      customerPhone: prev.customerPhone || profile.phone || "",
+    }));
+
+    let cancelled = false;
+
+    async function syncAccountState() {
+      try {
+        const res = await fetch("/api/auth/mfa/status");
+        if (!res.ok || cancelled) return;
+
+        const data = (await res.json()) as { verified?: boolean };
+        if (cancelled) return;
+
+        if (data.verified) {
+          setNeedsEmailVerify(false);
+          setAccountLocked(true);
+          setConfirmedSections((prev) => new Set([...prev, "account"]));
+          return;
+        }
+
+        setNeedsEmailVerify(true);
+        setAccountLocked(false);
+        setConfirmedSections((prev) => {
+          const next = new Set(prev);
+          next.delete("account");
+          return next;
+        });
+      } catch {
+        if (!cancelled) {
+          setNeedsEmailVerify(true);
+          setAccountLocked(false);
+        }
+      }
+    }
+
+    syncAccountState();
+
+    return () => {
+      cancelled = true;
+    };
   }, [profile]);
 
   useEffect(() => {
@@ -299,11 +338,9 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
           return null;
         case "flight":
           if (!isFlightSectionRequired(form.serviceType)) return null;
-          if (!form.flightNumber.trim()) return "Flight number is required";
           if (!form.flightDepartureTime) return "Flight departure time is required";
           if (!form.flightTerminal) return "Please select a terminal";
           if (isReturn) {
-            if (!form.returnFlightNumber.trim()) return "Return flight number is required";
             if (!form.returnFlightDepartureTime) return "Return flight departure time is required";
             if (!form.returnFlightTerminal) return "Please select a return terminal";
           }
@@ -316,6 +353,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
           return null;
         case "account":
           if (!authProfile) return "Please sign in or create an account";
+          if (needsEmailVerify) return "Please verify your email to continue";
           return null;
         case "details":
           if (!form.customerName.trim() || form.customerName.trim().length < 2) {
@@ -334,7 +372,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
           return null;
       }
     },
-    [form, isReturn, authProfile]
+    [form, isReturn, authProfile, needsEmailVerify]
   );
 
   const isSectionConfirmed = useCallback(
@@ -467,6 +505,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   function handleAuthenticated(nextProfile: CustomerProfile) {
     setAuthProfile(nextProfile);
     onProfileChange?.(nextProfile);
+    setNeedsEmailVerify(false);
     setAccountLocked(true);
     setForm((prev) => ({
       ...prev,
@@ -807,7 +846,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                 {(!isReturn || flightLeg === "outbound") && (
                   <div className="space-y-4">
                     <div>
-                      <label className={squareLabelClass}>Flight number</label>
+                      <label className={squareLabelClass}>Flight number (optional)</label>
                       <input
                         type="text"
                         placeholder="e.g. FR1234"
@@ -848,7 +887,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                 {isReturn && flightLeg === "return" && (
                   <div className="space-y-4">
                     <div>
-                      <label className={squareLabelClass}>Return flight number</label>
+                      <label className={squareLabelClass}>Return flight number (optional)</label>
                       <input
                         type="text"
                         placeholder="e.g. FR1234"
@@ -926,7 +965,11 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             )}
 
             {section.id === "account" && !accountLocked && (
-              <BookingAccountPanel onAuthenticated={handleAuthenticated} />
+              <BookingAccountPanel
+                verifyOnly={needsEmailVerify}
+                defaultEmail={authProfile?.email}
+                onAuthenticated={handleAuthenticated}
+              />
             )}
 
             {section.id === "details" && authProfile && (

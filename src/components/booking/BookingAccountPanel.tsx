@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/site-url";
 import type { CustomerProfile } from "@/lib/customer";
+import { CustomerEmailVerifyPanel } from "@/components/customer/CustomerEmailVerifyPanel";
 import {
   squareButtonPrimaryClass,
   squareInputClass,
@@ -16,19 +17,24 @@ type BookingAccountPanelProps = {
   defaultName?: string;
   defaultPhone?: string;
   defaultEmail?: string;
+  verifyOnly?: boolean;
   onAuthenticated: (profile: CustomerProfile) => void;
 };
 
 type AuthMode = "signin" | "signup";
+type AuthStep = "credentials" | "verify";
 
 export function BookingAccountPanel({
   defaultName = "",
   defaultPhone = "",
   defaultEmail = "",
+  verifyOnly = false,
   onAuthenticated,
 }: BookingAccountPanelProps) {
+  const [step, setStep] = useState<AuthStep>(verifyOnly ? "verify" : "credentials");
   const [mode, setMode] = useState<AuthMode>("signin");
   const [loading, setLoading] = useState(false);
+  const [bootstrapping, setBootstrapping] = useState(verifyOnly);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [name, setName] = useState(defaultName);
@@ -37,13 +43,70 @@ export function BookingAccountPanel({
   const [password, setPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  async function loadProfile() {
+  const loadProfile = useCallback(async () => {
     const res = await fetch("/api/customer/profile");
     if (!res.ok) {
       throw new Error("Could not load your account");
     }
     const profile = (await res.json()) as CustomerProfile;
     onAuthenticated(profile);
+  }, [onAuthenticated]);
+
+  useEffect(() => {
+    if (!verifyOnly) return;
+
+    async function prepareVerifyStep() {
+      setBootstrapping(true);
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user?.email) {
+          setStep("credentials");
+          return;
+        }
+
+        const statusRes = await fetch("/api/auth/mfa/status");
+        if (statusRes.ok) {
+          const data = (await statusRes.json()) as { verified?: boolean };
+          if (data.verified) {
+            await loadProfile();
+            return;
+          }
+        }
+
+        setEmail(user.email);
+        setStep("verify");
+      } catch {
+        setStep("credentials");
+      } finally {
+        setBootstrapping(false);
+      }
+    }
+
+    prepareVerifyStep();
+  }, [verifyOnly, loadProfile]);
+
+  async function continueAfterAuth(userEmail: string) {
+    try {
+      const statusRes = await fetch("/api/auth/mfa/status");
+      if (statusRes.ok) {
+        const data = (await statusRes.json()) as { verified?: boolean };
+        if (data.verified) {
+          await loadProfile();
+          return;
+        }
+      }
+
+      setEmail(userEmail);
+      setStep("verify");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -53,7 +116,7 @@ export function BookingAccountPanel({
     setMessage("");
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -64,13 +127,12 @@ export function BookingAccountPanel({
       return;
     }
 
-    try {
-      await loadProfile();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed");
-    } finally {
-      setLoading(false);
+    if (data.user?.email) {
+      await continueAfterAuth(data.user.email);
+      return;
     }
+
+    setLoading(false);
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -107,15 +169,9 @@ export function BookingAccountPanel({
       return;
     }
 
-    if (data.session) {
+    if (data.session && data.user?.email) {
       await fetch("/api/customer/profile", { method: "POST" });
-      try {
-        await loadProfile();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Account setup failed");
-      } finally {
-        setLoading(false);
-      }
+      await continueAfterAuth(data.user.email);
       return;
     }
 
@@ -124,6 +180,54 @@ export function BookingAccountPanel({
     );
     setMode("signin");
     setLoading(false);
+  }
+
+  async function handleVerified() {
+    setLoading(true);
+    setError("");
+    try {
+      await loadProfile();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load your account");
+      setLoading(false);
+    }
+  }
+
+  if (bootstrapping) {
+    return (
+      <div className="flex items-center justify-center py-10">
+        <Loader2 className="h-7 w-7 animate-spin text-brand" />
+      </div>
+    );
+  }
+
+  if (step === "verify") {
+    return (
+      <div>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          Before continuing with your booking, verify your email with the one-time code we send to
+          your inbox.
+        </p>
+        {error && (
+          <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+            {error}
+          </div>
+        )}
+        <CustomerEmailVerifyPanel
+          email={email}
+          redirect="/book"
+          onVerified={handleVerified}
+          onBack={
+            verifyOnly
+              ? undefined
+              : () => {
+                  setStep("credentials");
+                  setError("");
+                }
+          }
+        />
+      </div>
+    );
   }
 
   return (
