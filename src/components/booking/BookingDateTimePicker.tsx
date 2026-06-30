@@ -40,6 +40,7 @@ type BookingDateTimePickerProps = {
   onTimeChange: (time: string) => void;
   minDate?: string;
   title?: string;
+  square?: boolean;
 };
 
 export function BookingDateTimePicker({
@@ -49,6 +50,7 @@ export function BookingDateTimePicker({
   onTimeChange,
   minDate,
   title = "Select time",
+  square = false,
 }: BookingDateTimePickerProps) {
   const todayKey = toUkDateKey(new Date());
   const min = minDate ?? todayKey;
@@ -168,7 +170,9 @@ export function BookingDateTimePicker({
                     key={slot}
                     type="button"
                     onClick={() => onTimeChange(slot)}
-                    className={`w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all md:py-2.5 ${
+                    className={`w-full border px-4 py-3 text-left text-sm font-medium transition-all md:py-2.5 ${
+                      square ? "rounded-none" : "rounded-xl"
+                    } ${
                       selected
                         ? "border-brand bg-brand-light/40 text-brand ring-1 ring-brand/30 dark:bg-brand/10 dark:text-brand-end"
                         : "border-gray-200/80 bg-white text-dark hover:border-brand/40 dark:border-white/10 dark:bg-dark dark:text-gray-100"

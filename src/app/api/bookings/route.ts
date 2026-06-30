@@ -5,7 +5,7 @@ import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
 import { getHub, formatHubLabel, isHubTransfer, normalizeServiceType } from "@/lib/hubs";
 import { estimatePrice } from "@/lib/airports";
-import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
+import { getCustomerUserFromRequest } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
 import { getApiErrorMessage } from "@/lib/api-errors";
 
@@ -25,13 +25,9 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCustomerUserWithDailyMfa(req);
+    const user = await getCustomerUserFromRequest(req);
     if (!user) {
-      const authed = await getCustomerUserFromRequest(req);
-      if (authed) {
-        return json({ error: "Email verification required", code: "mfa_required" }, 403);
-      }
-      return json({ error: "Sign in required to create a booking" }, 401);
+      return json({ error: "Sign in required to complete your booking" }, 401);
     }
 
     const customer = await ensureCustomer(user);
