@@ -4,10 +4,8 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  formatBookingTimeLabel,
-  PICKUP_TIME_PERIODS,
-} from "@/components/booking/time-slot-groups";
+import { PICKUP_TIME_PERIODS } from "@/components/booking/time-slot-groups";
+import { TimePeriodScroller } from "@/components/booking/TimePeriodScroller";
 import {
   addMonths,
   getMonthGrid,
@@ -147,37 +145,13 @@ export function BookingDateTimePicker({
           <p className="mb-4 shrink-0 text-xs leading-relaxed text-muted">
             When your driver collects you — not your flight or drop-off time.
           </p>
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="space-y-6">
-              {PICKUP_TIME_PERIODS.map((period) => (
-                <div key={period.id}>
-                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
-                    {period.label}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {period.slots.map((slot) => {
-                      const selected = time === slot;
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => onTimeChange(slot)}
-                          className={`w-full border px-3 py-2.5 text-left text-sm font-medium transition-all ${
-                            square ? "rounded-none" : "rounded-xl"
-                          } ${
-                            selected
-                              ? "border-brand bg-brand-light/40 text-brand ring-1 ring-brand/30 dark:bg-brand/10 dark:text-brand-end"
-                              : "border-gray-200/80 bg-white text-dark hover:border-brand/40 dark:border-white/10 dark:bg-dark dark:text-gray-100"
-                          }`}
-                        >
-                          {formatBookingTimeLabel(slot)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+            <TimePeriodScroller
+              periods={PICKUP_TIME_PERIODS}
+              value={time}
+              onChange={onTimeChange}
+              square={square}
+            />
           </div>
         </div>
       </div>
