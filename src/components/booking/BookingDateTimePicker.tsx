@@ -56,7 +56,7 @@ export function BookingDateTimePicker({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full max-w-full space-y-4 overflow-hidden">
       <div>
         <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
           {title}
@@ -77,7 +77,7 @@ export function BookingDateTimePicker({
         </div>
       </div>
 
-      <div className="max-w-md">
+      <div className="w-full max-w-md">
         <div className="mb-3 flex items-center justify-between gap-3">
           <button
             type="button"

@@ -13,6 +13,7 @@ type BookingAccordionSectionProps = {
   complete: boolean;
   onToggle: () => void;
   scrollIntoView?: boolean;
+  locked?: boolean;
   children: ReactNode;
 };
 
@@ -24,6 +25,7 @@ export function BookingAccordionSection({
   open,
   unlocked,
   complete,
+  locked = false,
   onToggle,
   scrollIntoView = false,
   children,
@@ -49,11 +51,16 @@ export function BookingAccordionSection({
     >
       <button
         type="button"
-        disabled={!unlocked}
-        onClick={onToggle}
-        aria-expanded={open}
+        disabled={!unlocked || locked}
+        onClick={() => {
+          if (locked) return;
+          onToggle();
+        }}
+        aria-expanded={open && !locked}
         aria-controls={`${id}-panel`}
-        className="flex w-full items-center gap-4 border-b border-gray-200 bg-[#f3f4f6] px-4 py-4 text-left transition-colors disabled:cursor-not-allowed dark:border-white/10 dark:bg-white/5 sm:px-5"
+        className={`flex w-full items-center gap-4 border-b border-gray-200 bg-[#f3f4f6] px-4 py-4 text-left transition-colors disabled:cursor-not-allowed dark:border-white/10 dark:bg-white/5 sm:px-5 ${
+          locked ? "opacity-80" : ""
+        }`}
       >
         <span
           className={`flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold ${
@@ -79,8 +86,8 @@ export function BookingAccordionSection({
         />
       </button>
 
-      {open && unlocked && (
-        <div id={`${id}-panel`} className="px-4 py-5 sm:px-5 sm:py-6">
+      {open && unlocked && !locked && (
+        <div id={`${id}-panel`} className="max-w-full overflow-hidden px-4 py-5 sm:px-5 sm:py-6">
           {children}
         </div>
       )}

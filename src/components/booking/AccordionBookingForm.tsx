@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
@@ -34,6 +34,11 @@ import { getAirportTerminals } from "@/lib/airport-terminals";
 import { BookingAccordionSection } from "@/components/booking/BookingAccordionSection";
 import { BookingAccountPanel } from "@/components/booking/BookingAccountPanel";
 import {
+  BookingSectionError,
+  BookingSectionNextButton,
+} from "@/components/booking/BookingSectionNextButton";
+import { buildBookingReviewSections } from "@/components/booking/BookingReviewSummary";
+import {
   squareButtonPrimaryClass,
   squareButtonSecondaryClass,
   squareCardActiveClass,
@@ -59,10 +64,20 @@ const ALL_SECTIONS = [
   { id: "driver", title: "Driver", subtitle: "Choose your driver" },
   { id: "account", title: "Account", subtitle: "Sign in or create an account" },
   { id: "details", title: "Confirm your details", subtitle: "Review your contact information" },
+  { id: "review", title: "Review your booking", subtitle: "Check everything before payment" },
   { id: "payment", title: "Payment", subtitle: "Secure your trip or save for later" },
 ] as const;
 
-const MANUAL_CONFIRM_SECTIONS = new Set<SectionId>(["route", "details"]);
+const SECTIONS_WITH_NEXT = new Set<SectionId>([
+  "trip",
+  "route",
+  "schedule",
+  "party",
+  "flight",
+  "driver",
+  "details",
+  "review",
+]);
 
 type SectionId = (typeof ALL_SECTIONS)[number]["id"];
 
@@ -154,13 +169,17 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [confirmedSections, setConfirmedSections] = useState<Set<SectionId>>(new Set());
+  const [confirmedSections, setConfirmedSections] = useState<Set<SectionId>>(() =>
+    profile ? new Set(["account"]) : new Set()
+  );
+  const [accountLocked, setAccountLocked] = useState(() => Boolean(profile));
   const [sectionError, setSectionError] = useState("");
-  const prevCompletionRef = useRef<Record<SectionId, boolean>>({} as Record<SectionId, boolean>);
 
   useEffect(() => {
     setAuthProfile(profile);
     if (profile) {
+      setAccountLocked(true);
+      setConfirmedSections((prev) => new Set([...prev, "account"]));
       setForm((prev) => ({
         ...prev,
         customerName: prev.customerName || profile.name || "",
@@ -254,6 +273,13 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const validateSectionFields = useCallback(
     (sectionId: SectionId): string | null => {
       switch (sectionId) {
+        case "trip":
+          if (!form.journeyType) return "Please choose a journey type";
+          if (!form.serviceType) return "Please choose a service";
+          if (form.journeyType === "SINGLE" && isHubTransfer(form.serviceType) && !form.tripType) {
+            return "Please choose a direction";
+          }
+          return null;
         case "route":
           if (!form.pickupAddress.trim() || form.pickupAddress.trim().length < 3) {
             return "Please enter a complete pickup address";
@@ -282,6 +308,15 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             if (!form.returnFlightTerminal) return "Please select a return terminal";
           }
           return null;
+        case "party":
+          if (form.passengers < 1) return "At least one passenger is required";
+          return null;
+        case "driver":
+          if (!form.driverId) return "Please select a driver";
+          return null;
+        case "account":
+          if (!authProfile) return "Please sign in or create an account";
+          return null;
         case "details":
           if (!form.customerName.trim() || form.customerName.trim().length < 2) {
             return "Name is required";
@@ -293,47 +328,33 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             return "A valid email is required";
           }
           return null;
+        case "review":
+          return null;
         default:
           return null;
       }
     },
-    [form, isReturn]
+    [form, isReturn, authProfile]
+  );
+
+  const isSectionConfirmed = useCallback(
+    (sectionId: SectionId): boolean => {
+      if (sectionId === "account") {
+        return Boolean(authProfile) && accountLocked;
+      }
+      if (sectionId === "payment") return false;
+      return confirmedSections.has(sectionId);
+    },
+    [authProfile, accountLocked, confirmedSections]
   );
 
   const sectionComplete = useCallback(
     (sectionId: SectionId): boolean => {
-      switch (sectionId) {
-        case "trip":
-          if (!form.journeyType || !form.serviceType) return false;
-          if (form.journeyType === "SINGLE" && isHubTransfer(form.serviceType) && !form.tripType) {
-            return false;
-          }
-          return true;
-        case "route":
-          if (!confirmedSections.has("route")) return false;
-          return validateSectionFields("route") === null;
-        case "schedule":
-          return validateSectionFields("schedule") === null;
-        case "party":
-          return form.passengers >= 1;
-        case "flight":
-          if (!isFlightSectionRequired(form.serviceType)) return true;
-          return validateSectionFields("flight") === null;
-        case "driver":
-          return Boolean(form.driverId);
-        case "account":
-          return Boolean(authProfile);
-        case "details":
-          if (!authProfile) return false;
-          if (!confirmedSections.has("details")) return false;
-          return validateSectionFields("details") === null;
-        case "payment":
-          return false;
-        default:
-          return false;
-      }
+      if (sectionId === "payment") return false;
+      if (!isSectionConfirmed(sectionId)) return false;
+      return validateSectionFields(sectionId) === null;
     },
-    [form, authProfile, confirmedSections, validateSectionFields]
+    [isSectionConfirmed, validateSectionFields]
   );
 
   const sectionUnlocked = useCallback(
@@ -354,6 +375,12 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
     setScrollTarget(nextId);
   }
 
+  function goToNextSection(currentId: SectionId) {
+    const currentIndex = visibleSections.findIndex((s) => s.id === currentId);
+    const next = visibleSections[currentIndex + 1];
+    if (next) advanceToSection(next.id);
+  }
+
   function confirmSection(sectionId: SectionId) {
     const err = validateSectionFields(sectionId);
     if (err) {
@@ -362,28 +389,23 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
     }
     setSectionError("");
     setConfirmedSections((prev) => new Set([...prev, sectionId]));
-    const currentIndex = visibleSections.findIndex((s) => s.id === sectionId);
-    const next = visibleSections[currentIndex + 1];
-    if (next) {
-      advanceToSection(next.id);
-    }
+    goToNextSection(sectionId);
   }
 
-  useEffect(() => {
-    for (const section of visibleSections) {
-      if (MANUAL_CONFIRM_SECTIONS.has(section.id)) continue;
-      const wasComplete = prevCompletionRef.current[section.id];
-      const isComplete = sectionComplete(section.id);
-      if (!wasComplete && isComplete) {
-        const currentIndex = visibleSections.findIndex((s) => s.id === section.id);
-        const next = visibleSections[currentIndex + 1];
-        if (next && sectionUnlocked(next.id)) {
-          advanceToSection(next.id);
+  const reviewSections = useMemo(
+    () =>
+      buildBookingReviewSections(
+        {
+          ...form,
+          estimatedPrice: price,
+        },
+        {
+          isAirportTransfer,
+          driverName: selectedDriver?.name,
         }
-      }
-      prevCompletionRef.current[section.id] = isComplete;
-    }
-  }, [form, authProfile, confirmedSections, sectionComplete, sectionUnlocked, visibleSections]);
+      ),
+    [form, price, isAirportTransfer, selectedDriver?.name]
+  );
 
   function update(field: keyof FormState, value: string | number) {
     setForm((prev) => {
@@ -411,6 +433,11 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
     });
     setError("");
     setSectionError("");
+    setConfirmedSections((prev) => {
+      const next = new Set(prev);
+      next.delete("review");
+      return next;
+    });
   }
 
   function handleHomeAddress(value: string) {
@@ -440,6 +467,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   function handleAuthenticated(nextProfile: CustomerProfile) {
     setAuthProfile(nextProfile);
     onProfileChange?.(nextProfile);
+    setAccountLocked(true);
     setForm((prev) => ({
       ...prev,
       customerName: nextProfile.name || "",
@@ -448,9 +476,12 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
     }));
     setConfirmedSections((prev) => {
       const next = new Set(prev);
+      next.add("account");
       next.delete("details");
+      next.delete("review");
       return next;
     });
+    setSectionError("");
     advanceToSection("details");
   }
 
@@ -502,6 +533,18 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const optionCard = (active: boolean) =>
     `${squareCardClass} p-5 ${active ? squareCardActiveClass : "hover:border-brand/40"}`;
 
+  function renderSectionFooter(sectionId: SectionId, label = "Next") {
+    if (!SECTIONS_WITH_NEXT.has(sectionId)) return null;
+    return (
+      <>
+        <BookingSectionError
+          message={sectionError && openSection === sectionId ? sectionError : undefined}
+        />
+        <BookingSectionNextButton label={label} onClick={() => confirmSection(sectionId)} />
+      </>
+    );
+  }
+
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1fr_300px] lg:gap-8">
       <div className="space-y-3">
@@ -518,12 +561,18 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             step={index + 1}
             title={section.title}
             subtitle={section.subtitle}
-            open={openSection === section.id}
+            open={
+              section.id === "account" && accountLocked
+                ? false
+                : openSection === section.id
+            }
             unlocked={sectionUnlocked(section.id)}
             complete={sectionComplete(section.id)}
+            locked={section.id === "account" && accountLocked}
             scrollIntoView={scrollTarget === section.id}
             onToggle={() => {
               if (!sectionUnlocked(section.id)) return;
+              if (section.id === "account" && accountLocked) return;
               setOpenSection(section.id);
               setScrollTarget(null);
             }}
@@ -624,6 +673,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                     </div>
                   </div>
                 )}
+                {renderSectionFooter("trip")}
               </div>
             )}
 
@@ -674,23 +724,12 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                   </>
                 )}
 
-                {sectionError && openSection === "route" && (
-                  <p className="text-sm text-red-600 dark:text-red-400">{sectionError}</p>
-                )}
-                <div className="flex justify-end border-t border-gray-200 pt-4 dark:border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => confirmSection("route")}
-                    className={squareButtonPrimaryClass}
-                  >
-                    Next
-                  </button>
-                </div>
+                {renderSectionFooter("route")}
               </div>
             )}
 
             {section.id === "schedule" && (
-              <div>
+              <div className="max-w-full overflow-hidden">
                 {isReturn && (
                   <div className="mb-4 flex gap-2">
                     {(["outbound", "return"] as const).map((leg) => (
@@ -723,20 +762,24 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                     update(scheduleLeg === "return" ? "returnTime" : "pickupTime", time)
                   }
                 />
+                {renderSectionFooter("schedule")}
               </div>
             )}
 
             {section.id === "party" && (
-              <PartySizePicker
+              <div>
+                <PartySizePicker
                 passengers={form.passengers}
                 luggage={form.luggage}
                 onPassengersChange={(value) => update("passengers", value)}
-                onLuggageChange={(value) => update("luggage", value)}
-              />
+                  onLuggageChange={(value) => update("luggage", value)}
+                />
+                {renderSectionFooter("party")}
+              </div>
             )}
 
             {section.id === "flight" && isAirportTransfer && (
-              <div className="space-y-5">
+              <div className="max-w-full space-y-5 overflow-hidden">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Help your driver meet you at the right terminal. These details are for your
                   flight — separate from your pickup time above.
@@ -842,6 +885,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                     </div>
                   </div>
                 )}
+                {renderSectionFooter("flight")}
               </div>
             )}
 
@@ -877,24 +921,12 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                       : "Complete the date and time section first to see available drivers."}
                   </p>
                 )}
+                {renderSectionFooter("driver")}
               </div>
             )}
 
-            {section.id === "account" && (
-              <div>
-                {authProfile ? (
-                  <div className="border border-brand/30 bg-brand-light/20 px-4 py-4 dark:bg-brand/10">
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      Signed in as {authProfile.name || authProfile.email}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Continue below to confirm your contact details.
-                    </p>
-                  </div>
-                ) : (
-                  <BookingAccountPanel onAuthenticated={handleAuthenticated} />
-                )}
-              </div>
+            {section.id === "account" && !accountLocked && (
+              <BookingAccountPanel onAuthenticated={handleAuthenticated} />
             )}
 
             {section.id === "details" && authProfile && (
@@ -947,18 +979,38 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                   />
                 </div>
 
-                {sectionError && openSection === "details" && (
-                  <p className="text-sm text-red-600 dark:text-red-400">{sectionError}</p>
-                )}
-                <div className="flex justify-end border-t border-gray-200 pt-4 dark:border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => confirmSection("details")}
-                    className={squareButtonPrimaryClass}
-                  >
-                    Confirm details
-                  </button>
+                {renderSectionFooter("details", "Confirm details")}
+              </div>
+            )}
+
+            {section.id === "review" && (
+              <div className="space-y-5">
+                <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                  Please read through your booking summary below. Open any section above if you
+                  need to change something, then confirm to continue to payment.
+                </p>
+
+                <div className="space-y-4 border border-gray-200 bg-[#fafafa] p-4 dark:border-white/10 dark:bg-white/5 sm:p-5">
+                  {reviewSections.map((group) => (
+                    <div key={group.title}>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-brand">
+                        {group.title}
+                      </h4>
+                      <ul className="mt-2 space-y-1">
+                        {group.lines.map((line) => (
+                          <li
+                            key={`${group.title}-${line}`}
+                            className="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                          >
+                            {line}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
+
+                {renderSectionFooter("review", "Confirm booking")}
               </div>
             )}
 
@@ -992,7 +1044,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                     <div className="flex flex-col gap-3 sm:flex-row">
                       <button
                         type="button"
-                        disabled={loading || !sectionComplete("details")}
+                        disabled={loading || !sectionComplete("review")}
                         onClick={() => submitBooking("pay")}
                         className={squareButtonPrimaryClass}
                       >
@@ -1004,7 +1056,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                       </button>
                       <button
                         type="button"
-                        disabled={loading || !sectionComplete("details")}
+                        disabled={loading || !sectionComplete("review")}
                         onClick={() => submitBooking("save")}
                         className={squareButtonSecondaryClass}
                       >

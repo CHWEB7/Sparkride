@@ -17,14 +17,14 @@ export function TimePeriodScroller({
   square = false,
 }: TimePeriodScrollerProps) {
   return (
-    <div className="space-y-4">
+    <div className="w-full max-w-full space-y-3 overflow-hidden">
       {periods.map((period) => (
-        <div key={period.id}>
+        <div key={period.id} className="w-full max-w-full">
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             {period.label}
           </h4>
-          <div className="overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:thin]">
-            <div className="flex min-w-min gap-2 pr-1">
+          <div className="w-full max-w-full overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:thin]">
+            <div className="inline-flex gap-2 pb-1 pr-1">
               {period.slots.map((slot) => {
                 const selected = value === slot;
                 return (
