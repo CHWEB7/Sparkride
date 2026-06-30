@@ -729,7 +729,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             )}
 
             {section.id === "schedule" && (
-              <div className="min-w-0 max-w-full overflow-hidden">
+              <div className="min-w-0 overflow-hidden">
                 {isReturn && (
                   <div className="mb-4 flex gap-2">
                     {(["outbound", "return"] as const).map((leg) => (
