@@ -53,7 +53,7 @@ export function BookingPageHeader({ profile, onProfileChange }: BookingPageHeade
   const initials = profile ? getInitials(profile.name, profile.email) : "";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-dark/95">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white dark:border-white/10 dark:bg-dark">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
         <Logo href="/" size="header" />
 
