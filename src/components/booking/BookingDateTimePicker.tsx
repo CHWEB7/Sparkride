@@ -140,10 +140,8 @@ export function BookingDateTimePicker({
         </div>
       </div>
 
-      <div className="border-t border-gray-200 pt-4 dark:border-white/10">
-        <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-          Pickup time
-        </p>
+      <div className="min-w-0 border-t border-gray-200 pt-4 dark:border-white/10">
+        <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Pickup time</p>
         <TimePeriodScroller
           periods={PICKUP_TIME_PERIODS}
           value={time}

@@ -546,8 +546,8 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   }
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[1fr_300px] lg:gap-8">
-      <div className="space-y-3">
+    <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
+      <div className="min-w-0 space-y-3">
         {error && (
           <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
             {error}
@@ -729,7 +729,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             )}
 
             {section.id === "schedule" && (
-              <div className="max-w-full overflow-hidden">
+              <div className="min-w-0 max-w-full overflow-hidden">
                 {isReturn && (
                   <div className="mb-4 flex gap-2">
                     {(["outbound", "return"] as const).map((leg) => (
@@ -779,7 +779,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             )}
 
             {section.id === "flight" && isAirportTransfer && (
-              <div className="max-w-full space-y-5 overflow-hidden">
+              <div className="min-w-0 max-w-full space-y-5 overflow-hidden">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Help your driver meet you at the right terminal. These details are for your
                   flight — separate from your pickup time above.
