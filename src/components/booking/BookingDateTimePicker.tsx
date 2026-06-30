@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PICKUP_TIME_PERIODS } from "@/components/booking/time-slot-groups";
+import { TimePeriodScroller } from "@/components/booking/TimePeriodScroller";
 import {
   addMonths,
   getMonthGrid,
@@ -12,26 +14,7 @@ import {
   toUkDateKey,
 } from "@/lib/uk-calendar";
 
-function buildTimeSlots(): string[] {
-  const slots: string[] = [];
-  for (let h = 5; h < 24; h++) {
-    for (const m of [0, 15, 30, 45]) {
-      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-  }
-  return slots;
-}
-
-const TIME_SLOTS = buildTimeSlots();
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-export function formatBookingTimeLabel(time: string): string {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "pm" : "am";
-  const hour12 = h % 12 || 12;
-  const minutes = String(m).padStart(2, "0");
-  return `${hour12}.${minutes} ${period}`;
-}
 
 type BookingDateTimePickerProps = {
   date: string;
@@ -40,6 +23,7 @@ type BookingDateTimePickerProps = {
   onTimeChange: (time: string) => void;
   minDate?: string;
   title?: string;
+  square?: boolean;
 };
 
 export function BookingDateTimePicker({
@@ -49,6 +33,7 @@ export function BookingDateTimePicker({
   onTimeChange,
   minDate,
   title = "Select time",
+  square = false,
 }: BookingDateTimePickerProps) {
   const todayKey = toUkDateKey(new Date());
   const min = minDate ?? todayKey;
@@ -71,13 +56,12 @@ export function BookingDateTimePicker({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
       <h2 className="mb-5 shrink-0 text-2xl font-semibold tracking-[-0.02em] dark:text-white">
         {title}
       </h2>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-6 md:flex-row md:gap-8">
-        {/* Month calendar */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 md:flex-row md:gap-8">
         <div className="flex w-full shrink-0 flex-col md:w-[300px] lg:w-[320px]">
           <div className="mb-5 flex items-center justify-center gap-4">
             <button
@@ -156,32 +140,23 @@ export function BookingDateTimePicker({
           </div>
         </div>
 
-        {/* Time slots */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col md:border-l md:border-gray-200/60 md:pl-8 dark:md:border-white/10">
-          <p className="mb-4 shrink-0 text-sm font-semibold text-muted">Available times</p>
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 xl:grid-cols-3">
-              {TIME_SLOTS.map((slot) => {
-                const selected = time === slot;
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => onTimeChange(slot)}
-                    className={`w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all md:py-2.5 ${
-                      selected
-                        ? "border-brand bg-brand-light/40 text-brand ring-1 ring-brand/30 dark:bg-brand/10 dark:text-brand-end"
-                        : "border-gray-200/80 bg-white text-dark hover:border-brand/40 dark:border-white/10 dark:bg-dark dark:text-gray-100"
-                    }`}
-                  >
-                    {formatBookingTimeLabel(slot)}
-                  </button>
-                );
-              })}
-            </div>
+          <p className="mb-1 shrink-0 text-sm font-semibold text-muted">Pickup time</p>
+          <p className="mb-4 shrink-0 text-xs leading-relaxed text-muted">
+            When your driver collects you — not your flight or drop-off time.
+          </p>
+          <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+            <TimePeriodScroller
+              periods={PICKUP_TIME_PERIODS}
+              value={time}
+              onChange={onTimeChange}
+              square={square}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+export { formatBookingTimeLabel } from "@/components/booking/time-slot-groups";

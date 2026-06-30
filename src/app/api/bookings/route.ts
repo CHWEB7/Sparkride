@@ -5,9 +5,15 @@ import { bookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/auth";
 import { getHub, formatHubLabel, isHubTransfer, normalizeServiceType } from "@/lib/hubs";
 import { estimatePrice } from "@/lib/airports";
-import { getCustomerUserFromRequest, getCustomerUserWithDailyMfa } from "@/lib/customer-auth";
+import { getCustomerUserFromRequest } from "@/lib/customer-auth";
 import { ensureCustomer } from "@/lib/customer";
 import { getApiErrorMessage } from "@/lib/api-errors";
+import { isAutoAcceptedHubBooking } from "@/lib/fixed-price-bookings";
+import {
+  ensureBookingPaymentLink,
+  handleBookingAccepted,
+  paymentLinkSkipMessage,
+} from "@/lib/booking-confirmation";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,17 +31,14 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCustomerUserWithDailyMfa(req);
+    const user = await getCustomerUserFromRequest(req);
     if (!user) {
-      const authed = await getCustomerUserFromRequest(req);
-      if (authed) {
-        return json({ error: "Email verification required", code: "mfa_required" }, 403);
-      }
-      return json({ error: "Sign in required to create a booking" }, 401);
+      return json({ error: "Sign in required to complete your booking" }, 401);
     }
 
     const customer = await ensureCustomer(user);
     const body = await req.json();
+    const preparePayment = Boolean(body.preparePayment);
     const parsed = bookingSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -88,6 +91,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const autoAccept = isAutoAcceptedHubBooking(storedServiceType);
+
     const booking = await prisma.booking.create({
       data: {
         reference: generateReference(),
@@ -109,7 +114,11 @@ export async function POST(req: NextRequest) {
         customerEmail: customer.email,
         customerPhone,
         flightNumber: data.flightNumber || null,
+        flightDepartureTime: data.flightDepartureTime || null,
+        flightTerminal: data.flightTerminal || null,
         returnFlightNumber: data.returnFlightNumber || null,
+        returnFlightDepartureTime: data.returnFlightDepartureTime || null,
+        returnFlightTerminal: data.returnFlightTerminal || null,
         notes: data.notes || null,
         estimatedPrice: estimatePrice(
           driver.vehicleType,
@@ -118,8 +127,25 @@ export async function POST(req: NextRequest) {
           data.serviceType,
           data.airportCode
         ),
+        status: autoAccept ? "ACCEPTED" : "PENDING",
       },
     });
+
+    let paymentLinkUrl: string | null = null;
+    let paymentError: string | null = null;
+
+    if (autoAccept && preparePayment) {
+      const paymentResult = await ensureBookingPaymentLink(booking.id);
+      paymentLinkUrl = paymentResult.paymentLinkUrl;
+
+      if (!paymentLinkUrl) {
+        paymentError = paymentLinkSkipMessage(paymentResult) ?? "Could not start Square checkout";
+      } else {
+        void handleBookingAccepted(booking.id).catch((error) => {
+          console.error("Auto-accepted booking email failed:", error);
+        });
+      }
+    }
 
     if (data.saveDetails) {
       const label =
@@ -152,6 +178,9 @@ export async function POST(req: NextRequest) {
       id: booking.id,
       reference: booking.reference,
       estimatedPrice: booking.estimatedPrice,
+      autoAccepted: autoAccept,
+      paymentLinkUrl,
+      paymentError,
     });
   } catch (error) {
     console.error("Booking error:", error);
