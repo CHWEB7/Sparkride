@@ -108,3 +108,9 @@ CREATE TABLE IF NOT EXISTS "CustomerMfaSession" (
 ALTER TABLE "CustomerMfaSession" ADD COLUMN IF NOT EXISTS "lastOtpSentAt" TIMESTAMP(3);
 ALTER TABLE "CustomerMfaSession" ADD COLUMN IF NOT EXISTS "otpHash" TEXT;
 ALTER TABLE "CustomerMfaSession" ADD COLUMN IF NOT EXISTS "otpExpiresAt" TIMESTAMP(3);
+
+ALTER TABLE "Booking"
+  ADD COLUMN IF NOT EXISTS "flightDepartureTime" TEXT,
+  ADD COLUMN IF NOT EXISTS "flightTerminal" TEXT,
+  ADD COLUMN IF NOT EXISTS "returnFlightDepartureTime" TEXT,
+  ADD COLUMN IF NOT EXISTS "returnFlightTerminal" TEXT;

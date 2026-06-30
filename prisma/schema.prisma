@@ -105,7 +105,11 @@ model Booking {
   customerEmail      String
   customerPhone      String
   flightNumber       String?
-  returnFlightNumber String?
+  flightDepartureTime  String?
+  flightTerminal       String?
+  returnFlightNumber   String?
+  returnFlightDepartureTime String?
+  returnFlightTerminal      String?
   notes              String?
   estimatedPrice       Float?
   paymentStatus        PaymentStatus @default(NOT_REQUIRED)

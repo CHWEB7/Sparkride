@@ -105,7 +105,11 @@ export async function POST(req: NextRequest) {
         customerEmail: customer.email,
         customerPhone,
         flightNumber: data.flightNumber || null,
+        flightDepartureTime: data.flightDepartureTime || null,
+        flightTerminal: data.flightTerminal || null,
         returnFlightNumber: data.returnFlightNumber || null,
+        returnFlightDepartureTime: data.returnFlightDepartureTime || null,
+        returnFlightTerminal: data.returnFlightTerminal || null,
         notes: data.notes || null,
         estimatedPrice: estimatePrice(
           driver.vehicleType,

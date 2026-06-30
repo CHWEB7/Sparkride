@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
@@ -28,6 +28,9 @@ import {
 import { AddressFinder } from "@/components/AddressFinder";
 import { BookingDateTimePicker } from "@/components/booking/BookingDateTimePicker";
 import { PartySizePicker } from "@/components/booking/PartySizePicker";
+import { TimePeriodScroller } from "@/components/booking/TimePeriodScroller";
+import { FLIGHT_TIME_PERIODS } from "@/components/booking/time-slot-groups";
+import { getAirportTerminals } from "@/lib/airport-terminals";
 import { BookingAccordionSection } from "@/components/booking/BookingAccordionSection";
 import { BookingAccountPanel } from "@/components/booking/BookingAccountPanel";
 import {
@@ -43,14 +46,15 @@ import type { CustomerProfile } from "@/lib/customer";
 
 const DRAFT_STORAGE_KEY = "sparkride-booking-draft";
 
-const SECTIONS = [
+const ALL_SECTIONS = [
   { id: "trip", title: "Choose your trip", subtitle: "Journey type and service" },
   { id: "route", title: "Route", subtitle: "Pickup and destination" },
-  { id: "schedule", title: "Date and time", subtitle: "When you are travelling" },
+  { id: "schedule", title: "Pickup date and time", subtitle: "When your driver collects you" },
+  { id: "party", title: "Passengers", subtitle: "Party size and luggage" },
   {
-    id: "party",
-    title: "Passenger and flight information",
-    subtitle: "Party size, luggage, and flight details",
+    id: "flight",
+    title: "Flight information",
+    subtitle: "Flight number, departure time, and terminal",
   },
   { id: "driver", title: "Driver", subtitle: "Choose your driver" },
   { id: "account", title: "Account", subtitle: "Sign in or create an account" },
@@ -60,7 +64,11 @@ const SECTIONS = [
 
 const MANUAL_CONFIRM_SECTIONS = new Set<SectionId>(["route", "details"]);
 
-type SectionId = (typeof SECTIONS)[number]["id"];
+type SectionId = (typeof ALL_SECTIONS)[number]["id"];
+
+function isFlightSectionRequired(serviceType: string): boolean {
+  return serviceType === "AIRPORT_TRANSFER";
+}
 
 type BookableDriver = {
   id: string;
@@ -89,7 +97,11 @@ type FormState = {
   customerEmail: string;
   customerPhone: string;
   flightNumber: string;
+  flightDepartureTime: string;
+  flightTerminal: string;
   returnFlightNumber: string;
+  returnFlightDepartureTime: string;
+  returnFlightTerminal: string;
   notes: string;
 };
 
@@ -112,7 +124,11 @@ const DEFAULT_FORM: FormState = {
   customerEmail: "",
   customerPhone: "",
   flightNumber: "",
+  flightDepartureTime: "",
+  flightTerminal: "",
   returnFlightNumber: "",
+  returnFlightDepartureTime: "",
+  returnFlightTerminal: "",
   notes: "",
 };
 
@@ -133,6 +149,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const [openSection, setOpenSection] = useState<SectionId>("trip");
   const [scrollTarget, setScrollTarget] = useState<SectionId | null>(null);
   const [scheduleLeg, setScheduleLeg] = useState<"outbound" | "return">("outbound");
+  const [flightLeg, setFlightLeg] = useState<"outbound" | "return">("outbound");
   const [drivers, setDrivers] = useState<BookableDriver[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -208,6 +225,17 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const isReturn = form.journeyType === "RETURN";
   const isHubTransferType = isHubTransfer(form.serviceType);
   const isAirportTransfer = form.serviceType === "AIRPORT_TRANSFER";
+  const visibleSections = useMemo(
+    () =>
+      ALL_SECTIONS.filter(
+        (section) => section.id !== "flight" || isFlightSectionRequired(form.serviceType)
+      ),
+    [form.serviceType]
+  );
+  const airportTerminals = useMemo(
+    () => getAirportTerminals(form.airportCode),
+    [form.airportCode]
+  );
   const hubList = isHubTransferType ? getHubList(form.serviceType) : [];
   const selectedHub = isHubTransferType ? getHub(form.airportCode, form.serviceType) : undefined;
   const selectedDriver = drivers.find((d) => d.id === form.driverId);
@@ -241,6 +269,17 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
           if (isReturn && !form.returnTime) return "Please select your return time";
           if (isReturn && form.returnDate < form.pickupDate) {
             return "Return date must be on or after outbound date";
+          }
+          return null;
+        case "flight":
+          if (!isFlightSectionRequired(form.serviceType)) return null;
+          if (!form.flightNumber.trim()) return "Flight number is required";
+          if (!form.flightDepartureTime) return "Flight departure time is required";
+          if (!form.flightTerminal) return "Please select a terminal";
+          if (isReturn) {
+            if (!form.returnFlightNumber.trim()) return "Return flight number is required";
+            if (!form.returnFlightDepartureTime) return "Return flight departure time is required";
+            if (!form.returnFlightTerminal) return "Please select a return terminal";
           }
           return null;
         case "details":
@@ -277,6 +316,9 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
           return validateSectionFields("schedule") === null;
         case "party":
           return form.passengers >= 1;
+        case "flight":
+          if (!isFlightSectionRequired(form.serviceType)) return true;
+          return validateSectionFields("flight") === null;
         case "driver":
           return Boolean(form.driverId);
         case "account":
@@ -297,14 +339,14 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
   const sectionUnlocked = useCallback(
     (sectionId: SectionId): boolean => {
       if (sectionId === "details" && !authProfile) return false;
-      const index = SECTIONS.findIndex((s) => s.id === sectionId);
+      const index = visibleSections.findIndex((s) => s.id === sectionId);
       if (index <= 0) return true;
       for (let i = 0; i < index; i++) {
-        if (!sectionComplete(SECTIONS[i].id)) return false;
+        if (!sectionComplete(visibleSections[i].id)) return false;
       }
       return true;
     },
-    [sectionComplete, authProfile]
+    [sectionComplete, authProfile, visibleSections]
   );
 
   function advanceToSection(nextId: SectionId) {
@@ -320,28 +362,28 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
     }
     setSectionError("");
     setConfirmedSections((prev) => new Set([...prev, sectionId]));
-    const currentIndex = SECTIONS.findIndex((s) => s.id === sectionId);
-    const next = SECTIONS[currentIndex + 1];
+    const currentIndex = visibleSections.findIndex((s) => s.id === sectionId);
+    const next = visibleSections[currentIndex + 1];
     if (next) {
       advanceToSection(next.id);
     }
   }
 
   useEffect(() => {
-    for (const section of SECTIONS) {
+    for (const section of visibleSections) {
       if (MANUAL_CONFIRM_SECTIONS.has(section.id)) continue;
       const wasComplete = prevCompletionRef.current[section.id];
       const isComplete = sectionComplete(section.id);
       if (!wasComplete && isComplete) {
-        const currentIndex = SECTIONS.findIndex((s) => s.id === section.id);
-        const next = SECTIONS[currentIndex + 1];
+        const currentIndex = visibleSections.findIndex((s) => s.id === section.id);
+        const next = visibleSections[currentIndex + 1];
         if (next && sectionUnlocked(next.id)) {
           advanceToSection(next.id);
         }
       }
       prevCompletionRef.current[section.id] = isComplete;
     }
-  }, [form, authProfile, confirmedSections, sectionComplete, sectionUnlocked]);
+  }, [form, authProfile, confirmedSections, sectionComplete, sectionUnlocked, visibleSections]);
 
   function update(field: keyof FormState, value: string | number) {
     setForm((prev) => {
@@ -359,6 +401,10 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
               next.dropoffAddress = hubLabel;
             }
           }
+        }
+        if (field === "airportCode") {
+          next.flightTerminal = "";
+          next.returnFlightTerminal = "";
         }
       }
       return next;
@@ -465,7 +511,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
           </div>
         )}
 
-        {SECTIONS.map((section, index) => (
+        {visibleSections.map((section, index) => (
           <BookingAccordionSection
             key={section.id}
             id={`booking-section-${section.id}`}
@@ -665,7 +711,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                 )}
 
                 <BookingDateTimePicker
-                  title="Select date and time"
+                  title="Select pickup date and time"
                   square
                   date={scheduleLeg === "return" ? form.returnDate : form.pickupDate}
                   time={scheduleLeg === "return" ? form.returnTime : form.pickupTime}
@@ -681,18 +727,44 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
             )}
 
             {section.id === "party" && (
-              <div className="space-y-5">
-                <PartySizePicker
-                  passengers={form.passengers}
-                  luggage={form.luggage}
-                  onPassengersChange={(value) => update("passengers", value)}
-                  onLuggageChange={(value) => update("luggage", value)}
-                />
+              <PartySizePicker
+                passengers={form.passengers}
+                luggage={form.luggage}
+                onPassengersChange={(value) => update("passengers", value)}
+                onLuggageChange={(value) => update("luggage", value)}
+              />
+            )}
 
-                {isAirportTransfer && (
-                  <div className="space-y-4 border-t border-gray-200 pt-5 dark:border-white/10">
+            {section.id === "flight" && isAirportTransfer && (
+              <div className="space-y-5">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Help your driver meet you at the right terminal. These details are for your
+                  flight — separate from your pickup time above.
+                </p>
+
+                {isReturn && (
+                  <div className="flex gap-2">
+                    {(["outbound", "return"] as const).map((leg) => (
+                      <button
+                        key={leg}
+                        type="button"
+                        onClick={() => setFlightLeg(leg)}
+                        className={`px-4 py-2 text-sm font-medium ${
+                          flightLeg === leg
+                            ? "bg-brand text-white"
+                            : "border border-gray-300 bg-white text-gray-600 dark:border-white/15 dark:bg-dark dark:text-gray-300"
+                        }`}
+                      >
+                        {leg === "outbound" ? "Outbound flight" : "Return flight"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {(!isReturn || flightLeg === "outbound") && (
+                  <div className="space-y-4">
                     <div>
-                      <label className={squareLabelClass}>Outbound flight number (optional)</label>
+                      <label className={squareLabelClass}>Flight number</label>
                       <input
                         type="text"
                         placeholder="e.g. FR1234"
@@ -701,18 +773,73 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                         className={squareInputClass}
                       />
                     </div>
-                    {isReturn && (
-                      <div>
-                        <label className={squareLabelClass}>Return flight number (optional)</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. FR1234"
-                          value={form.returnFlightNumber}
-                          onChange={(e) => update("returnFlightNumber", e.target.value)}
-                          className={squareInputClass}
-                        />
-                      </div>
-                    )}
+                    <div>
+                      <label className={squareLabelClass}>Flight departure time</label>
+                      <TimePeriodScroller
+                        periods={FLIGHT_TIME_PERIODS}
+                        value={form.flightDepartureTime}
+                        onChange={(time) => update("flightDepartureTime", time)}
+                        square
+                      />
+                    </div>
+                    <div>
+                      <label className={squareLabelClass}>
+                        Terminal at {selectedHub?.name ?? "airport"}
+                      </label>
+                      <select
+                        value={form.flightTerminal}
+                        onChange={(e) => update("flightTerminal", e.target.value)}
+                        className={squareSelectClass}
+                      >
+                        <option value="">Select terminal</option>
+                        {airportTerminals.map((terminal) => (
+                          <option key={terminal.id} value={terminal.id}>
+                            {terminal.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {isReturn && flightLeg === "return" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className={squareLabelClass}>Return flight number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. FR1234"
+                        value={form.returnFlightNumber}
+                        onChange={(e) => update("returnFlightNumber", e.target.value)}
+                        className={squareInputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={squareLabelClass}>Return flight departure time</label>
+                      <TimePeriodScroller
+                        periods={FLIGHT_TIME_PERIODS}
+                        value={form.returnFlightDepartureTime}
+                        onChange={(time) => update("returnFlightDepartureTime", time)}
+                        square
+                      />
+                    </div>
+                    <div>
+                      <label className={squareLabelClass}>
+                        Return terminal at {selectedHub?.name ?? "airport"}
+                      </label>
+                      <select
+                        value={form.returnFlightTerminal}
+                        onChange={(e) => update("returnFlightTerminal", e.target.value)}
+                        className={squareSelectClass}
+                      >
+                        <option value="">Select terminal</option>
+                        {airportTerminals.map((terminal) => (
+                          <option key={terminal.id} value={terminal.id}>
+                            {terminal.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
