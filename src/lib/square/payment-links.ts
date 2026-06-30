@@ -17,7 +17,7 @@ export async function createSquarePaymentLink(input: {
   amountPence: number;
   description: string;
 }): Promise<{ ok: true; id: string; url: string } | { ok: false; error: string }> {
-  const redirectUrl = `${getSiteUrl()}/booking/${encodeURIComponent(input.reference)}?paid=1`;
+  const redirectUrl = `${getSiteUrl()}/my-bookings?paid=1&ref=${encodeURIComponent(input.reference)}`;
 
   const result = await squareRequest<PaymentLinkResponse>({
     accessToken: input.accessToken,

@@ -47,6 +47,7 @@ import {
   squareLabelClass,
   squareSelectClass,
 } from "@/components/booking/booking-square-styles";
+import { isAutoAcceptedHubBooking } from "@/lib/fixed-price-bookings";
 import type { CustomerProfile } from "@/lib/customer";
 
 const DRAFT_STORAGE_KEY = "sparkride-booking-draft";
@@ -295,6 +296,9 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
     [form.airportCode]
   );
   const hubList = isHubTransferType ? getHubList(form.serviceType) : [];
+  const isFixedPriceBooking = isAutoAcceptedHubBooking(
+    normalizeServiceType(form.serviceType, form.airportCode)
+  );
   const selectedHub = isHubTransferType ? getHub(form.airportCode, form.serviceType) : undefined;
   const selectedDriver = drivers.find((d) => d.id === form.driverId);
   const priceVehicleType = selectedDriver?.vehicleType ?? form.vehicleType;
@@ -538,6 +542,7 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
       const payload = {
         ...form,
         serviceType: storedServiceType,
+        preparePayment: mode === "pay",
         ...(form.journeyType === "RETURN" && isHubTransfer(form.serviceType)
           ? { tripType: "TO_AIRPORT", dropoffAddress: hubLabel || form.dropoffAddress }
           : {}),
@@ -555,12 +560,21 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
       localStorage.removeItem(DRAFT_STORAGE_KEY);
 
       if (mode === "pay") {
+        if (data.paymentLinkUrl) {
+          window.location.href = data.paymentLinkUrl as string;
+          return;
+        }
+        if (data.paymentError) {
+          throw new Error(data.paymentError as string);
+        }
         router.push(`/booking/${data.reference}`);
         return;
       }
 
       setSuccessMessage(
-        `Booking ${data.reference} saved. You can pay when your driver confirms — find it in My bookings.`
+        isFixedPriceBooking
+          ? `Booking ${data.reference} saved. Pay any time from My bookings when you are ready.`
+          : `Booking ${data.reference} saved. You can pay when your driver confirms — find it in My bookings.`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -1078,8 +1092,9 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                           Estimated fare: £{price}
                         </p>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                          Pay now to secure your trip once your driver confirms, or save the booking
-                          to your account and pay later from My bookings.
+                          {isFixedPriceBooking
+                            ? "Pay now with Square to confirm your fixed-price transfer instantly."
+                            : "Pay now to secure your trip once your driver confirms, or save the booking to your account and pay later from My bookings."}
                         </p>
                       </div>
                     </div>
@@ -1089,12 +1104,20 @@ export function AccordionBookingForm({ profile, onProfileChange }: AccordionBook
                         type="button"
                         disabled={loading || !sectionComplete("review")}
                         onClick={() => submitBooking("pay")}
-                        className={squareButtonPrimaryClass}
+                        className={`inline-flex items-center justify-center gap-2.5 ${squareButtonPrimaryClass}`}
                       >
                         {loading ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          "Pay to secure trip"
+                          <>
+                            <img
+                              src="/images/integrations/square.svg"
+                              alt=""
+                              aria-hidden
+                              className="h-5 w-5 shrink-0"
+                            />
+                            Pay £{price} with Square
+                          </>
                         )}
                       </button>
                       <button
