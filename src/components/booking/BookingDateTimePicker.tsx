@@ -23,6 +23,36 @@ function buildTimeSlots(): string[] {
 }
 
 const TIME_SLOTS = buildTimeSlots();
+
+type TimePeriod = {
+  id: string;
+  label: string;
+  slots: string[];
+};
+
+function groupTimeSlotsByPeriod(slots: string[]): TimePeriod[] {
+  const morning: string[] = [];
+  const afternoon: string[] = [];
+  const evening: string[] = [];
+  const night: string[] = [];
+
+  for (const slot of slots) {
+    const hour = Number(slot.split(":")[0]);
+    if (hour < 12) morning.push(slot);
+    else if (hour < 17) afternoon.push(slot);
+    else if (hour < 21) evening.push(slot);
+    else night.push(slot);
+  }
+
+  return [
+    { id: "morning", label: "Morning", slots: morning },
+    { id: "afternoon", label: "Afternoon", slots: afternoon },
+    { id: "evening", label: "Evening", slots: evening },
+    { id: "night", label: "Night", slots: night },
+  ].filter((period) => period.slots.length > 0);
+}
+
+const TIME_PERIODS = groupTimeSlotsByPeriod(TIME_SLOTS);
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function formatBookingTimeLabel(time: string): string {
@@ -162,26 +192,35 @@ export function BookingDateTimePicker({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col md:border-l md:border-gray-200/60 md:pl-8 dark:md:border-white/10">
           <p className="mb-4 shrink-0 text-sm font-semibold text-muted">Available times</p>
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 xl:grid-cols-3">
-              {TIME_SLOTS.map((slot) => {
-                const selected = time === slot;
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => onTimeChange(slot)}
-                    className={`w-full border px-4 py-3 text-left text-sm font-medium transition-all md:py-2.5 ${
-                      square ? "rounded-none" : "rounded-xl"
-                    } ${
-                      selected
-                        ? "border-brand bg-brand-light/40 text-brand ring-1 ring-brand/30 dark:bg-brand/10 dark:text-brand-end"
-                        : "border-gray-200/80 bg-white text-dark hover:border-brand/40 dark:border-white/10 dark:bg-dark dark:text-gray-100"
-                    }`}
-                  >
-                    {formatBookingTimeLabel(slot)}
-                  </button>
-                );
-              })}
+            <div className="space-y-6">
+              {TIME_PERIODS.map((period) => (
+                <div key={period.id}>
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+                    {period.label}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {period.slots.map((slot) => {
+                      const selected = time === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => onTimeChange(slot)}
+                          className={`w-full border px-3 py-2.5 text-left text-sm font-medium transition-all ${
+                            square ? "rounded-none" : "rounded-xl"
+                          } ${
+                            selected
+                              ? "border-brand bg-brand-light/40 text-brand ring-1 ring-brand/30 dark:bg-brand/10 dark:text-brand-end"
+                              : "border-gray-200/80 bg-white text-dark hover:border-brand/40 dark:border-white/10 dark:bg-dark dark:text-gray-100"
+                          }`}
+                        >
+                          {formatBookingTimeLabel(slot)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
