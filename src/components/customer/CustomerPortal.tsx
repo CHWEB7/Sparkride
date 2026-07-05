@@ -69,16 +69,9 @@ const VIEW_TITLES: Record<CustomerPortalView, string> = {
   account: "Account settings",
 };
 
-export function CustomerPortal({
-  profile,
-  initialWizardFromAi = false,
-}: {
-  profile: CustomerProfile | null;
-  initialWizardFromAi?: boolean;
-}) {
+export function CustomerPortal({ profile }: { profile: CustomerProfile }) {
   const router = useRouter();
-  const [view, setView] = useState<PortalView>(initialWizardFromAi ? "wizard" : "home");
-  const [fromAiWizard] = useState(initialWizardFromAi);
+  const [view, setView] = useState<PortalView>("home");
   const [tripTab, setTripTab] = useState<TripTab>("all");
   const [search, setSearch] = useState("");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -90,17 +83,12 @@ export function CustomerPortal({
   const shellView: CustomerPortalView = view === "wizard" ? returnView : view;
 
   useEffect(() => {
-    if (!profile) {
-      setLoadingTrips(false);
-      return;
-    }
-
     setLoadingTrips(true);
     fetch("/api/customer/bookings")
       .then((r) => r.json())
       .then((data) => setBookings(Array.isArray(data) ? data : []))
       .finally(() => setLoadingTrips(false));
-  }, [profile]);
+  }, []);
 
   const activeTrips = bookings
     .filter((b) => ACTIVE_STATUSES.has(b.status))
@@ -162,20 +150,6 @@ export function CustomerPortal({
     router.refresh();
   }
 
-  if (!profile && fromAiWizard) {
-    return (
-      <div className="mx-auto max-w-4xl">
-        <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated">
-          <BookingForm variant="embedded" fromAi={fromAiWizard} />
-        </div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return null;
-  }
-
   return (
     <CustomerBookingShell
       profile={profile}
@@ -193,7 +167,6 @@ export function CustomerPortal({
               profile={profile}
               savedTemplate={wizardTemplate}
               variant="embedded"
-              fromAi={fromAiWizard}
               onCancel={closeWizard}
             />
           </div>

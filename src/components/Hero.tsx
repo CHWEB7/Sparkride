@@ -3,7 +3,6 @@ import { Plane, Shield, Clock, Star, Zap } from "lucide-react";
 import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { HeroAmbientBackground } from "./HeroAmbientBackground";
 import { HeroTitle } from "./HeroTitle";
-import { AiBookingHero } from "@/components/booking/AiBookingHero";
 
 export function Hero() {
   return (
@@ -25,11 +24,9 @@ export function Hero() {
               professional drivers, 24/7 service to all major UK airports.
             </p>
 
-            <AiBookingHero />
-
-            <div className="mt-7 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
               <AnimatedGradientButton href="/book" className="px-6 py-3 text-sm sm:px-8 sm:py-4 sm:text-base">
-                Classic booking form
+                Reserve a ride
               </AnimatedGradientButton>
               <Link
                 href="/download"
