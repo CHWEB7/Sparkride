@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "sync:driver-auth": "tsx scripts/sync-driver-auth-users.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test": "tsx --test src/lib/booking-conversation/engine.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",

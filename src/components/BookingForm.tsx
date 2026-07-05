@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { estimatePrice } from "@/lib/airports";
 import {
   formatHubLabel,
-  getDefaultHubCode,
   getDirectionOptions,
   getHub,
   getHubList,
@@ -99,6 +98,13 @@ function StepHeading({
 }
 
 import type { CustomerProfile } from "@/lib/customer";
+import {
+  applyServiceSelection,
+  getHandoffStepIndex,
+  INITIAL_WIZARD_FORM,
+  type WizardForm,
+} from "@/lib/booking-wizard/steps";
+import { loadBookingDraft, loadBookingDraftSource } from "@/lib/booking-wizard/draft";
 
 type SavedTemplate = {
   serviceType: string;
@@ -126,13 +132,38 @@ type BookingFormProps = {
   profile?: CustomerProfile | null;
   savedTemplate?: SavedTemplate | null;
   variant?: "page" | "modal" | "embedded";
+  fromAi?: boolean;
   onCancel?: () => void;
 };
+
+function buildInitialForm(
+  profile?: CustomerProfile | null,
+  savedTemplate?: SavedTemplate | null
+): WizardForm {
+  return {
+    ...INITIAL_WIZARD_FORM,
+    journeyType: (savedTemplate?.journeyType as WizardForm["journeyType"]) ?? "",
+    serviceType: (savedTemplate?.serviceType as WizardForm["serviceType"]) ?? "",
+    tripType: (savedTemplate?.tripType as WizardForm["tripType"]) ?? "TO_AIRPORT",
+    airportCode: savedTemplate?.airportCode ?? "LBA",
+    pickupAddress: savedTemplate?.pickupAddress ?? "",
+    dropoffAddress: savedTemplate?.dropoffAddress ?? "",
+    passengers: savedTemplate?.passengers ?? 1,
+    luggage: savedTemplate?.luggage ?? 1,
+    vehicleType: (savedTemplate?.vehicleType as WizardForm["vehicleType"]) ?? "SALOON",
+    driverId: savedTemplate?.driverId ?? "",
+    customerName: profile?.name ?? "",
+    customerEmail: profile?.email ?? "",
+    customerPhone: profile?.phone ?? "",
+    notes: savedTemplate?.notes ?? "",
+  };
+}
 
 export function BookingForm({
   profile,
   savedTemplate,
   variant = "modal",
+  fromAi = false,
   onCancel,
 }: BookingFormProps) {
   const router = useRouter();
@@ -143,30 +174,26 @@ export function BookingForm({
   const [showNotes, setShowNotes] = useState(Boolean(savedTemplate?.notes));
   const [scheduleLeg, setScheduleLeg] = useState<"outbound" | "return">("outbound");
   const [drivers, setDrivers] = useState<BookableDriver[]>([]);
-  const [form, setForm] = useState({
-    journeyType: savedTemplate?.journeyType ?? "",
-    serviceType: savedTemplate?.serviceType ?? "",
-    tripType: savedTemplate?.tripType ?? "TO_AIRPORT",
-    airportCode: savedTemplate?.airportCode ?? "LBA",
-    pickupAddress: savedTemplate?.pickupAddress ?? "",
-    dropoffAddress: savedTemplate?.dropoffAddress ?? "",
-    pickupDate: "",
-    pickupTime: "",
-    returnDate: "",
-    returnTime: "",
-    passengers: savedTemplate?.passengers ?? 1,
-    luggage: savedTemplate?.luggage ?? 1,
-    vehicleType: savedTemplate?.vehicleType ?? "SALOON",
-    driverId: savedTemplate?.driverId ?? "",
-    customerName: profile?.name ?? "",
-    customerEmail: profile?.email ?? "",
-    customerPhone: profile?.phone ?? "",
-    flightNumber: "",
-    returnFlightNumber: "",
-    notes: savedTemplate?.notes ?? "",
-    saveDetails: false,
-    savedDetailsLabel: "",
-  });
+  const [showAiBanner, setShowAiBanner] = useState(fromAi);
+  const [form, setForm] = useState<WizardForm>(() => buildInitialForm(profile, savedTemplate));
+
+  useEffect(() => {
+    const draft = loadBookingDraft();
+    const draftSource = loadBookingDraftSource();
+    if (!draft || (fromAi && draftSource !== "ai")) return;
+
+    const merged: WizardForm = {
+      ...buildInitialForm(profile, savedTemplate),
+      ...draft,
+      customerName: profile?.name ?? draft.customerName ?? "",
+      customerEmail: profile?.email ?? draft.customerEmail ?? "",
+      customerPhone: profile?.phone ?? draft.customerPhone ?? "",
+    };
+
+    setForm(merged);
+    setStepIndex(getHandoffStepIndex(merged));
+    if (draftSource === "ai") setShowAiBanner(true);
+  }, [fromAi, profile, savedTemplate]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -238,7 +265,7 @@ export function BookingForm({
     if (stepIndex > 0) goTo(stepIndex - 1);
   }
 
-  function update(field: string, value: string | number) {
+  function update(field: keyof WizardForm, value: string | number | boolean) {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "journeyType" && value === "RETURN") next.tripType = "TO_AIRPORT";
@@ -270,16 +297,7 @@ export function BookingForm({
   }
 
   function selectService(value: string) {
-    const hubCode = getDefaultHubCode(value);
-    const hub = getHub(hubCode, value);
-    setForm((prev) => ({
-      ...prev,
-      serviceType: value,
-      airportCode: hubCode,
-      tripType: "TO_AIRPORT",
-      pickupAddress: "",
-      dropoffAddress: hub && isHubTransfer(value) ? formatHubLabel(hub, value) : "",
-    }));
+    setForm((prev) => applyServiceSelection(prev, value));
     setTimeout(() => {
       setDirection(1);
       setStepIndex((i) => i + 1);
@@ -350,7 +368,7 @@ export function BookingForm({
     setForm((prev) => ({
       ...prev,
       driverId: driver.id,
-      vehicleType: driver.vehicleType,
+      vehicleType: driver.vehicleType as WizardForm["vehicleType"],
     }));
     setTimeout(() => {
       setDirection(1);
@@ -421,6 +439,20 @@ export function BookingForm({
 
   const stepContent = (
     <>
+      {showAiBanner && (
+        <div className="mb-4 rounded-xl border border-brand/25 bg-brand-light/30 px-4 py-3 text-sm text-gray-800 dark:border-brand/30 dark:bg-brand/10 dark:text-gray-200">
+          We&apos;ve pre-filled your trip from the AI assistant — review the details below and
+          choose your driver to continue.
+          <button
+            type="button"
+            onClick={() => setShowAiBanner(false)}
+            className="ml-2 font-semibold text-brand hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-sm">
           {error}

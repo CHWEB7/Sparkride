@@ -57,7 +57,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isVerify2fa = pathname === "/verify-2fa";
   const isProtected =
-    pathname.startsWith("/book") ||
+    (pathname.startsWith("/book") && request.nextUrl.searchParams.get("from") !== "ai") ||
     pathname.startsWith("/my-bookings") ||
     pathname.startsWith("/account") ||
     pathname.startsWith("/booking/");
