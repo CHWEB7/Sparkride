@@ -11,7 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { getBookingUrl } from "@/lib/booking-url";
+import { getBookingUrl, isExternalBookingUrl } from "@/lib/booking-url";
 
 type NavTab = {
   id: string;
@@ -20,6 +20,8 @@ type NavTab = {
 };
 
 function buildNavTabs(bookingUrl: string): NavTab[] {
+  const bookingExternal = isExternalBookingUrl(bookingUrl);
+
   return [
     {
       id: "services",
@@ -44,7 +46,7 @@ function buildNavTabs(bookingUrl: string): NavTab[] {
         {
           links: [
             { label: "Fares", href: "/fares" },
-            { label: "Book online", href: bookingUrl, external: true },
+            { label: "Book online", href: bookingUrl, external: bookingExternal },
             { label: "Cancellation policy", href: "/cancellation" },
           ],
         },
@@ -56,7 +58,7 @@ function buildNavTabs(bookingUrl: string): NavTab[] {
       columns: [
         {
           links: [
-            { label: "Book online", href: bookingUrl, external: true },
+            { label: "Book online", href: bookingUrl, external: bookingExternal },
             { label: "View fares", href: "/fares" },
             { label: "Cancellation policy", href: "/cancellation" },
           ],
@@ -113,7 +115,7 @@ function buildSidebarItems(bookingUrl: string): SidebarItem[] {
       desc: "Airport pickups & drop-offs",
       iconBg: "bg-brand/15",
       iconColor: "text-brand",
-      external: true,
+      external: isExternalBookingUrl(bookingUrl),
     },
     {
       id: "fares",

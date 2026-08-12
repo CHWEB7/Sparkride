@@ -2,13 +2,21 @@
 
 Marketing website for Sparkride airport transfers (Castleford, West Yorkshire).
 
-Booking and trip management are handled by a third-party system. Set the public booking URL in Vercel:
+## Booking
+
+The `/book` page embeds the DM Taxi Assistant booking form inline:
+
+```html
+<script src="https://dmtaxiassistant.com/booking/v1.js" data-operator="8bycg38i982l" async></script>
+```
+
+All “Book” / “Reserve a ride” CTAs link to `/book` by default.
+
+Optional override (Vercel → Environment Variables):
 
 ```
-NEXT_PUBLIC_BOOKING_URL=https://your-provider.example
+NEXT_PUBLIC_BOOKING_URL=https://other-destination.example
 ```
-
-All “Book” / “Reserve a ride” CTAs use that URL. If it is unset, CTAs fall back to `mailto:info@sparkride.co.uk`.
 
 ## Local development
 
@@ -20,10 +28,4 @@ npm run dev
 ## What’s included
 
 - Homepage, services, fares, and cancellation policy
-- External booking CTAs via `NEXT_PUBLIC_BOOKING_URL`
-
-## What’s removed
-
-- In-house booking wizard and customer portal
-- Driver portal and Square payment integrations
-- Supabase auth, Prisma booking database, and mobile booking app
+- `/book` with the third-party booking form embed

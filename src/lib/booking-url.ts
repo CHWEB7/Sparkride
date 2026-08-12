@@ -1,14 +1,15 @@
-/** External third-party booking system URL (set in Vercel env). */
-export const BOOKING_URL_ENV = "NEXT_PUBLIC_BOOKING_URL";
+/** In-app booking page with the embedded third-party form. */
+export const BOOKING_PATH = "/book";
 
-const FALLBACK_CONTACT = "mailto:info@sparkride.co.uk?subject=Book%20a%20transfer";
+/** Optional override to send Book CTAs somewhere else (e.g. full provider URL). */
+export const BOOKING_URL_ENV = "NEXT_PUBLIC_BOOKING_URL";
 
 export function getBookingUrl(): string {
   const url = process.env.NEXT_PUBLIC_BOOKING_URL?.trim();
   if (url) return url;
-  return FALLBACK_CONTACT;
+  return BOOKING_PATH;
 }
 
 export function isExternalBookingUrl(url: string = getBookingUrl()): boolean {
-  return /^https?:\/\//i.test(url) || url.startsWith("mailto:");
+  return /^(https?:|mailto:|tel:)/i.test(url);
 }
