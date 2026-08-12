@@ -3,6 +3,7 @@ import { Leaf } from "lucide-react";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 import { RollingStat } from "@/components/RollingStat";
+import { getBookingUrl } from "@/lib/booking-url";
 
 const STATS: {
   value: number;
@@ -35,6 +36,8 @@ const STATS: {
 ];
 
 export function SustainableTravelSection() {
+  const bookingUrl = getBookingUrl();
+
   return (
     <section
       id="sustainability"
@@ -64,7 +67,7 @@ export function SustainableTravelSection() {
             </p>
 
             <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-              <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
+              <AnimatedGradientButton href={bookingUrl} className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
                 Book an electric ride
               </AnimatedGradientButton>
               <Link

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
+import { getBookingUrl } from "@/lib/booking-url";
 
 const SERVICE_AREA_IMAGE = "/images/location/west-yorkshire-map.jpg";
 
@@ -50,6 +51,8 @@ function LocationMapVisual({
 }
 
 export function LocationSection() {
+  const bookingUrl = getBookingUrl();
+
   return (
     <section id="locations" className="border-y border-black/5 dark:border-white/5">
       <div className="relative overflow-hidden bg-app-bg dark:bg-dark">
@@ -95,7 +98,7 @@ export function LocationSection() {
             </p>
 
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3">
-              <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
+              <AnimatedGradientButton href={bookingUrl} className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
                 Book from your location
               </AnimatedGradientButton>
               <Link

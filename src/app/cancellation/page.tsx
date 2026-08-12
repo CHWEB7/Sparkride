@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
+import { getBookingUrl } from "@/lib/booking-url";
 import {
   airportWaitingFeePer15Min,
   CANCELLATION_POLICY_TITLE,
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 
 export default function CancellationPolicyPage() {
   const waitingFee = airportWaitingFeePer15Min();
+  const bookingUrl = getBookingUrl();
 
   return (
     <>
@@ -127,15 +128,15 @@ export default function CancellationPolicyPage() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-2.5 sm:mt-12 sm:gap-3">
-            <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-5 sm:py-2.5">
+            <AnimatedGradientButton href={bookingUrl} className="px-5 py-2.5 text-sm sm:px-5 sm:py-2.5">
               Book a transfer
             </AnimatedGradientButton>
-            <Link
-              href="/payments"
+            <a
+              href="mailto:info@sparkride.co.uk"
               className="inline-flex items-center justify-center rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/5"
             >
-              How payments work
-            </Link>
+              Contact us
+            </a>
           </div>
         </SiteContainer>
       </main>

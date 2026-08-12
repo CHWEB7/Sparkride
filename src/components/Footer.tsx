@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { SiteContainer } from "./SiteContainer";
 import { Logo } from "./Logo";
+import { getBookingUrl } from "@/lib/booking-url";
 
 export function Footer() {
+  const bookingUrl = getBookingUrl();
+
   return (
     <footer className="bg-dark text-gray-400 py-10 sm:py-16">
       <SiteContainer>
@@ -17,13 +20,31 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-3 sm:mb-4">Quick links</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/book" className="hover:text-brand-end transition-colors">Book a transfer</Link></li>
-              <li><Link href="/login" className="hover:text-brand-end transition-colors">Sign in</Link></li>
-              <li><Link href="/my-bookings" className="hover:text-brand-end transition-colors">My bookings</Link></li>
-              <li><Link href="/download" className="hover:text-brand-end transition-colors">Download Android app</Link></li>
-              <li><Link href="/#sustainability" className="hover:text-brand-end transition-colors">Sustainable travel</Link></li>
-              <li><Link href="/#how-it-works" className="hover:text-brand-end transition-colors">FAQ</Link></li>
-              <li><Link href="/driver/login" className="hover:text-brand-end transition-colors">Driver portal</Link></li>
+              <li>
+                <a href={bookingUrl} className="hover:text-brand-end transition-colors">
+                  Book a transfer
+                </a>
+              </li>
+              <li>
+                <Link href="/fares" className="hover:text-brand-end transition-colors">
+                  Fares
+                </Link>
+              </li>
+              <li>
+                <Link href="/cancellation" className="hover:text-brand-end transition-colors">
+                  Cancellation policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/#sustainability" className="hover:text-brand-end transition-colors">
+                  Sustainable travel
+                </Link>
+              </li>
+              <li>
+                <Link href="/#how-it-works" className="hover:text-brand-end transition-colors">
+                  FAQ
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

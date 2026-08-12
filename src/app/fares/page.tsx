@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { FaresSections } from "@/components/FaresSections";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
+import { getBookingUrl } from "@/lib/booking-url";
 
 export const metadata: Metadata = {
   title: "Fixed fares | Sparkride",
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default function FaresPage() {
+  const bookingUrl = getBookingUrl();
+
   return (
     <>
       <Header />
@@ -40,7 +43,7 @@ export default function FaresPage() {
           </div>
 
           <div className="mt-10 sm:mt-16 pt-8 sm:pt-10 border-t border-black/8 dark:border-white/10 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-            <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
+            <AnimatedGradientButton href={bookingUrl} className="px-5 py-2.5 text-sm sm:px-7 sm:py-3.5">
               Book your transfer
             </AnimatedGradientButton>
             <Link

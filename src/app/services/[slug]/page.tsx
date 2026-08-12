@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
+import { getBookingUrl } from "@/lib/booking-url";
 import { getServiceBySlug, SERVICES } from "@/lib/services";
 
 type Props = {
@@ -31,6 +32,7 @@ export default async function ServicePage({ params }: Props) {
   const { slug } = await params;
   const service = getServiceBySlug(slug);
   if (!service) notFound();
+  const bookingUrl = getBookingUrl();
 
   return (
     <>
@@ -64,7 +66,7 @@ export default async function ServicePage({ params }: Props) {
               confirm your journey.
             </p>
             <div className="mt-6 sm:mt-8 flex flex-wrap gap-2.5 sm:gap-3">
-              <AnimatedGradientButton href="/book" className="px-5 py-2.5 text-sm sm:px-5 sm:py-2.5">
+              <AnimatedGradientButton href={bookingUrl} className="px-5 py-2.5 text-sm sm:px-5 sm:py-2.5">
                 Book online
               </AnimatedGradientButton>
               <Link

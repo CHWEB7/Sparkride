@@ -8,7 +8,12 @@ type AnimatedGradientButtonProps = {
   disabled?: boolean;
   className?: string;
   children: ReactNode;
+  external?: boolean;
 };
+
+function isAbsoluteHref(href: string) {
+  return /^(https?:|mailto:|tel:)/i.test(href);
+}
 
 export function AnimatedGradientButton({
   href,
@@ -17,10 +22,25 @@ export function AnimatedGradientButton({
   disabled,
   className = "",
   children,
+  external,
 }: AnimatedGradientButtonProps) {
   const classes = `inline-flex items-center justify-center px-5 py-2.5 bg-brand-gradient-animated text-white font-medium tracking-[-0.01em] rounded-full transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none ${className}`;
 
   if (href) {
+    const openExternal = external ?? isAbsoluteHref(href);
+    if (openExternal) {
+      return (
+        <a
+          href={href}
+          className={classes}
+          target={href.startsWith("http") ? "_blank" : undefined}
+          rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+        >
+          {children}
+        </a>
+      );
+    }
+
     return (
       <Link href={href} className={classes}>
         {children}

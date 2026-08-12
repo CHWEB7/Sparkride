@@ -3,8 +3,11 @@ import { Plane, Shield, Clock, Star, Zap } from "lucide-react";
 import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { HeroAmbientBackground } from "./HeroAmbientBackground";
 import { HeroTitle } from "./HeroTitle";
+import { getBookingUrl } from "@/lib/booking-url";
 
 export function Hero() {
+  const bookingUrl = getBookingUrl();
+
   return (
     <section className="relative min-h-[82vh] sm:min-h-[92vh] flex items-center overflow-hidden bg-app-bg dark:bg-dark">
       <HeroAmbientBackground />
@@ -25,14 +28,14 @@ export function Hero() {
             </p>
 
             <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <AnimatedGradientButton href="/book" className="px-6 py-3 text-sm sm:px-8 sm:py-4 sm:text-base">
+              <AnimatedGradientButton href={bookingUrl} className="px-6 py-3 text-sm sm:px-8 sm:py-4 sm:text-base">
                 Reserve a ride
               </AnimatedGradientButton>
               <Link
-                href="/download"
+                href="/fares"
                 className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 border border-dark/15 dark:border-white/25 bg-white/60 dark:bg-white/5 backdrop-blur-sm text-dark dark:text-white hover:bg-white/80 dark:hover:bg-white/15 font-medium tracking-[-0.01em] rounded-full transition-colors text-sm sm:text-base"
               >
-                Get the Android app
+                View fares
               </Link>
             </div>
 

@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, Globe } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
 import { AnimatedGradientButton } from "./AnimatedGradientButton";
 import { SiteContainer } from "./SiteContainer";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
 import { BackToTop } from "./BackToTop";
 import { useTheme } from "./ThemeProvider";
+import { getBookingUrl } from "@/lib/booking-url";
 
 const FADE_START = 48;
 const FADE_END = 180;
@@ -18,8 +18,8 @@ const FADE_END = 180;
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const { theme, canToggle, zone } = useTheme();
-  const showThemeToggle = canToggle && zone === "customer";
+  const { theme } = useTheme();
+  const bookingUrl = getBookingUrl();
   const overlayLightText = overlay && theme === "dark" && !menuOpen && scrollY < FADE_START;
 
   useEffect(() => {
@@ -76,20 +76,22 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                   <Globe className="w-4 h-4" />
                   EN
                 </button>
-                <Link
-                  href="/help"
+                <a
+                  href="mailto:info@sparkride.co.uk"
                   onClick={closeMenu}
                   className="hidden sm:inline text-sm font-medium text-dark dark:text-gray-200 tracking-[-0.01em] hover:opacity-70 transition-opacity"
                 >
                   Support
-                </Link>
-                <Link
-                  href="/book"
+                </a>
+                <a
+                  href={bookingUrl}
                   onClick={closeMenu}
                   className="hidden sm:inline-flex items-center px-5 py-2.5 bg-dark dark:bg-white text-white dark:text-dark text-sm font-medium tracking-[-0.01em] rounded-full hover:opacity-90 transition-opacity"
+                  target={bookingUrl.startsWith("http") ? "_blank" : undefined}
+                  rel={bookingUrl.startsWith("http") ? "noopener noreferrer" : undefined}
                 >
-                  Register
-                </Link>
+                  Book now
+                </a>
                 <button
                   onClick={closeMenu}
                   className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
@@ -100,8 +102,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               </>
             ) : (
               <>
-                {showThemeToggle && <ThemeToggle light={overlayLightText} />}
-                <AnimatedGradientButton href="/book" className="hidden sm:inline-flex text-sm">
+                <AnimatedGradientButton href={bookingUrl} className="hidden sm:inline-flex text-sm">
                   Reserve a ride
                 </AnimatedGradientButton>
                 <button
