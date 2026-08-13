@@ -23,9 +23,11 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
   const overlayLightText = overlay && theme === "dark" && !menuOpen && scrollY < FADE_START;
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
+    const bookLocked = document.documentElement.dataset.scrollLock === "book";
+    document.body.style.overflow = menuOpen || bookLocked ? "hidden" : "";
     return () => {
-      document.body.style.overflow = "";
+      const stillBookLocked = document.documentElement.dataset.scrollLock === "book";
+      document.body.style.overflow = stillBookLocked ? "hidden" : "";
     };
   }, [menuOpen]);
 

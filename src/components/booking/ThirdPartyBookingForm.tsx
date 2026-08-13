@@ -5,12 +5,16 @@ import { useEffect, useRef } from "react";
 const SCRIPT_SRC = "https://dmtaxiassistant.com/booking/v1.js";
 const OPERATOR_ID = "8bycg38i982l";
 
+type ThirdPartyBookingFormProps = {
+  className?: string;
+};
+
 /**
  * Inline DM Taxi Assistant booking form.
  * Script must mount in this section (not in a global before-</body> slot)
  * so the form renders where the embed is placed.
  */
-export function ThirdPartyBookingForm() {
+export function ThirdPartyBookingForm({ className = "" }: ThirdPartyBookingFormProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +38,7 @@ export function ThirdPartyBookingForm() {
   return (
     <div
       ref={containerRef}
-      className="w-full min-h-[560px] overflow-hidden rounded-2xl border border-black/8 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated sm:min-h-[640px]"
+      className={`h-full w-full overflow-hidden rounded-2xl border border-black/8 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated ${className}`}
       data-booking-embed="dmtaxi"
     />
   );
