@@ -38,17 +38,17 @@ export function ThirdPartyBookingForm({ className = "" }: ThirdPartyBookingFormP
   return (
     <>
       <style>{`
-        @media (max-width: 1023px) {
-          [data-booking-embed="dmtaxi"] iframe,
-          [data-booking-embed="dmtaxi"] > div:not(style) {
-            width: 100% !important;
-            min-height: calc(100dvh - 8.75rem) !important;
-          }
+        [data-booking-embed="dmtaxi"],
+        [data-booking-embed="dmtaxi"] iframe,
+        [data-booking-embed="dmtaxi"] > div {
+          width: 100% !important;
+          height: 100% !important;
+          min-height: 100% !important;
         }
       `}</style>
       <div
         ref={containerRef}
-        className={`w-full rounded-2xl border border-black/8 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated max-lg:min-h-[calc(100dvh-8.75rem)] max-lg:overflow-visible lg:h-full lg:min-h-0 lg:overflow-hidden ${className}`}
+        className={`h-full w-full overflow-hidden bg-white dark:bg-dark-elevated ${className}`}
         data-booking-embed="dmtaxi"
       />
     </>

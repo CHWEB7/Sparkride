@@ -2,36 +2,20 @@
 
 import { useEffect } from "react";
 
-const DESKTOP_MQ = "(min-width: 1024px)";
-
-/** Locks document scroll on desktop booking layout only (lg+). */
+/** Locks document scroll while the booking page is mounted. */
 export function BookPageScrollLock() {
   useEffect(() => {
-    const mq = window.matchMedia(DESKTOP_MQ);
+    const html = document.documentElement;
+    const body = document.body;
 
-    function applyScrollLock() {
-      const html = document.documentElement;
-      const body = document.body;
-
-      if (mq.matches) {
-        html.dataset.scrollLock = "book";
-        html.style.overflow = "hidden";
-        body.style.overflow = "hidden";
-      } else {
-        delete html.dataset.scrollLock;
-        html.style.overflow = "";
-        body.style.overflow = "";
-      }
-    }
-
-    applyScrollLock();
-    mq.addEventListener("change", applyScrollLock);
+    html.dataset.scrollLock = "book";
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
 
     return () => {
-      mq.removeEventListener("change", applyScrollLock);
-      delete document.documentElement.dataset.scrollLock;
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
+      delete html.dataset.scrollLock;
+      html.style.overflow = "";
+      body.style.overflow = "";
     };
   }, []);
 
