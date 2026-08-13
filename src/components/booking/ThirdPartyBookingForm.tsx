@@ -5,16 +5,15 @@ import { useEffect, useRef } from "react";
 const SCRIPT_SRC = "https://dmtaxiassistant.com/booking/v1.js";
 const OPERATOR_ID = "8bycg38i982l";
 
-type ThirdPartyBookingFormProps = {
-  className?: string;
-};
-
 /**
  * Inline DM Taxi Assistant booking form.
  * Script must mount in this section (not in a global before-</body> slot)
  * so the form renders where the embed is placed.
+ *
+ * The provider iframe is max-width 760px by default — keep that natural size
+ * and center it; do not stretch it to full page width.
  */
-export function ThirdPartyBookingForm({ className = "" }: ThirdPartyBookingFormProps) {
+export function ThirdPartyBookingForm() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,17 +37,28 @@ export function ThirdPartyBookingForm({ className = "" }: ThirdPartyBookingFormP
   return (
     <>
       <style>{`
-        [data-booking-embed="dmtaxi"],
-        [data-booking-embed="dmtaxi"] iframe,
-        [data-booking-embed="dmtaxi"] > div {
+        [data-booking-embed="dmtaxi"] {
+          display: flex;
+          justify-content: center;
+          width: 100%;
+          max-width: 760px;
+          margin-left: auto;
+          margin-right: auto;
+          background: transparent;
+        }
+        [data-booking-embed="dmtaxi"] iframe {
+          display: block !important;
           width: 100% !important;
-          height: 100% !important;
-          min-height: 100% !important;
+          max-width: 760px !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          border: 0 !important;
+          background: transparent !important;
         }
       `}</style>
       <div
         ref={containerRef}
-        className={`h-full w-full overflow-hidden bg-transparent ${className}`}
+        className="w-full max-w-[760px] bg-transparent"
         data-booking-embed="dmtaxi"
       />
     </>
