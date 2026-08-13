@@ -32,32 +32,34 @@ export default function BookPage() {
     <div className="bg-app-bg dark:bg-dark max-lg:min-h-screen lg:fixed lg:inset-0 lg:z-0 lg:flex lg:flex-col lg:overflow-hidden">
       <BookPageScrollLock />
       <Header />
-      <main className="max-lg:pb-10 pt-24 sm:pt-28 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:pb-0 lg:pt-28 sm:pt-32 lg:pt-36">
-        <SiteContainer className="py-8 sm:py-10 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:py-0 lg:pb-5 sm:pb-6 lg:pb-8">
-          <div className="flex flex-col gap-8 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-stretch lg:gap-12 lg:overflow-hidden xl:gap-16">
-            <aside className="rounded-2xl border border-black/8 bg-white/80 p-5 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-dark-elevated/90 lg:flex lg:min-h-0 lg:flex-col lg:justify-center lg:overflow-hidden lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none">
-              <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-brand">
+      <main className="pt-20 pb-8 sm:pt-24 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:pb-0 lg:pt-36">
+        <SiteContainer className="py-4 sm:py-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:py-0 lg:pb-8">
+          <div className="flex flex-col gap-4 sm:gap-5 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-stretch lg:gap-12 lg:overflow-hidden xl:gap-16">
+            <aside className="order-2 lg:order-1 lg:flex lg:min-h-0 lg:flex-col lg:justify-center lg:overflow-hidden">
+              <p className="hidden text-xs font-semibold uppercase tracking-[0.14em] text-brand sm:text-sm lg:block">
                 Online booking
               </p>
-              <h1 className="mt-2 sm:mt-3 text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold tracking-[-0.02em] dark:text-white">
+              <h1 className="mt-2 hidden text-3xl font-semibold tracking-[-0.02em] dark:text-white sm:mt-3 sm:text-4xl lg:block lg:text-[2.75rem]">
                 Book your transfer
               </h1>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted leading-relaxed max-w-md">
+              <p className="mt-3 hidden max-w-md text-sm leading-relaxed text-muted sm:mt-4 sm:text-base lg:block">
                 Get a live quote and complete your booking in a few steps. Your journey details,
                 price, and customer information are all handled in the form.
               </p>
 
-              <ul className="mt-5 space-y-4 sm:mt-8 sm:space-y-5">
+              <ul className="space-y-2.5 lg:mt-8 lg:space-y-5">
                 {HIGHLIGHTS.map((item) => (
-                  <li key={item.title} className="flex gap-3.5">
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
-                      <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                  <li key={item.title} className="flex items-center gap-3 lg:items-start lg:gap-3.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand lg:mt-0.5 lg:h-7 lg:w-7">
+                      <Check className="h-3.5 w-3.5 lg:h-4 lg:w-4" strokeWidth={2.5} aria-hidden />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm sm:text-base font-semibold tracking-[-0.01em] dark:text-white">
+                      <p className="text-sm font-semibold tracking-[-0.01em] dark:text-white sm:text-base">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-sm text-muted leading-relaxed">{item.description}</p>
+                      <p className="mt-1 hidden text-sm leading-relaxed text-muted lg:block">
+                        {item.description}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -66,11 +68,16 @@ export default function BookPage() {
 
             <section
               aria-label="Booking form"
-              className="min-w-0 lg:flex lg:min-h-0 lg:min-w-0 lg:flex-1 lg:flex-col lg:overflow-hidden"
+              className="order-1 min-w-0 lg:order-2 lg:flex lg:min-h-0 lg:min-w-0 lg:flex-1 lg:flex-col lg:overflow-hidden"
             >
-              <p className="mb-3 text-sm font-semibold text-muted lg:hidden">
-                Complete your booking
-              </p>
+              <div className="mb-3 lg:hidden">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+                  Online booking
+                </p>
+                <h1 className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] dark:text-white">
+                  Book your transfer
+                </h1>
+              </div>
               <ThirdPartyBookingForm className="lg:min-h-0 lg:flex-1" />
             </section>
           </div>

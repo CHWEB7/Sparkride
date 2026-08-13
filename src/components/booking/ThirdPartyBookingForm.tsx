@@ -36,10 +36,21 @@ export function ThirdPartyBookingForm({ className = "" }: ThirdPartyBookingFormP
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className={`h-full w-full rounded-2xl border border-black/8 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated max-lg:min-h-[min(72vh,640px)] max-lg:overflow-visible lg:overflow-hidden ${className}`}
-      data-booking-embed="dmtaxi"
-    />
+    <>
+      <style>{`
+        @media (max-width: 1023px) {
+          [data-booking-embed="dmtaxi"] iframe,
+          [data-booking-embed="dmtaxi"] > div:not(style) {
+            width: 100% !important;
+            min-height: calc(100dvh - 8.75rem) !important;
+          }
+        }
+      `}</style>
+      <div
+        ref={containerRef}
+        className={`w-full rounded-2xl border border-black/8 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated max-lg:min-h-[calc(100dvh-8.75rem)] max-lg:overflow-visible lg:h-full lg:min-h-0 lg:overflow-hidden ${className}`}
+        data-booking-embed="dmtaxi"
+      />
+    </>
   );
 }
