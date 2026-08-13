@@ -34,7 +34,7 @@ export function ThirdPartyBookingForm() {
   return (
     <div
       ref={containerRef}
-      className="w-full min-h-[520px] rounded-2xl bg-white dark:bg-dark-elevated"
+      className="w-full min-h-[560px] overflow-hidden rounded-2xl border border-black/8 bg-white shadow-sm dark:border-white/10 dark:bg-dark-elevated sm:min-h-[640px]"
       data-booking-embed="dmtaxi"
     />
   );
