@@ -14,7 +14,7 @@ export default function BookPage() {
     <div className="fixed inset-0 z-0 flex flex-col overflow-hidden bg-app-bg dark:bg-dark">
       <BookPageScrollLock />
       <Header />
-      <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-3 py-4 pt-[calc(3.5rem+1rem)] sm:px-4 sm:pt-[calc(4.25rem+1.25rem)]">
+      <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-3 pb-6 pt-[calc(3.5rem+1.75rem)] sm:px-4 sm:pt-[calc(4.25rem+2rem)] lg:items-center lg:pb-4 lg:pt-[calc(4.25rem+1.25rem)]">
         <ThirdPartyBookingForm />
       </main>
     </div>
