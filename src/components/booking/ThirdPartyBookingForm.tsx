@@ -48,7 +48,7 @@ export function ThirdPartyBookingForm({ className = "" }: ThirdPartyBookingFormP
       `}</style>
       <div
         ref={containerRef}
-        className={`h-full w-full overflow-hidden bg-white dark:bg-dark-elevated ${className}`}
+        className={`h-full w-full overflow-hidden bg-transparent ${className}`}
         data-booking-embed="dmtaxi"
       />
     </>
