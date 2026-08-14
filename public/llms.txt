@@ -1,0 +1,34 @@
+# Sparkride — Castleford & West Yorkshire airport transfers
+
+> Fixed-price electric private hire. Book online 24/7.
+
+## Key facts
+
+- Service area: Castleford, Pontefract, Knottingley, Normanton, Featherstone, Wakefield, Garforth, Kippax (fixed-price zone); Leeds, Bradford, Doncaster (quote at booking)
+- Region: West Yorkshire, Yorkshire, UK
+- Leeds Bradford Airport from £45 single
+- Manchester Airport from £100 single
+- Phone: 01977 800 000
+- Email: info@sparkride.co.uk
+- Book: https://sparkride.co.uk/book
+
+## Pages
+
+- / — Homepage with service area, FAQ, and booking
+- /book — Online booking
+- /fares — Full fixed fare list
+- /locations/castleford — Castleford airport transfers
+- /locations/west-yorkshire — West Yorkshire service area
+- /locations/leeds — Leeds Bradford airport transfers
+- /routes/castleford-to-leeds-bradford-airport — Castleford to LBA from £45
+- /routes/castleford-to-manchester-airport — Castleford to MAN from £100
+- /services/airport-transfers — Airport transfer service
+- /cancellation — Cancellation and delays policy
+
+## Google Business Profile
+
+Ensure NAP matches this site exactly:
+- Name: Sparkride Airport Transfers
+- Locality: Castleford, West Yorkshire
+- Phone: 01977 800 000
+- Website: https://sparkride.co.uk

@@ -26,6 +26,16 @@ export function Footer() {
                 </a>
               </li>
               <li>
+                <Link href="/locations/castleford" className="hover:text-brand-end transition-colors">
+                  Castleford transfers
+                </Link>
+              </li>
+              <li>
+                <Link href="/locations/west-yorkshire" className="hover:text-brand-end transition-colors">
+                  West Yorkshire
+                </Link>
+              </li>
+              <li>
                 <Link href="/fares" className="hover:text-brand-end transition-colors">
                   Fares
                 </Link>

@@ -2,7 +2,7 @@
  * Canonical site URL.
  * Set NEXT_PUBLIC_SITE_URL in Vercel to your production domain.
  */
-const PRODUCTION_URL = "https://sparkride-umber.vercel.app";
+const PRODUCTION_URL = "https://sparkride.co.uk";
 
 export function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
