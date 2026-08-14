@@ -22,6 +22,10 @@ export function Hero() {
 
             <HeroTitle />
 
+            <p className="mt-3 text-sm font-medium text-muted dark:text-gray-300">
+              Castleford & West Yorkshire airport transfers
+            </p>
+
             <p className="mt-4 sm:mt-6 text-base sm:text-xl text-muted dark:text-gray-200 font-normal tracking-[-0.01em] leading-relaxed max-w-lg">
               Reliable private hire airport transfers from Castleford. Fixed prices,
               professional drivers, 24/7 service to all major UK airports.
@@ -44,7 +48,7 @@ export function Hero() {
                 { icon: Shield, label: "Fully licensed" },
                 { icon: Clock, label: "24/7 service" },
                 { icon: Star, label: "5-star rated" },
-                { icon: Plane, label: "12 airports" },
+                { icon: Plane, label: "10 airports" },
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}

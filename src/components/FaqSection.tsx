@@ -4,49 +4,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SiteContainer } from "@/components/SiteContainer";
-
-const FAQS = [
-  {
-    question: "How do I pay for my booking?",
-    answer:
-      "After your driver accepts the booking, you will receive a secure Square payment link by email and on your booking page. Payment is completed on Square's hosted checkout — Sparkride never stores your card details. Funds go directly to your driver's Square account.",
-  },
-  {
-    question: "How do I book a transfer?",
-    answer:
-      "Choose your service, enter your pickup and drop-off details, select your vehicle, and confirm online. You will receive a reference number straight away and your driver will confirm the booking.",
-  },
-  {
-    question: "Are your vehicles fully electric?",
-    answer:
-      "Yes. Sparkride operates a fully electric fleet. Every journey is powered by clean energy, helping reduce emissions and fuel use compared with a conventional private hire.",
-  },
-  {
-    question: "Is the price fixed when I book?",
-    answer:
-      "Yes. The price you see when booking is the fixed fare for your trip. After your driver accepts the booking, you can pay online via a secure Square payment link sent by email and shown on your booking page. Sparkride does not store card details.",
-  },
-  {
-    question: "What if I am collected from a non-fixed-price location?",
-    answer:
-      "The system will detect this when you make a booking. Our drivers have to confirm the trips that you book, and the driver will send you a custom quote via email for you to review. If you choose to accept, that price is then fixed for your trip.",
-  },
-  {
-    question: "Which airports do you cover?",
-    answer:
-      "We cover major UK airports including Leeds Bradford, Manchester, Heathrow, Gatwick, Birmingham, Liverpool, Newcastle, and more. Airport transfers can be booked as single or return journeys.",
-  },
-  {
-    question: "What if my flight is delayed?",
-    answer:
-      "Include your flight number when booking so we can monitor arrival times. For airport pickups we adjust collection accordingly — just contact us if your plans change.",
-  },
-  {
-    question: "Do you offer corporate and private hire?",
-    answer:
-      "Yes. Beyond airport transfers we provide corporate travel, private hire, ferry port transfers, and theme park journeys. All services use the same professional drivers and electric vehicles.",
-  },
-] as const;
+import { FAQS } from "@/lib/faqs";
 
 function FaqItem({
   question,
@@ -115,8 +73,8 @@ export function FaqSection() {
             Questions answered
           </h2>
           <p className="mt-4 sm:mt-5 text-base sm:text-lg text-muted leading-relaxed">
-            Everything you need to know about booking, pricing, and travelling
-            with Sparkride&apos;s electric fleet.
+            Everything you need to know about booking airport transfers from Castleford and West
+            Yorkshire with Sparkride&apos;s electric fleet.
           </p>
         </div>
 

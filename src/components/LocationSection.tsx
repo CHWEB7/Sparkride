@@ -4,6 +4,7 @@ import { MapPin } from "lucide-react";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
 import { getBookingUrl } from "@/lib/booking-url";
+import { formatTownList, SERVICE_AREA } from "@/lib/service-area";
 
 const SERVICE_AREA_IMAGE = "/images/location/west-yorkshire-map.jpg";
 
@@ -51,12 +52,12 @@ function LocationMapVisual({
 }
 
 export function LocationSection() {
-  const bookingUrl = getBookingUrl();
+  const bookingUrl = getBookingUrl({ utmSource: "homepage", utmCampaign: "locations" });
+  const fixedTowns = formatTownList(SERVICE_AREA.fixedPriceTowns);
 
   return (
     <section id="locations" className="border-y border-black/5 dark:border-white/5">
       <div className="relative overflow-hidden bg-app-bg dark:bg-dark">
-        {/* Desktop: map on the right */}
         <div
           className="absolute inset-y-0 left-[38%] sm:left-[42%] lg:left-[46%] xl:left-[48%] right-0 hidden sm:block"
           aria-hidden
@@ -83,14 +84,31 @@ export function LocationSection() {
             </div>
 
             <h2 className="font-display mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-[3.25rem] dark:text-white leading-[1.05] tracking-[-0.02em]">
-              Fixed pricing for Castleford and surrounding areas
+              Fixed pricing for Castleford and West Yorkshire
             </h2>
 
             <p className="mt-4 sm:mt-5 text-base sm:text-lg text-muted dark:text-gray-200 leading-relaxed">
-              We use fixed pricing for many of our services — including airport, ferry port,
-              and cruise terminal transfers when you are collected from certain West Yorkshire
-              areas. You will know what the cost is before you travel, with no surprises.
+              Fixed airport, ferry port, and cruise terminal pricing when you are collected from{" "}
+              {fixedTowns}. You will know the cost before you travel, with no surprises.
             </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {SERVICE_AREA.fixedPriceTowns.map((town) => (
+                <Link
+                  key={town}
+                  href={`/locations/${town.toLowerCase()}`}
+                  className="rounded-full border border-black/10 bg-white/70 px-3 py-1 text-xs font-medium text-dark transition-colors hover:border-brand/30 hover:text-brand dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:text-brand-end"
+                >
+                  {town}
+                </Link>
+              ))}
+              <Link
+                href="/locations/west-yorkshire"
+                className="rounded-full border border-brand/20 bg-brand/8 px-3 py-1 text-xs font-medium text-brand dark:text-brand-end"
+              >
+                All West Yorkshire
+              </Link>
+            </div>
 
             <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted leading-relaxed max-w-md">
               Drop-off fees that some airports charge us are covered by Sparkride, not passed on
@@ -117,7 +135,6 @@ export function LocationSection() {
           </div>
         </SiteContainer>
 
-        {/* Mobile: full-width map below content */}
         <div className="relative z-0 sm:hidden">
           <LocationMapVisual
             className="relative aspect-[16/10] min-h-[200px] max-h-[280px] w-full"

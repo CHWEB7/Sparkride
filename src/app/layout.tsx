@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SiteJsonLd } from "@/components/seo/StructuredData";
+import { rootMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -10,11 +14,7 @@ const outfit = Outfit({
   weight: ["300", "400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  title: "Sparkride | Airport Transfers",
-  description:
-    "Book reliable private hire airport transfers across Yorkshire and the UK. Fixed prices, professional drivers.",
-};
+export const metadata = rootMetadata;
 
 export default function RootLayout({
   children,
@@ -24,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.variable} suppressHydrationWarning>
       <body className={`${outfit.className} antialiased`}>
+        <SiteJsonLd />
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

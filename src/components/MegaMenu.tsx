@@ -39,7 +39,7 @@ function buildNavTabs(bookingUrl: string): NavTab[] {
         {
           links: [
             { label: "Sustainable travel", href: "/#sustainability" },
-            { label: "Pickup locations", href: "/#locations" },
+            { label: "Pickup locations", href: "/locations/west-yorkshire" },
             { label: "FAQs", href: "/#how-it-works" },
           ],
         },
@@ -71,7 +71,7 @@ function buildNavTabs(bookingUrl: string): NavTab[] {
       columns: [
         {
           links: [
-            { label: "About Sparkride", href: "/#about" },
+            { label: "About Sparkride", href: "/#sustainability" },
             { label: "Sustainability", href: "/#sustainability" },
             { label: "Contact", href: "mailto:info@sparkride.co.uk", external: true },
           ],

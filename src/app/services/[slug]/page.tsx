@@ -6,7 +6,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteContainer } from "@/components/SiteContainer";
 import { AnimatedGradientButton } from "@/components/AnimatedGradientButton";
+import { BreadcrumbJsonLd } from "@/components/seo/StructuredData";
 import { getBookingUrl } from "@/lib/booking-url";
+import { createPageMetadata } from "@/lib/seo";
 import { getServiceBySlug, SERVICES } from "@/lib/services";
 
 type Props = {
@@ -22,26 +24,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const service = getServiceBySlug(slug);
   if (!service) return { title: "Service | Sparkride" };
 
-  return {
-    title: `${service.title} | Sparkride`,
-    description: service.description,
-  };
+  return createPageMetadata({
+    title: service.metaTitle,
+    description: service.metaDescription,
+    path: `/services/${slug}`,
+  });
 }
 
 export default async function ServicePage({ params }: Props) {
   const { slug } = await params;
   const service = getServiceBySlug(slug);
   if (!service) notFound();
-  const bookingUrl = getBookingUrl();
+  const bookingUrl = getBookingUrl({ utmSource: "service", utmCampaign: slug });
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: "/" },
+          { name: service.title, path: `/services/${slug}` },
+        ]}
+      />
       <Header />
       <main>
         <section className="relative min-h-[42vh] flex items-end overflow-hidden bg-dark">
           <Image
             src={service.image}
-            alt=""
+            alt={`${service.title} from Castleford and West Yorkshire`}
             fill
             className="object-cover"
             priority
@@ -61,10 +70,30 @@ export default async function ServicePage({ params }: Props) {
         <SiteContainer className="py-10 sm:py-16">
           <div className="max-w-2xl">
             <p className="text-base sm:text-lg text-muted leading-relaxed">{service.description}</p>
-            <p className="mt-4 text-muted leading-relaxed">
-              More detail for this service is coming soon. You can book online now and our team will
-              confirm your journey.
-            </p>
+            {service.localContent.map((paragraph) => (
+              <p key={paragraph.slice(0, 40)} className="mt-4 text-muted leading-relaxed">
+                {paragraph}
+              </p>
+            ))}
+
+            {service.relatedLinks.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-lg font-semibold dark:text-white">Related pages</h2>
+                <ul className="mt-3 space-y-2">
+                  {service.relatedLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-sm font-medium text-brand hover:underline dark:text-brand-end"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="mt-6 sm:mt-8 flex flex-wrap gap-2.5 sm:gap-3">
               <AnimatedGradientButton href={bookingUrl} className="px-5 py-2.5 text-sm sm:px-5 sm:py-2.5">
                 Book online

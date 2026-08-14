@@ -6,12 +6,14 @@ import { CancellationPolicyTimeline } from "@/components/cancellation/Cancellati
 import { buildCancellationPolicySections } from "@/lib/cancellation-policy-sections";
 import { airportWaitingFeePer15Min } from "@/lib/cancellation-policy";
 import { getBookingUrl } from "@/lib/booking-url";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Cancellation & delays policy | Sparkride",
+export const metadata: Metadata = createPageMetadata({
+  title: "Cancellation & Delays Policy",
   description:
-    "Sparkride airport transfer cancellation, flight delay, waiting time, and no-show policy.",
-};
+    "Sparkride airport transfer cancellation, flight delay, waiting time, and no-show policy for Castleford and West Yorkshire transfers.",
+  path: "/cancellation",
+});
 
 export default function CancellationPolicyPage() {
   const waitingFee = airportWaitingFeePer15Min();

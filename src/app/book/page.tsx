@@ -4,12 +4,14 @@ import { Header } from "@/components/Header";
 import { BookPageScrollLock } from "@/components/booking/BookPageScrollLock";
 import { ThirdPartyBookingForm } from "@/components/booking/ThirdPartyBookingForm";
 import { cancellationPolicyPath } from "@/lib/cancellation-policy";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Book a transfer | Sparkride",
+export const metadata: Metadata = createPageMetadata({
+  title: "Book Airport Transfer Castleford & West Yorkshire",
   description:
-    "Book your Sparkride airport transfer online. Live pricing, vehicle options, and instant quotes.",
-};
+    "Book fixed-price electric airport transfers from Castleford and West Yorkshire online. Leeds Bradford from £45. Instant quotes, 24/7 booking.",
+  path: "/book",
+});
 
 export default function BookPage() {
   return (
