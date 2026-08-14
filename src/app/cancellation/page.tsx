@@ -22,7 +22,7 @@ export default function CancellationPolicyPage() {
     <>
       <Header />
       <main className="bg-app-bg dark:bg-dark">
-        <SiteContainer className="max-w-5xl py-12 sm:py-20 lg:py-24">
+        <SiteContainer className="py-12 sm:py-20 lg:py-24">
           <CancellationPolicyTimeline sections={sections} bookingUrl={bookingUrl} />
         </SiteContainer>
       </main>
