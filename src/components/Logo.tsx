@@ -1,136 +1,86 @@
-"use client";
-
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Plane } from "lucide-react";
-
-const SIZES = {
-  sm: { height: 32, width: 146, icon: "w-4 h-4", box: "w-9 h-9", text: "text-lg" },
-  md: { height: 40, width: 182, icon: "w-4 h-4", box: "w-10 h-10", text: "text-xl" },
-  lg: { height: 48, width: 219, icon: "w-5 h-5", box: "w-12 h-12", text: "text-2xl" },
-  xl: { height: 56, width: 255, icon: "w-6 h-6", box: "w-14 h-14", text: "text-3xl" },
-  header: { height: 42, width: 191, icon: "w-5 h-5", box: "w-11 h-11", text: "text-2xl" },
-} as const;
-
 type LogoProps = {
-  size?: keyof typeof SIZES;
-  showText?: boolean;
-  href?: string;
   className?: string;
-  light?: boolean;
+  variant?: "full" | "mark";
+  title?: string;
 };
 
-function logoImageClass(size: keyof typeof SIZES): string {
-  switch (size) {
-    case "header":
-      return "h-8 w-auto sm:h-[42px]";
-    case "md":
-      return "h-8 w-auto sm:h-10";
-    case "sm":
-      return "h-8 w-auto";
-    case "lg":
-      return "h-12 w-auto";
-    case "xl":
-      return "h-14 w-auto";
-    default:
-      return "w-auto";
-  }
+/**
+ * Interlocking dual-hexagon mark that reads as ∞.
+ * Stroke-based so it scales cleanly next to the wordmark.
+ */
+function HostMark({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 64 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden={true}
+    >
+      {/* Continuous infinity path with hexagonal facets */}
+      <path
+        d="
+          M18 4
+          L30 4
+          L38 18
+          L30 32
+          L18 32
+          L10 18
+          Z
+        "
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <path
+        d="
+          M34 4
+          L46 4
+          L54 18
+          L46 32
+          L34 32
+          L26 18
+          Z
+        "
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
-function LogoImage({
-  size,
-  light,
-}: {
-  size: keyof typeof SIZES;
-  light?: boolean;
-}) {
-  const s = SIZES[size];
-  const [src, setSrc] = useState(light ? "/logo-light.png" : "/logo.png");
-  const [useIcon, setUseIcon] = useState(false);
-
-  if (useIcon) {
+/**
+ * Hostfinity lockup: lowercase "host" + mint hexagon-infinity mark.
+ */
+export function Logo({
+  className = "",
+  variant = "full",
+  title = "Hostfinity",
+}: LogoProps) {
+  if (variant === "mark") {
     return (
-      <div
-        className={`${s.box} rounded-full bg-brand-gradient flex items-center justify-center shrink-0`}
-      >
-        <Plane className={`${s.icon} text-white`} />
-      </div>
+      <span className={`inline-flex text-brand-mint ${className}`} title={title}>
+        <HostMark className="h-[1em] w-auto" />
+        <span className="sr-only">{title}</span>
+      </span>
     );
   }
 
   return (
-    <Image
-      src={src}
-      alt="Sparkride"
-      width={s.width}
-      height={s.height}
-      className={`${logoImageClass(size)} max-w-none object-contain object-left shrink-0`}
-      priority
-      onError={() => {
-        if (light && src === "/logo-light.png") {
-          setSrc("/logo.png");
-          return;
-        }
-        setUseIcon(true);
-      }}
-    />
-  );
-}
-
-export function Logo({
-  size = "md",
-  showText = false,
-  href = "/",
-  className = "",
-  light = false,
-}: LogoProps) {
-  const s = SIZES[size];
-
-  const mark = (
-    <>
-      <LogoImage size={size} light={light} />
-      {showText && (
-        <span
-          className={`${s.text} font-semibold tracking-[-0.02em] ${
-            light ? "text-white" : "text-dark dark:text-white"
-          }`}
-        >
-          Sparkride
-        </span>
-      )}
-    </>
-  );
-
-  if (!href) {
-    return <div className={`flex items-center gap-2 ${className}`}>{mark}</div>;
-  }
-
-  return (
-    <Link
-      href={href}
-      className={`inline-flex items-center ${
-        size === "header" ? "min-h-8 sm:min-h-[42px]" : size === "md" ? "min-h-8 sm:min-h-10" : ""
-      } ${className}`}
-      style={
-        size === "header" || size === "md" ? undefined : { minHeight: `${s.height}px` }
-      }
+    <span
+      className={`inline-flex items-center gap-[0.22em] leading-none ${className}`}
+      title={title}
     >
-      {mark}
-    </Link>
-  );
-}
-
-export function LogoMark({
-  size = "md",
-  className = "",
-}: {
-  size?: keyof typeof SIZES;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <LogoImage size={size} />
-    </div>
+      <span className="font-display text-[1em] font-semibold tracking-[-0.045em] text-white lowercase">
+        host
+      </span>
+      <span className="text-brand-mint translate-y-[0.04em]">
+        <HostMark className="h-[0.88em] w-auto" />
+      </span>
+      <span className="sr-only">{title}</span>
+    </span>
   );
 }

@@ -1,23 +1,26 @@
-import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
-import { ServicesSection } from "@/components/ServicesSection";
-import { SustainableTravelSection } from "@/components/SustainableTravelSection";
-import { LocationSection } from "@/components/LocationSection";
-import { FaqSection } from "@/components/FaqSection";
-import { Footer } from "@/components/Footer";
+import { Logo } from "@/components/Logo";
 
+/**
+ * Blank brand stage — logo first.
+ * Services and marketing sections come next.
+ */
 export default function HomePage() {
   return (
-    <>
-      <Header overlay />
-      <main>
-        <Hero />
-        <ServicesSection />
-        <SustainableTravelSection />
-        <LocationSection />
-        <FaqSection />
-      </main>
-      <Footer />
-    </>
+    <main className="logo-stage relative flex min-h-dvh flex-col items-center justify-center px-6">
+      <div className="logo-enter flex flex-col items-center gap-8">
+        <div className="logo-mark-pulse">
+          <Logo className="text-[clamp(2.75rem,8vw,5.5rem)]" />
+        </div>
+
+        <p className="max-w-xs text-center text-sm font-medium tracking-[0.18em] text-brand-muted uppercase">
+          Hostfinity
+        </p>
+      </div>
+
+      <p className="absolute bottom-8 left-1/2 w-[min(90vw,28rem)] -translate-x-1/2 text-center text-sm leading-relaxed text-brand-muted/80">
+        Websites built and hosted. Template starting point — services coming
+        next.
+      </p>
+    </main>
   );
 }

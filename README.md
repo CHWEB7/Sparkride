@@ -1,31 +1,21 @@
-# Sparkride
+# Hostfinity
 
-Marketing website for Sparkride airport transfers (Castleford, West Yorkshire).
+Marketing site for **Hostfinity** — websites built and hosted.
 
-## Booking
+## Brand
 
-The `/book` page embeds the DM Taxi Assistant booking form inline:
+- **Name:** Hostfinity (`host` + infinity)
+- **Wordmark:** lowercase `host` + mint hexagon-infinity mark
+- **Colors:** charcoal ink `#101010`, white type, mint `#b2e3c4`
 
-```html
-<script src="https://dmtaxiassistant.com/booking/v1.js" data-operator="8bycg38i982l" async></script>
-```
+## Stack
 
-All “Book” / “Reserve a ride” CTAs link to `/book` by default.
+Next.js (App Router) + Tailwind CSS v4 + TypeScript
 
-Optional override (Vercel → Environment Variables):
-
-```
-NEXT_PUBLIC_BOOKING_URL=https://other-destination.example
-```
-
-## Local development
+## Scripts
 
 ```bash
 npm install
 npm run dev
+npm run build
 ```
-
-## What’s included
-
-- Homepage, services, fares, and cancellation policy
-- `/book` with the third-party booking form embed
